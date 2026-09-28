@@ -52,21 +52,26 @@ Source documents:
 | Tenant isolation | ✅ **Verified end to end**: no context → 0 rows; per-tenant context → only that tenant; cross-tenant INSERT refused |
 | Test harness — canonical fixture, two tenants, injected clock | ✅ Built |
 | Database test suite (`npm run test:db`) | ✅ **25 assertions passing** |
-| Unit test suite — Vitest (`npm test`) | ✅ **113 tests passing** |
-| Typecheck (`npx tsc --noEmit`) | ✅ **clean** |
+| Unit test suite — Vitest (`npm test`) | ✅ **138 tests passing** |
+| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **30 tests passing**, mutation-checked — new 2026-09-28 |
+| Typecheck (`npx tsc --noEmit`) | ✅ **clean** (run `next typegen` first when routes change) |
+| **Stack proven over HTTP** — `next dev`, Auth.js sign-in, forced change, revocation, scoping | ✅ 2026-09-28 |
 | 01/02 **contract layer** — permission catalogue, authorization, scope, audit | ✅ Built and tested |
 | 01 auth — Auth.js wiring, password hashing, lockout, sessions | ✅ Built and tested |
 | Seed — permissions, system roles per tenant, first super admin | ✅ Built, idempotent, verified |
 | `protectedRoute` wrapper + `GET /api/employees` | ✅ Built, typechecks |
-| **Version control** | ✅ `hrm-system` committed; `dev-plan` now a repo (97 files). **Push needs your credentials** |
-| Sign-in page and admin shell (UI) | ⬜ Next |
-| Remaining 01/02 route handlers | ⬜ Next |
+| **Version control** | ✅ `hrm-system` 8 commits, **5 unpushed**; `dev-plan` a repo with no remote. **Pushing needs your credentials** |
+| Sign-in and forced change-password screens (UI, skill-grounded) | ✅ 2026-09-28 |
+| Admin shell (sidebar, top bar), forgot/reset password, remaining 01 endpoints and screens | ⬜ Next (step 4) |
+| Remaining 02 route handlers and screens | ⬜ Step 5 |
 
 **Toolchain on this machine:** no Node, npm, or git — but **Docker works**, so the toolchain runs
-in containers (`docker run --rm -v C:\Dev\hrm-system:/app node:20-alpine …`). The repo's
-`node_modules` came from macOS and its Prisma binary is broken under Linux, so tooling uses an
-ephemeral global install rather than touching it. Schema validation confirmed working this way.
-**git is still missing, so nothing can be committed from here** (OQ-005).
+in containers (`docker run --rm -v C:\Dev\hrm-system:/app node:20-alpine …`), and git runs as
+`alpine/git` against the bind-mounted repo. The app runs with
+`docker compose up -d --build app` (dev target, hot reload). **New files are not always picked up by
+the container's watcher on the Windows bind mount** — if Turbopack reports "Module not found" for a
+file that exists, `docker restart hrm-system-app-1`. The host's `node_modules/.bin/next` is a broken
+macOS symlink: call `node node_modules/next/dist/bin/next …` instead.
 
 **Planning completed 2026-09-18.** Prior to the above, build had not started. The gate before starting each feature is
 Part 3 of `DEFINITION_OF_DONE.md`; three questions still block work (OQ-319, OQ-701, OQ-601b), and
@@ -123,8 +128,11 @@ gap.
 | OQ-001 | Confirm feature list and build order (Step 1). | 2026-09-11 | ✅ Resolved 2026-09-11 |
 | OQ-002 | Remote repository not yet connected: no git remote is set and `gh` is not installed. Needs the target repo URL and credentials set up by the user. | 2026-09-14 | ✅ Resolved 2026-09-14 — `gh` installed, user authenticated, `origin` → `intelliglowsolutions-afk/hrm-system` (private), `main` pushed |
 | OQ-003 | A GitHub personal access token was pasted into the chat in plaintext on 2026-09-14 and must be revoked/rotated. Not used by Claude. | 2026-09-14 | Open — user action |
-| OQ-004 | Two copies of the plan exist: `C:\Dev\dev-plan` (authoritative) and `hrm-system/dev-plan/` (committed 2026-09-14, now stale). The stale copy needs to be reconciled or removed. | 2026-09-15 | Open |
-| OQ-005 | Work has moved to a Windows machine (`C:\Dev`). `git` is not on PATH in the session shell, so nothing can be committed or pushed from here; earlier sessions ran on macOS with `gh` set up. | 2026-09-15 | Open — user action |
+| OQ-004 | Two copies of the plan exist: `C:\Dev\dev-plan` (authoritative) and `hrm-system/dev-plan/` (committed 2026-09-14, now stale). The stale copy needs to be reconciled or removed. | 2026-09-15 | ✅ Resolved 2026-09-28 (Session 28) — deletion committed |
+| OQ-005 | Work has moved to a Windows machine (`C:\Dev`). `git` is not on PATH in the session shell, so nothing can be committed or pushed from here; earlier sessions ran on macOS with `gh` set up. | 2026-09-15 | Committing solved (git in a container). **Pushing still needs the user's credentials** — nothing is on GitHub since 2026-09-14 |
+| OQ-116 | **Argon2id vs scrypt.** 01 FR-A-02 says Argon2id; scrypt is implemented because Argon2 bindings are native modules and this builds on Alpine. One-file swap; existing hashes upgrade on next sign-in. | 2026-09-28 | Open — needs the security owner's call |
+| OQ-117 | **Confirm OQ-201's consequence:** under the union answer a department head sees their own manager (Ravi sees Ayesha). Now proven over HTTP and pinned by integration tests. | 2026-09-28 | Open — confirm intended |
+| OQ-118 | **Device-event retention.** Does "no automatic deletion" (OQ-1002 et al.) extend to machine logs? Without a sweep or transition-only logging, one terminal writes >1M rows a year. | 2026-09-28 | Open — before feature 04 ingestion |
 | OQ-006 | The two source documents the plan is built on (`HRM_SYSTEM_PLANNING_INSTRUCTIONS.md`, `HRM_SYSTEM_DEPLOYMENT.md`) are not present anywhere under `C:\Dev`. | 2026-09-15 | Open |
 | OQ-101 | Auth library: Auth.js (NextAuth) v5 vs hand-rolled sessions. Plan assumes hand-rolled. | 2026-09-15 | Open — needs decision before build |
 | OQ-102 | MFA for admin accounts in v1? Plan assumes no. | 2026-09-15 | Open |
@@ -204,6 +212,103 @@ gap.
 ---
 
 ## Session entries
+
+### 2026-09-28 — Session 29: Stack proven over HTTP; auth screens; integration test layer
+
+**Step 1 — the stack, over real HTTP (previously never run)**
+- `docker compose up -d --build app` → `next dev` (Next 16.3.4, Turbopack) against the live DB.
+- Proven with scripted HTTP probes: unauthenticated → 401 · wrong password → no session cookie ·
+  sign-in issues a JWT whose server-side `sessions` row stores only a 43-char SHA-256 hash · the
+  forced password change returns **403 `PASSWORD_CHANGE_REQUIRED` even to SUPER_ADMIN** · SUPER_ADMIN
+  holds 19/19 permissions from zero stored grants · ALL / DEPARTMENT / SELF scoping correct for
+  admin, manager and employee · sensitive fields **absent** without `employee.read_sensitive` · no
+  Globex rows ever · `includeTerminated` works · **deleting the session row kills a live cookie on
+  the next request** (01 D-04 immediate revocation, the reason for the sid-in-JWT design) · sign-out
+  deletes the row and a replayed cookie gets 401.
+
+**The bug HTTP found that the SQL suite hid**
+- Over HTTP, Ravi did **not** see Ayesha, contradicting Session 26. The app's CTE was right; the
+  *data* was wrong: `test/db/06` re-pointed department heads inside a `DO` block, which autocommits,
+  so **every `test:db` run permanently altered the canonical fixture**. Wrapped in
+  `BEGIN … ROLLBACK`; the fixture now survives the suite. With canonical data Ravi sees Ayesha, as
+  OQ-201's union predicts.
+- The same investigation showed `test/db/06` tests a **copy** of the CTE, not `scope.ts` — its
+  header claimed it would catch divergence; it could not. Corrected, and it motivated step 3.
+
+**Step 2 — sign-in and change-password screens** (`ui-ux-pro-max` → `minimalist-ui`, per `C:\Dev\CLAUDE.md`)
+- `/login`, `/change-password` (forced and voluntary), placeholder `/dashboard`, `/` → `/dashboard`.
+  Server Actions + `useActionState`; copy exactly per 01 `ui-ux.md`.
+- Skill grounding: Swiss-minimal for dense admin (design-system query); WCAG 2.2 accessible
+  authentication (paste + password managers allowed, correct `autocomplete`); `role="alert"`;
+  errors linked by `aria-describedby`; pending state on submit; Server Actions validate their own
+  input. **Rejected from the skills:** the landing-page "Hero + CTA" pattern and GSAP motion
+  (wrong for a form; no new animation library), and Inter (Geist is already loaded).
+- **Two `minimalist-ui` values failed measured contrast** and were replaced: muted text `#787774`
+  is 4.48:1 (→ `#6B6A67`, 5.2:1); `#EAEAEA` is 1.2:1 as an input edge (→ `#8F8E8A`, 3.3:1, WCAG
+  1.4.11). Tokens now live in `globals.css`; the scaffold's Arial override is gone.
+- **Measured, not assumed:** the show/hide toggle was 36px tall — fixed to 44px.
+- Locked accounts get the spec's one non-generic message via a coded `CredentialsSignin` thrown
+  from `authorize()`; verified in the browser.
+- Password policy moved to a crypto-free `password-policy.ts`, shared by the live checklist and the
+  server, so the UI cannot tick a rule the server rejects.
+- Post-sign-in redirect accepts same-origin relative paths only (open-redirect guard, 25 tests).
+- **Verified over HTTP, including a no-JavaScript form submission** (React's progressive-enhancement
+  fields): 20 checks — wrong current password counts towards lockout; policy, mismatch and reuse
+  errors land on the right fields; success clears the flag, revokes every old session, issues a new
+  cookie, writes `auth.password_changed` with no password material, and the old password stops
+  working.
+
+**Deviations, deliberate — review if you disagree**
+- **Change-password revokes ALL sessions and issues a fresh one**; the spec keeps the current one.
+  The user stays signed in either way; rotation on a credential change is strictly stronger and
+  needs no session id exposed to the browser.
+- **The checklist does not disable the submit button** (reset-password spec says it should): a
+  disabled button gives no reason and cannot be focused. Submitting shows the specific problem.
+- `/forgot-password` is not built (needs feature 05); the login screen says "Ask an administrator to
+  reset it" rather than linking to nothing.
+
+**Step 3 — the integration test layer (did not exist)**
+- `npm run test:integration`: reload fixture → run the **real** `prisma/seed.ts` for grants (the
+  fixture deliberately has none) → Vitest on the compose network **as `hrm_app`**. 30 tests over
+  `resolveScopedEmployeeIds`, `withTenant`/RLS through Prisma (including no context leaking across
+  pooled connections), and the real `GET /api/employees` handler with only `getSession` mocked.
+- **Mutation-checked:** deleting the department-head half of the CTE fails 5 tests (the SQL copy
+  would fail none); removing sub-department recursion fails 1. That exercise **caught a weak test of
+  my own** — built on Ayesha, whose reporting chain already covers everyone, it passed with half the
+  CTE deleted. Rewritten around Sara.
+- `loadGrants` moved to `src/lib/auth/grants.ts` so tests use the production path without NextAuth.
+- The runner deletes its throwaway super admin afterwards; left in place, it made the seed skip
+  creating the real admin — found when the admin probe failed after a run.
+
+**Environment notes**
+- `.env` (gitignored) now holds generated **local test** credentials: `SEED_ADMIN_PASSWORD` for
+  `admin@acme.test`, and `FIXTURE_TEST_PASSWORD`, set on `ravi@` / `imran@acme.test` for probes.
+  Any fixture reload (`test:db`, `test:integration`) wipes these users; re-run the seed.
+- The dev DB is left seeded with `admin@acme.test` pending its forced password change, so the UI
+  can be tried from the start.
+- tsc needs `next typegen` first when routes change (`PageProps<"/login">` is generated).
+- An auto-mode guard blocked me from reading the test password to type it into the browser, so the
+  **change-password screen has not been visually checked** in a browser — its behaviour was
+  verified over HTTP. The login screen was checked in the browser: dark, light, 375px, focus rings.
+
+**Status: 138 unit · 30 integration · 25 database · typecheck and lint clean.** `hrm-system` has 8
+commits; the last 5 (from `5d1baf6`) are not on GitHub — the remote stops at `f630325` (2026-09-14).
+
+**Found, not fixed (for step 4)**
+- Sign-in events are not audited: 01 api-design specifies `auth.login` / `auth.login_failed` /
+  `auth.account_locked`; `authorize()` writes none.
+- Audit `before`/`after` store JSON `null` rather than SQL `NULL` when there is no diff; queries
+  using `IS NULL` would miss them.
+- Auth.js logs every failed sign-in as `[auth][error] CredentialsSignin` with a stack — noise that
+  will bury real errors; configure its `logger`.
+- The app shell with inert links during a forced change (01 ui-ux) waits for the shell itself.
+
+**Next**
+- Step 4: finish feature 01 — shell, sign-in auditing, users/roles/audit endpoints and screens,
+  forgot/reset once feature 05's outbox exists (or an interim admin-issued reset link).
+- Your decisions: OQ-701, OQ-601b, OQ-319 (blocking) · OQ-116 Argon2id vs scrypt · OQ-117 confirm
+  the OQ-201 consequence · OQ-118 device-event retention · **OQ-003 revoke the pasted token** · push
+  both repos.
 
 ### 2026-09-28 — Session 28: Git under control, seed working, first protected endpoint
 
