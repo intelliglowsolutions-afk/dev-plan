@@ -52,15 +52,15 @@ Source documents:
 | Tenant isolation | ✅ **Verified end to end**: no context → 0 rows; per-tenant context → only that tenant; cross-tenant INSERT refused |
 | Test harness — canonical fixture, two tenants, injected clock | ✅ Built |
 | Database test suite (`npm run test:db`) | ✅ **25 assertions passing** |
-| Unit test suite — Vitest (`npm test`) | ✅ **169 tests passing** |
-| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **135 tests passing**, mutation-checked |
+| Unit test suite — Vitest (`npm test`) | ✅ **180 tests passing** |
+| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **154 tests passing**, mutation-checked |
 | Typecheck (`npx tsc --noEmit`) | ✅ **clean** (run `next typegen` first when routes change) |
 | **Stack proven over HTTP** — `next dev`, Auth.js sign-in, forced change, revocation, scoping | ✅ 2026-09-28 |
 | 01/02 **contract layer** — permission catalogue, authorization, scope, audit | ✅ Built and tested |
 | 01 auth — Auth.js wiring, password hashing, lockout, sessions | ✅ Built and tested |
 | Seed — permissions, system roles per tenant, first super admin | ✅ Built, idempotent, verified |
 | `protectedRoute` wrapper + `GET /api/employees` | ✅ Built, typechecks |
-| **Version control** | ✅ `hrm-system` 12 commits, **9 unpushed**; `dev-plan` a repo with no remote. **Pushing needs your credentials** |
+| **Version control** | ✅ `hrm-system` 14 commits, **11 unpushed**; `dev-plan` a repo with no remote. **Pushing needs your credentials** |
 | Sign-in and forced change-password screens (UI, skill-grounded) | ✅ 2026-09-28 |
 | **Feature 01 API** — users, roles, permissions, audit log, invite/reset, audited sign-in | ✅ 2026-09-28 |
 | **Feature 01 screens** — shell, users, invite, user detail, roles + matrix, audit log, reset/invite, /403 | ✅ 2026-09-28 (visual check in a browser still owed — see Session 30) |
@@ -68,7 +68,9 @@ Source documents:
 | **Feature 02 API** — employees, dated history, lifecycle, departments, positions, org chart, documents, CSV import/export | ✅ 2026-09-28 |
 | **Feature 02 screens** — list, create/edit, tabbed profile, lifecycle dialogs, import wizard, org chart, departments, positions | ✅ 2026-09-28 (browser visual check still owed) |
 | Feature 02 remainders — history correction endpoint, scheduler, org-chart pan/zoom/export, drag re-parenting | ⬜ Deferred, listed in Session 31 |
-| Feature 03 (Admin & Settings) | ⬜ Next (step 6) |
+| **Feature 03 API + screens** — settings registry, company profile, work week, holidays, `isWorkingDay`, terminal registry | ✅ 2026-09-28 (browser visual check owed) |
+| Feature 03 remainders — /iclock wiring and unknown-device panel (OQ-319), offline alerts (05), SVG logos, 12-month holiday grid, applying date formats app-wide | ⬜ Deferred, listed in Session 32 |
+| Feature 04 (Attendance) — engine first, against synthetic punches | ⬜ Next (step 6 continues) |
 
 **Toolchain on this machine:** no Node, npm, or git — but **Docker works**, so the toolchain runs
 in containers (`docker run --rm -v C:\Dev\hrm-system:/app node:20-alpine …`), and git runs as
@@ -139,6 +141,8 @@ gap.
 | OQ-117 | **Confirm OQ-201's consequence:** under the union answer a department head sees their own manager (Ravi sees Ayesha). Now proven over HTTP and pinned by integration tests. | 2026-09-28 | Open — confirm intended |
 | OQ-119 | **Confirm the no-escalation rule** (added 2026-09-28, not in the spec): nobody may assign a role, edit a role's grants, or change/suspend/reset a user whose access exceeds their own. Without it HR_ADMIN (`user.assign_role` at ALL) can make colleagues SUPER_ADMIN and vice versa. Consequence: an HR admin cannot manage the owner's account. | 2026-09-28 | Open — confirm intended |
 | OQ-120 | Invite links live 60 minutes, same as reset links (ui-ux.md). Realistic for a link handed over in person; too short once invites are emailed and read the next morning. Revisit with feature 05. | 2026-09-28 | Open — revisit with 05 |
+| OQ-123 | **The application role can UPDATE the `tenants` table**, which has no RLS (it is the tenant list). Settings write the timezone and currency there, always for the session's own tenant — but nothing at the database level stops a bug from writing another tenant's row. Move per-tenant mutable fields to an RLS'd table, or grant hrm_app column-level UPDATE on its own row via a policy. | 2026-09-28 | Open — hardening |
+| OQ-124 | **SVG logos** are refused: SVG can carry script, and sanitising it safely needs a library (e.g. DOMPurify on the server). Approve a dependency, or keep PNG/JPEG only. | 2026-09-28 | Open |
 | OQ-121 | **Emergency contacts treated as personal data** (behind `employee.read_sensitive`, with the other personal fields). They are third parties' phone numbers; the spec left their visibility unstated. A manager therefore cannot see a team member's emergency contact. | 2026-09-28 | Open — confirm intended |
 | OQ-122 | **Terminating a department head does not clear the head.** The department keeps pointing at someone who has left, so no one gets that department through OQ-201's headship rule. Clear it automatically, or prompt? | 2026-09-28 | Open |
 | OQ-209 | Document volume: now a named volume `documents-data` in `docker-compose.yml`. **The backup story is still unwritten** — a database-only backup keeps document metadata and silently loses every file (02 NFR-05). | 2026-09-28 | Volume ✅; backup open |
@@ -222,6 +226,70 @@ gap.
 ---
 
 ## Session entries
+
+### 2026-09-28 — Session 32: Feature 03 — settings, holidays, isWorkingDay, terminals (step 6 begins)
+
+**Scope decided from the plan, not guessed.** 03 D-08 (per-device comm keys) is withdrawn — the
+SenseFace 2A has no such field — and replaced by a per-site collector (D-08b) that waits on
+**OQ-319**. So the device half of 03 splits: the *registry* is built; *wiring /iclock to it* is not,
+because looking a device up by serial before the tenant is known needs a new RLS-bypassing path,
+which is exactly what OQ-319 decides. DEVICE-INGESTION-SECURITY.md is explicit: do not ship
+serial-only ingestion. The /iclock placeholder still ingests nothing.
+
+**Migration `20260928000000_admin_settings`** — company profiles, settings, work week, holidays,
+device events; devices gain tenant, model, location, status, `lastPushAt` and IP pinning. Forced RLS
+on all six tables (the DB suite's coverage check now includes them). Existing tenants get a profile
+and a Mon–Fri week in the migration; new ones from the seed. The header warns that
+`devices.tenant_id NOT NULL` is safe only on an empty table (acceptance 12: there were no rows).
+
+**Built**
+- **Settings registry** — declared once in code; typed reads with compile-time keys; defaults without
+  rows; per-tenant cache invalidated on write. Change-controlled keys need
+  `settings.change_controlled` *and* a confirmation stating the consequence, with distinct audit
+  actions (`settings.timezone_changed` for the timezone). Secrets are never returned or audited with
+  a value. Timezone and currency are the **Tenant columns every other path already reads** — one
+  source of truth, not two.
+- **`isWorkingDay`** — the single answer (D-05): work week → the employee's calendar resolved
+  **location → department → up the tree → default** → full / half / optional holidays. Batched form
+  for payroll (NFR-02). The fixture gained a second calendar on Plant 2 so resolution can fail its
+  tests (Founders Day is a holiday at head office, not at the plant).
+- **Dates**: `dayOf()` puts an instant on the tenant's day (acceptance 2);
+  `zonedDayRange()` is exact across DST — tested on London's 23- and 25-hour days.
+- **Holidays** — one per date per calendar; any change to a date with recorded attendance needs
+  confirmation naming the count (acceptance 8; the leave count is 0 until feature 06); recurring
+  holidays materialised per year; CSV import writes nothing on any error (acceptance 9).
+- **Terminals** — allowlist with globally unique serials (the error does not say whose), disable
+  keeps history, delete refused while attendance references it (acceptance 11), derived health
+  (acceptance 7). `recordDeviceContact()` — what ingestion will call — logs `CONNECTED` only on a
+  transition, not every 30-second poll, and pins the first source IP (trust on first use).
+- **Screens** — settings home with a setup checklist; settings forms *generated from the
+  catalogue*; timezone changed by typing it; company profile and logo; work-week grid; holidays for
+  everyone (read-only without `holiday.write`) with impact warnings and import; health-first terminal
+  cards; upcoming holidays on the dashboard.
+
+**Found along the way**
+- The audit writer's own redaction (Session 26) turned out to catch the SMTP password *before* my
+  secret placeholders could: anything under a key containing "password" is stored as
+  `[redacted]`. Two layers agreeing — the test now asserts what actually lands.
+- **The retention sweep conflicts with your standing rule** ("no automatic deletion anywhere"), and
+  OQ-118 asks whether that covers machine logs. The sweep exists but is **not scheduled**;
+  transition-only logging already removes the ~1M rows/terminal/year it was designed for.
+- The app role can UPDATE the unprotected `tenants` table — **OQ-123**.
+
+**Verification** — HTTP smoke **31/31** (settings, the change-controlled flow, secrets, company and
+logo, work week, holidays and the working-days API, import, terminals, the employee's read-only
+view). **180 unit · 154 integration · 25 database · tsc and lint clean.**
+
+**Not built — and why**
+- /iclock wiring, unknown-device attempts, IP-change quarantine enforcement → OQ-319 / feature 04.
+- Offline alerts (FR-D-09) → feature 05. Public logo/settings endpoints → tenant resolution without
+  a session (OQ-T-02). SVG logos → OQ-124. The twelve-month holiday grid (the list view is built).
+- Company date/time formats are stored but **not yet applied to existing screens** (FR-L-04); screens
+  still format as before. A retrofit pass is owed.
+- Browser visual check — the same credential guard as before.
+
+**Next** — step 6 continues: feature 04, the attendance engine against synthetic punches (the plan's
+own sequencing, since ingestion waits on OQ-319). Decisions: OQ-123, OQ-124, plus earlier ones.
 
 ### 2026-09-28 — Session 31: Feature 02 — employees, dated history, lifecycle, documents, import
 
