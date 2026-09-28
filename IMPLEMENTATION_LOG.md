@@ -52,20 +52,23 @@ Source documents:
 | Tenant isolation | ✅ **Verified end to end**: no context → 0 rows; per-tenant context → only that tenant; cross-tenant INSERT refused |
 | Test harness — canonical fixture, two tenants, injected clock | ✅ Built |
 | Database test suite (`npm run test:db`) | ✅ **25 assertions passing** |
-| Unit test suite — Vitest (`npm test`) | ✅ **150 tests passing** |
-| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **88 tests passing**, mutation-checked |
+| Unit test suite — Vitest (`npm test`) | ✅ **169 tests passing** |
+| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **135 tests passing**, mutation-checked |
 | Typecheck (`npx tsc --noEmit`) | ✅ **clean** (run `next typegen` first when routes change) |
 | **Stack proven over HTTP** — `next dev`, Auth.js sign-in, forced change, revocation, scoping | ✅ 2026-09-28 |
 | 01/02 **contract layer** — permission catalogue, authorization, scope, audit | ✅ Built and tested |
 | 01 auth — Auth.js wiring, password hashing, lockout, sessions | ✅ Built and tested |
 | Seed — permissions, system roles per tenant, first super admin | ✅ Built, idempotent, verified |
 | `protectedRoute` wrapper + `GET /api/employees` | ✅ Built, typechecks |
-| **Version control** | ✅ `hrm-system` 10 commits, **7 unpushed**; `dev-plan` a repo with no remote. **Pushing needs your credentials** |
+| **Version control** | ✅ `hrm-system` 12 commits, **9 unpushed**; `dev-plan` a repo with no remote. **Pushing needs your credentials** |
 | Sign-in and forced change-password screens (UI, skill-grounded) | ✅ 2026-09-28 |
 | **Feature 01 API** — users, roles, permissions, audit log, invite/reset, audited sign-in | ✅ 2026-09-28 |
 | **Feature 01 screens** — shell, users, invite, user detail, roles + matrix, audit log, reset/invite, /403 | ✅ 2026-09-28 (visual check in a browser still owed — see Session 30) |
 | Feature 01 remainders — /forgot-password (needs 05), per-session revoke, user edit form | ⬜ Deferred, listed in Session 30 |
-| Remaining 02 route handlers and screens | ⬜ Step 5 |
+| **Feature 02 API** — employees, dated history, lifecycle, departments, positions, org chart, documents, CSV import/export | ✅ 2026-09-28 |
+| **Feature 02 screens** — list, create/edit, tabbed profile, lifecycle dialogs, import wizard, org chart, departments, positions | ✅ 2026-09-28 (browser visual check still owed) |
+| Feature 02 remainders — history correction endpoint, scheduler, org-chart pan/zoom/export, drag re-parenting | ⬜ Deferred, listed in Session 31 |
+| Feature 03 (Admin & Settings) | ⬜ Next (step 6) |
 
 **Toolchain on this machine:** no Node, npm, or git — but **Docker works**, so the toolchain runs
 in containers (`docker run --rm -v C:\Dev\hrm-system:/app node:20-alpine …`), and git runs as
@@ -136,6 +139,9 @@ gap.
 | OQ-117 | **Confirm OQ-201's consequence:** under the union answer a department head sees their own manager (Ravi sees Ayesha). Now proven over HTTP and pinned by integration tests. | 2026-09-28 | Open — confirm intended |
 | OQ-119 | **Confirm the no-escalation rule** (added 2026-09-28, not in the spec): nobody may assign a role, edit a role's grants, or change/suspend/reset a user whose access exceeds their own. Without it HR_ADMIN (`user.assign_role` at ALL) can make colleagues SUPER_ADMIN and vice versa. Consequence: an HR admin cannot manage the owner's account. | 2026-09-28 | Open — confirm intended |
 | OQ-120 | Invite links live 60 minutes, same as reset links (ui-ux.md). Realistic for a link handed over in person; too short once invites are emailed and read the next morning. Revisit with feature 05. | 2026-09-28 | Open — revisit with 05 |
+| OQ-121 | **Emergency contacts treated as personal data** (behind `employee.read_sensitive`, with the other personal fields). They are third parties' phone numbers; the spec left their visibility unstated. A manager therefore cannot see a team member's emergency contact. | 2026-09-28 | Open — confirm intended |
+| OQ-122 | **Terminating a department head does not clear the head.** The department keeps pointing at someone who has left, so no one gets that department through OQ-201's headship rule. Clear it automatically, or prompt? | 2026-09-28 | Open |
+| OQ-209 | Document volume: now a named volume `documents-data` in `docker-compose.yml`. **The backup story is still unwritten** — a database-only backup keeps document metadata and silently loses every file (02 NFR-05). | 2026-09-28 | Volume ✅; backup open |
 | OQ-118 | **Device-event retention.** Does "no automatic deletion" (OQ-1002 et al.) extend to machine logs? Without a sweep or transition-only logging, one terminal writes >1M rows a year. | 2026-09-28 | Open — before feature 04 ingestion |
 | OQ-006 | The two source documents the plan is built on (`HRM_SYSTEM_PLANNING_INSTRUCTIONS.md`, `HRM_SYSTEM_DEPLOYMENT.md`) are not present anywhere under `C:\Dev`. | 2026-09-15 | Open |
 | OQ-101 | Auth library: Auth.js (NextAuth) v5 vs hand-rolled sessions. Plan assumes hand-rolled. | 2026-09-15 | Open — needs decision before build |
@@ -216,6 +222,86 @@ gap.
 ---
 
 ## Session entries
+
+### 2026-09-28 — Session 31: Feature 02 — employees, dated history, lifecycle, documents, import
+
+**Built — the API** (02 api-design.md), on services in `src/lib/employees`, `src/lib/org`, `src/lib/documents`
+- Employees (list with the spec's filters, create, patch, 24-hour delete, lookup, reports, history,
+  code check) · assignments · confirm / status / terminate / rehire · departments + tree ·
+  positions · org chart · documents, photo, expiring · import (template, dry run, run) · export.
+- **Scope is a filter in every query**; out of scope is 404. Sensitive columns are never *fetched*
+  without `employee.read_sensitive`. Lifecycle and assignment routes also assert the employee is
+  inside the scope of *their own* permission — found while writing them: the services looked
+  people up by id, so a custom role with `employee.lifecycle` at DEPARTMENT could have terminated
+  anyone.
+- **"Today" is the tenant's today** (`src/lib/dates.ts`), and date-only values never pass through
+  the server's timezone — tested with the suite pinned to Los Angeles.
+
+**Dated history (FR-H), and the silent failure the tests caught**
+- One code path writes assignments and the current-job columns. No overlaps, no gaps; future
+  changes wait; backdating needs `employee.edit_history`, is flagged and audited distinctly.
+  `jobOn(employee, date)` answers FR-H-04 from history, never the current columns.
+- **The first design would have wiped managers.** Applying a due change copied the whole open
+  history row onto the employee. The fixture's history rows — like any imported or legacy data —
+  carry no `manager_id`, so a routine promotion would have nulled Ravi's, Sara's and Imran's
+  managers, and with them every manager's scope. Fixed on both paths: changes carry forward from
+  the employee's *current* job, and the due-job applies only the fields a scheduled change actually
+  changed, reporting anything else as drift instead of "fixing" it. Pinned by a regression test.
+- No scheduler exists yet (OQ-316), so due changes are applied opportunistically once per tenant
+  per tenant-date on the first employee read.
+
+**Lifecycle**
+- Terminate refuses while reports would be orphaned (acceptance 7), moves them through history,
+  closes the period and assignment, and **never suspends the login** — it returns it so the UI
+  offers that as a separate step (FR-H-08). A future last day means NOTICE until then.
+- Rehire reopens the same record; not-eligible needs a super-admin override, audited distinctly;
+  a rehire cannot silently restore a manager who has since left.
+
+**Documents** — per-tenant UUID keys on a new named volume (`documents-data`, OQ-209); an allow-list
+by magic bytes with extension agreement (renamed `.exe`, macro-enabled Office and bare ZIPs refused);
+the 10 MB cap checked from Content-Length before the body is read; file-then-row with cleanup; soft
+delete; downloads audited, and **refused downloads audited too** (acceptance 11).
+
+**Import/export** — validate everything first, report every row, write nothing on error unless asked,
+managers resolved in a second pass, one transaction and one audit entry; updates go through dated
+history. The import needed a longer transaction timeout (Prisma's default is 5 s; NFR-06 allows
+60 s for 1 000 rows), now an option on `withTenant`, `protectedRoute` and `actionGuard`.
+
+**Other bugs found**
+- **Personal-field edits left no trace of which field changed**: masked values were identical on both
+  sides of the audit diff, so the diff dropped them. The two sides now use different placeholders.
+- React 19 resets a form after a `<form action>` completes **even on a validation error** — on the
+  20-field employee form that would wipe everything typed. Those forms submit through a transition.
+
+**Built — the screens** (`ui-ux-pro-max`; tabs as links, step indicator, upload by button as well
+as drop, wrapping filter chips): employee list · create/edit · tabbed profile with a history
+timeline · transfer, confirm, status, terminate (two-step review, then optional login suspension)
+and rehire dialogs · import wizard with downloadable annotated errors · org chart (tree and list at
+every width) · departments and positions admin. A manager sees fewer panels, not greyed ones.
+
+**Verification** — HTTP smoke **35/35** as admin, manager and employee, including upload/download
+headers, photos, import, a scheduled promotion, the manager's 404 and 403s. **169 unit · 135
+integration (acceptance 1, 4–11) · 25 database · tsc and lint clean.** Acceptance 12 (migrating
+free-text departments) was settled in Session 23: the database held only test rows.
+
+**Environment notes**
+- After adding route files, **restart the app container** — the watcher on the Windows bind mount
+  missed a new `[docId]` route (a stale route table served an HTML 404 until restart).
+- `docker compose -f docker-compose.yml up` **skips the dev override** and runs the image's old copy
+  of the source. Use plain `docker compose up -d app` from the project directory.
+
+**Not verified** — the screens have not been looked at in a browser (the same credential guard as
+Sessions 29–30). Behaviour and permissions are verified over HTTP; layout and feel are not.
+
+**Deferred**
+- A history-correction endpoint (`PATCH …/assignments/:aid`); backdating via the transfer flow
+  covers FR-H-05 for now. · Org-chart pan/zoom/export and drag re-parenting (would need a new
+  library — ask first). · Pickers load up to 500 employees; beyond that they need search.
+- The transfer form defaults to the current job; with a change already scheduled it would propose
+  reverting it. Rare, but worth a guard.
+
+**Next** — step 6: feature 03 (Admin & Settings). Decisions: OQ-121 (emergency contacts as personal
+data), OQ-122 (terminated department heads), OQ-209 backup, plus those carried from Sessions 29–30.
 
 ### 2026-09-28 — Session 30: Feature 01 — API, screens, and the rules that fail silently
 
