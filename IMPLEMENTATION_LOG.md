@@ -52,17 +52,19 @@ Source documents:
 | Tenant isolation | ✅ **Verified end to end**: no context → 0 rows; per-tenant context → only that tenant; cross-tenant INSERT refused |
 | Test harness — canonical fixture, two tenants, injected clock | ✅ Built |
 | Database test suite (`npm run test:db`) | ✅ **25 assertions passing** |
-| Unit test suite — Vitest (`npm test`) | ✅ **138 tests passing** |
-| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **30 tests passing**, mutation-checked — new 2026-09-28 |
+| Unit test suite — Vitest (`npm test`) | ✅ **150 tests passing** |
+| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **88 tests passing**, mutation-checked |
 | Typecheck (`npx tsc --noEmit`) | ✅ **clean** (run `next typegen` first when routes change) |
 | **Stack proven over HTTP** — `next dev`, Auth.js sign-in, forced change, revocation, scoping | ✅ 2026-09-28 |
 | 01/02 **contract layer** — permission catalogue, authorization, scope, audit | ✅ Built and tested |
 | 01 auth — Auth.js wiring, password hashing, lockout, sessions | ✅ Built and tested |
 | Seed — permissions, system roles per tenant, first super admin | ✅ Built, idempotent, verified |
 | `protectedRoute` wrapper + `GET /api/employees` | ✅ Built, typechecks |
-| **Version control** | ✅ `hrm-system` 8 commits, **5 unpushed**; `dev-plan` a repo with no remote. **Pushing needs your credentials** |
+| **Version control** | ✅ `hrm-system` 10 commits, **7 unpushed**; `dev-plan` a repo with no remote. **Pushing needs your credentials** |
 | Sign-in and forced change-password screens (UI, skill-grounded) | ✅ 2026-09-28 |
-| Admin shell (sidebar, top bar), forgot/reset password, remaining 01 endpoints and screens | ⬜ Next (step 4) |
+| **Feature 01 API** — users, roles, permissions, audit log, invite/reset, audited sign-in | ✅ 2026-09-28 |
+| **Feature 01 screens** — shell, users, invite, user detail, roles + matrix, audit log, reset/invite, /403 | ✅ 2026-09-28 (visual check in a browser still owed — see Session 30) |
+| Feature 01 remainders — /forgot-password (needs 05), per-session revoke, user edit form | ⬜ Deferred, listed in Session 30 |
 | Remaining 02 route handlers and screens | ⬜ Step 5 |
 
 **Toolchain on this machine:** no Node, npm, or git — but **Docker works**, so the toolchain runs
@@ -132,6 +134,8 @@ gap.
 | OQ-005 | Work has moved to a Windows machine (`C:\Dev`). `git` is not on PATH in the session shell, so nothing can be committed or pushed from here; earlier sessions ran on macOS with `gh` set up. | 2026-09-15 | Committing solved (git in a container). **Pushing still needs the user's credentials** — nothing is on GitHub since 2026-09-14 |
 | OQ-116 | **Argon2id vs scrypt.** 01 FR-A-02 says Argon2id; scrypt is implemented because Argon2 bindings are native modules and this builds on Alpine. One-file swap; existing hashes upgrade on next sign-in. | 2026-09-28 | Open — needs the security owner's call |
 | OQ-117 | **Confirm OQ-201's consequence:** under the union answer a department head sees their own manager (Ravi sees Ayesha). Now proven over HTTP and pinned by integration tests. | 2026-09-28 | Open — confirm intended |
+| OQ-119 | **Confirm the no-escalation rule** (added 2026-09-28, not in the spec): nobody may assign a role, edit a role's grants, or change/suspend/reset a user whose access exceeds their own. Without it HR_ADMIN (`user.assign_role` at ALL) can make colleagues SUPER_ADMIN and vice versa. Consequence: an HR admin cannot manage the owner's account. | 2026-09-28 | Open — confirm intended |
+| OQ-120 | Invite links live 60 minutes, same as reset links (ui-ux.md). Realistic for a link handed over in person; too short once invites are emailed and read the next morning. Revisit with feature 05. | 2026-09-28 | Open — revisit with 05 |
 | OQ-118 | **Device-event retention.** Does "no automatic deletion" (OQ-1002 et al.) extend to machine logs? Without a sweep or transition-only logging, one terminal writes >1M rows a year. | 2026-09-28 | Open — before feature 04 ingestion |
 | OQ-006 | The two source documents the plan is built on (`HRM_SYSTEM_PLANNING_INSTRUCTIONS.md`, `HRM_SYSTEM_DEPLOYMENT.md`) are not present anywhere under `C:\Dev`. | 2026-09-15 | Open |
 | OQ-101 | Auth library: Auth.js (NextAuth) v5 vs hand-rolled sessions. Plan assumes hand-rolled. | 2026-09-15 | Open — needs decision before build |
@@ -212,6 +216,96 @@ gap.
 ---
 
 ## Session entries
+
+### 2026-09-28 — Session 30: Feature 01 — API, screens, and the rules that fail silently
+
+**Built — the API** (01 api-design.md), on domain services shared by route handlers and Server Actions
+- `src/lib/users/service.ts`, `roles/service.ts`, `audit-log/service.ts`, `auth/password-reset.ts`,
+  `auth/sign-in.ts`. Every mutation takes the tenant transaction, so RLS confines it and its audit
+  entry commits or rolls back with it (FR-L-05).
+- `/api/users` (+ `:id`, `roles`, `status`, `reset-password`, `sessions`) · `/api/roles` (+ `:id`,
+  `permissions`) · `/api/permissions` · `/api/audit-logs` (+ `:id`, `export`) ·
+  `POST /api/auth/password/reset`.
+
+**Rules enforced in the services, each with a test**
+- FR-U-06 no self role/status change · FR-U-08 last active super admin protected, **serialised
+  with a per-tenant advisory lock** (two admins suspending each other at once would otherwise both
+  pass the check) · FR-Z-08/09 system and in-use roles · suspension and admin resets end sessions
+  in the same transaction.
+- **New, not in the spec — the no-escalation rule (OQ-119).** HR_ADMIN holds `user.assign_role` at
+  ALL, and FR-U-06 only blocks changing your *own* roles, so two HR admins could make each other
+  SUPER_ADMIN. Now nobody may assign a role, edit grants, or act on a user beyond their own access.
+  The UI shows those options disabled with the reason.
+- Reset/invite tokens: 256-bit, SHA-256 at rest, 60 min, single-use and **claimed atomically**
+  (two tabs redeeming one link: exactly one succeeds — tested).
+- `sessions` has no tenant column and so no RLS: session reads resolve the user through the
+  RLS-protected `users` table first. Tested: Acme cannot list a Globex user's sessions.
+
+**Sign-in rebuilt around `attemptSignIn()`** (out of the NextAuth config, so it is testable)
+- Audits `auth.login` / `login_failed` / `account_locked` / `logout` (FR-L-06 — the gap Session 29
+  found). All writes in one tenant transaction as `hrm_app`; `hrm_auth` only finds the user.
+- **Lockout counters re-read `FOR UPDATE`**: five concurrent wrong guesses now always count to five
+  — tested; a read-modify-write lost-update is a classic way past a lockout.
+- Same-cost dummy verify for unknown emails; per-IP throttle (10/15 min); only `ACTIVE` may sign in
+  (it previously let `INVITED` through `authorize`); session rows now carry IP and user agent.
+- Auth.js no longer logs every wrong password as an error with a stack.
+
+**Built — the screens** (`ui-ux-pro-max` + minimalist tokens; `impeccable` skipped because its first
+run downloads a binary, which `C:\Dev\CLAUDE.md` says to ask about first)
+- App shell: nav derived server-side from permissions (correct on first paint; empty groups
+  omitted); top bar with company name and user menu; drawer below 768 px; skip link.
+- Users list (URL-held filters) · invite (roles beyond your access disabled, with the reason) ·
+  user detail (**guard rails as disabled buttons with a visible reason**, not a hover tooltip;
+  confirmations state the consequence) · roles list · **the permission matrix** (labelled radio
+  group per permission, collapsible groups with "n of m", group setter, changed rows marked, sticky
+  "N changes" footer, blast-radius confirmation, unsaved-changes warning, SUPER_ADMIN read-only) ·
+  audit log (in-place before/after diff; CSV export that respects filters, **neutralises formula
+  injection** and audits itself) · `/reset-password` for invites and resets (`no-referrer`, since
+  the token is in the URL) · `/403` · a dashboard showing only what the person can open.
+- `pageGuard` / `actionGuard` give Server Components and Server Actions `protectedRoute`'s
+  guarantees: a declared permission, the forced-change block, the tenant transaction.
+- New status tokens measured in both themes; minimalist-ui's yellow text failed AA and was darkened.
+
+**Bugs found along the way**
+- **A cross-tenant duplicate email surfaced as a raw 500.** Postgres omits the conflicting key from
+  a unique-violation error when that row is hidden by RLS (it will not disclose another tenant's
+  data), so Prisma reported no target. Handled explicitly, with the reason in `errors.ts`.
+- **A string constant exported from a `"use client"` module** (my own, Session 29) reached Server
+  Components as a client *reference*. Shared class strings now live in a plain module.
+- Audit before/after were stored as JSON `null`, which `IS NULL` misses; now SQL `NULL`.
+- Two effects that set state (cascading renders) and an impure `Date.now()` in render — caught by
+  the React lint rules, fixed with the documented patterns.
+
+**Verification**
+- **HTTP smoke, 30/30** against the running app: every screen for the admin; the employee's view
+  (403 JSON from the API, `/403` from pages, no Administration group); **acceptance criteria 3**
+  (invite → link → set password → sign in as MANAGER), **5, 6** (suspension kills the next request),
+  **8** (audit trail), **9**; cross-origin mutation refused over the wire.
+- **150 unit · 88 integration · 25 database · tsc and lint clean.**
+- Mutation check: weakening the super-admin floor fails the suite. A second mutation (disabling the
+  escalation check) was **blocked by an auto-mode guard** as security-weakening and not retried; the
+  rule is pinned by five tests that expect `ESCALATION_REFUSED`.
+
+**Not verified — owed**
+- **The admin screens have not been looked at in a browser.** Signing in there needs the admin
+  password typed, and the guard that blocked reading it (Session 29) still applies. Their HTML,
+  behaviour and permissions were verified over HTTP; layout, dark mode and the matrix's feel were
+  not. A human visual pass is the next thing to do.
+
+**Deviations and deferrals**
+- `/forgot-password` not built: it needs feature 05 to deliver the link. Admins issue links instead.
+- Per-session revoke (only "sign out everywhere"); a user edit form (the PATCH API exists); the
+  spec's "send invite email" checkbox (nothing sends email yet); toasts replaced by inline
+  `role="status"` messages (a toast vanishes before some users can read it).
+- The forced change-password screen still stands alone rather than inside an inert shell.
+- The "300/min per session" general rate limit is not implemented; login and reset limits are.
+- Unknown-email sign-in failures are not audited: they belong to no tenant.
+
+**Next**
+- A visual pass over the new screens (you, or grant the browser sign-in).
+- Step 5: feature 02 — employees CRUD, departments, positions, dated assignments, documents, CSV
+  import, org chart.
+- Decisions: OQ-119 (no-escalation), OQ-120 (invite lifetime), plus those carried from Session 29.
 
 ### 2026-09-28 — Session 29: Stack proven over HTTP; auth screens; integration test layer
 
