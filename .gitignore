@@ -1,0 +1,7 @@
+# macOS finder metadata, left over from when this plan was written on a Mac
+.DS_Store
+._*
+
+# Windows
+Thumbs.db
+desktop.ini
