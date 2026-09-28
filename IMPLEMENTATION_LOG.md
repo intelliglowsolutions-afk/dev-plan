@@ -56,8 +56,11 @@ Source documents:
 | Typecheck (`npx tsc --noEmit`) | ✅ **clean** |
 | 01/02 **contract layer** — permission catalogue, authorization, scope, audit | ✅ Built and tested |
 | 01 auth — Auth.js wiring, password hashing, lockout, sessions | ✅ Built and tested |
-| 01/02 route handlers and UI | ⬜ Next |
-| Seed (permissions + system roles per tenant) | ⬜ Next |
+| Seed — permissions, system roles per tenant, first super admin | ✅ Built, idempotent, verified |
+| `protectedRoute` wrapper + `GET /api/employees` | ✅ Built, typechecks |
+| **Version control** | ✅ `hrm-system` committed; `dev-plan` now a repo (97 files). **Push needs your credentials** |
+| Sign-in page and admin shell (UI) | ⬜ Next |
+| Remaining 01/02 route handlers | ⬜ Next |
 
 **Toolchain on this machine:** no Node, npm, or git — but **Docker works**, so the toolchain runs
 in containers (`docker run --rm -v C:\Dev\hrm-system:/app node:20-alpine …`). The repo's
@@ -201,6 +204,38 @@ gap.
 ---
 
 ## Session entries
+
+### 2026-09-28 — Session 28: Git under control, seed working, first protected endpoint
+
+**Version control — the standing risk, closed**
+- `git` is still not installed on this machine, so it runs in a container (`alpine/git`) against the bind-mounted repos. No host install needed.
+- **`dev-plan` had never been a git repository at all** — 97 files describing eleven features existed only on one disk. It is now a repo with its own first commit. That was the larger of the two risks and was invisible because `hrm-system` *was* versioned.
+- `hrm-system`: two commits added. Before committing, 49 files showed as modified; **42 of them were pure file-mode churn** from the macOS→Windows move, with zero content changes. `core.fileMode false` reduced it to the 7 real changes, which kept the diff reviewable instead of drowning the actual work.
+- The stale `dev-plan/` copy inside `hrm-system` was already deleted on disk; the deletion is now recorded, which closes **OQ-004**.
+- **Push still needs the user's credentials** and was not attempted. Commits are local, so the work is protected against accidental edits but not against losing the disk. I do not handle tokens — which is also why OQ-003 is still open.
+
+**Seed**
+- `prisma/seed.ts`, run with `tsx`. Verified idempotent: the second run created nothing.
+- Orphaned permission keys are **reported, never deleted** — a typo in the catalogue must not silently revoke access that roles depend on.
+- Existing grants are not overwritten, because HR may have edited three of the four system roles deliberately.
+- **It refuses to invent a default admin password.** A seeded well-known credential is the most common way a system like this is compromised, so missing env vars are a hard failure. `mustChangePassword` is set, because the value handed to the seed has been in a shell history.
+
+**Proved the auth core against real data**
+- The seeded admin's password verifies; a wrong password is rejected; the hash is scrypt as intended.
+- **SUPER_ADMIN has zero stored grant rows and 19 of 19 effective permissions** — the computed-not-stored design working exactly as specified, confirmed against a live database rather than only in unit tests.
+
+**The inconsistency that verification exposed**
+- `MANAGER.department.read` was `DEPARTMENT` in the database but `ALL` in the code catalogue. Cause: the test fixture seeded its own `role_permissions`, and since the seed only inserts **missing** grants (it must not undo deliberate admin edits), the fixture's wrong value won.
+- Fixed by **removing grants from the fixture entirely**. There is now one source of truth — the code catalogue — and the database tests never needed grant semantics anyway; those are tested in `permissions.test.ts`. Two seeders for the same data was the actual defect, not the mismatched value.
+
+**Built**
+- `protectedRoute`: requires a permission **in its signature**, so a handler registered without one does not compile. "Fails closed" becomes a type error rather than a review item. It also hands the handler a transaction with `app.tenant_id` already set, so RLS is active and the global client cannot be reached by accident.
+- `GET /api/employees`: the vertical slice — session → permission → tenant context → RLS → scope filter → permission-driven field selection. Scope is composed into the `WHERE` clause, so the pagination total cannot leak the real row count; sensitive columns are not *selected* without the permission rather than selected and stripped.
+
+**Status: 113 unit tests, 25 database assertions, typecheck clean, 3 commits.**
+
+**Honest gap**
+- The endpoint has **not been called over HTTP**. It typechecks and its parts are tested, but `next dev` has not run, so the Auth.js integration is unproven end to end. That needs the app container up and is the next thing to do, together with the sign-in page — which is UI work and needs the skill grounding `C:\Dev\CLAUDE.md` requires.
 
 ### 2026-09-28 — Session 27: Auth.js wiring — and a library constraint that forced a design change
 
