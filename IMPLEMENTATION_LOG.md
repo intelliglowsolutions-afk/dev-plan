@@ -51,16 +51,16 @@ Source documents:
 | Database roles (`prisma/roles.sql`) | ✅ Created — `hrm_app` (RLS enforced), `hrm_auth` (sign-in only), `hrm_user` (owner/migrations) |
 | Tenant isolation | ✅ **Verified end to end**: no context → 0 rows; per-tenant context → only that tenant; cross-tenant INSERT refused |
 | Test harness — canonical fixture, two tenants, injected clock | ✅ Built |
-| Database test suite (`npm run test:db`) | ✅ **25 assertions passing** |
-| Unit test suite — Vitest (`npm test`) | ✅ **180 tests passing** |
-| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **154 tests passing**, mutation-checked |
+| Database test suite (`npm run test:db`) | ✅ **All passing** (RLS coverage now includes the 14 attendance tables) |
+| Unit test suite — Vitest (`npm test`) | ✅ **208 tests passing** (28 are the attendance engine on synthetic punches) |
+| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **178 tests passing**, mutation-checked |
 | Typecheck (`npx tsc --noEmit`) | ✅ **clean** (run `next typegen` first when routes change) |
 | **Stack proven over HTTP** — `next dev`, Auth.js sign-in, forced change, revocation, scoping | ✅ 2026-09-28 |
 | 01/02 **contract layer** — permission catalogue, authorization, scope, audit | ✅ Built and tested |
 | 01 auth — Auth.js wiring, password hashing, lockout, sessions | ✅ Built and tested |
 | Seed — permissions, system roles per tenant, first super admin | ✅ Built, idempotent, verified |
 | `protectedRoute` wrapper + `GET /api/employees` | ✅ Built, typechecks |
-| **Version control** | ✅ `hrm-system` 14 commits, **11 unpushed**; `dev-plan` a repo with no remote. **Pushing needs your credentials** |
+| **Version control** | ✅ `hrm-system` 16 commits, **13 unpushed**; `dev-plan` a repo with no remote. **Pushing needs your credentials** |
 | Sign-in and forced change-password screens (UI, skill-grounded) | ✅ 2026-09-28 |
 | **Feature 01 API** — users, roles, permissions, audit log, invite/reset, audited sign-in | ✅ 2026-09-28 |
 | **Feature 01 screens** — shell, users, invite, user detail, roles + matrix, audit log, reset/invite, /403 | ✅ 2026-09-28 (visual check in a browser still owed — see Session 30) |
@@ -70,7 +70,9 @@ Source documents:
 | Feature 02 remainders — history correction endpoint, scheduler, org-chart pan/zoom/export, drag re-parenting | ⬜ Deferred, listed in Session 31 |
 | **Feature 03 API + screens** — settings registry, company profile, work week, holidays, `isWorkingDay`, terminal registry | ✅ 2026-09-28 (browser visual check owed) |
 | Feature 03 remainders — /iclock wiring and unknown-device panel (OQ-319), offline alerts (05), SVG logos, 12-month holiday grid, applying date formats app-wide | ⬜ Deferred, listed in Session 32 |
-| Feature 04 (Attendance) — engine first, against synthetic punches | ⬜ Next (step 6 continues) |
+| **Feature 04 engine + API + screens** — shifts, patterns, roster, attendance days, corrections with approval chains, queue, day opener, gap detector | ✅ 2026-09-29 (browser visual check owed) |
+| Feature 04 remainders — ingestion (/iclock, collector, quarantine, unmatched-PIN maintenance) on OQ-319; alerts and reminders on 05; ON_LEAVE from 06; period lock from 07 | ⬜ Deferred, listed in Session 33 |
+| Feature 05 (Notifications) | ⬜ Next (step 6 continues) |
 
 **Toolchain on this machine:** no Node, npm, or git — but **Docker works**, so the toolchain runs
 in containers (`docker run --rm -v C:\Dev\hrm-system:/app node:20-alpine …`), and git runs as
@@ -146,6 +148,12 @@ gap.
 | OQ-121 | **Emergency contacts treated as personal data** (behind `employee.read_sensitive`, with the other personal fields). They are third parties' phone numbers; the spec left their visibility unstated. A manager therefore cannot see a team member's emergency contact. | 2026-09-28 | Open — confirm intended |
 | OQ-122 | **Terminating a department head does not clear the head.** The department keeps pointing at someone who has left, so no one gets that department through OQ-201's headship rule. Clear it automatically, or prompt? | 2026-09-28 | Open |
 | OQ-209 | Document volume: now a named volume `documents-data` in `docker-compose.yml`. **The backup story is still unwritten** — a database-only backup keeps document metadata and silently loses every file (02 NFR-05). | 2026-09-28 | Volume ✅; backup open |
+| OQ-125 | **Employment status is not dated.** FR-C-19 says ON_LEAVE / SUSPENDED employees get days classified accordingly, but 02 stores only the *current* status — so the engine applies it to every day it recomputes, including past ones. A recompute after someone returns from suspension turns those past days back into absences. Needs dated status history (in 02's assignment history, or its own table). | 2026-09-29 | Open |
+| OQ-126 | **Job runner location (OQ-315).** Built as an in-process runner started from `instrumentation.ts`, per tenant, safe to run on several instances (SKIP LOCKED, idempotent jobs), off with `JOBS_ENABLED=false`. Fine for one app server; a separate worker is the upgrade when there are several. | 2026-09-29 | Open — confirm acceptable for v1 |
+| OQ-127 | **UNKNOWN applies only to a working day with no punches.** FR-C-08 lists UNKNOWN first, which read literally would turn a holiday or a day with punches into UNKNOWN during an outage. Implemented the intent (D-08: never a false ABSENT). Partial-device gaps (FR-G-06 "flag for review") are not detected; only all-terminals-down. | 2026-09-29 | Open — confirm |
+| OQ-128 | **Correction approval chains are three presets** (manager · manager then HR · HR), a tenant setting, resolved and stored at submission, with HR override. OQ-606/407 asked for "configurable"; per-type or per-length rules are 06's to add on the same module (`src/lib/approvals/chain.ts`). | 2026-09-29 | Open — confirm presets suffice |
+| OQ-129 | **Rotating patterns are frozen once assigned** (days cannot change; create a new one). Shifts use FR-S-11's future-only / recompute choice; a pattern has no equivalent "copy" that keeps history right. | 2026-09-29 | Open — confirm |
+| OQ-130 | **Overtime** = hours beyond expected *minus* the threshold (FR-C-15 literally), so 40 minutes over with a 30-minute threshold is 10 minutes of overtime — not 40. Overtime approval itself has no endpoint yet (OQ-405: "approved elsewhere"). | 2026-09-29 | Open — confirm the arithmetic; approval flow owed |
 | OQ-118 | **Device-event retention.** Does "no automatic deletion" (OQ-1002 et al.) extend to machine logs? Without a sweep or transition-only logging, one terminal writes >1M rows a year. | 2026-09-28 | Open — before feature 04 ingestion |
 | OQ-006 | The two source documents the plan is built on (`HRM_SYSTEM_PLANNING_INSTRUCTIONS.md`, `HRM_SYSTEM_DEPLOYMENT.md`) are not present anywhere under `C:\Dev`. | 2026-09-15 | Open |
 | OQ-101 | Auth library: Auth.js (NextAuth) v5 vs hand-rolled sessions. Plan assumes hand-rolled. | 2026-09-15 | Open — needs decision before build |
@@ -226,6 +234,87 @@ gap.
 ---
 
 ## Session entries
+
+### 2026-09-29 — Session 33: Feature 04 — attendance engine, shifts, corrections, screens
+
+**Order followed from the plan:** engine and shifts first, fed synthetic punches; ingestion last,
+because it waits on **OQ-319**. /iclock still ingests nothing.
+
+**Migration `20260928120000_attendance_engine`, hand-written where it matters.** `attendance` is
+**renamed** to `attendance_punches` — constraints, indexes, sequence and foreign keys renamed in
+place, `tenant_id` backfilled from the device then made NOT NULL (acceptance 14; an auto-generated
+migration would have dropped the table). New: shifts, patterns and entries, assignments (check: exactly
+one of shift/pattern, a pattern needs its anchor), overrides, attendance days, day-change records,
+corrections, correction approval steps, dirty-day queue, unmatched PINs, device gaps, job runs — all
+under forced RLS. No `attendance_days` backfill (step 6: history needs shifts first). "General shift
+09:00–17:00", labelled as an example, per tenant (migration and seed). `prisma migrate diff` against
+the live DB afterwards: empty.
+
+**Built — the engine** (`src/lib/attendance/engine.ts`, `src/lib/shifts/resolve.ts`), pure: no DB, no
+clock (NFR-09)
+- `resolveShift`: override → assignment (pattern cycle from the assignment's anchor; a fixed shift only
+  on working weekdays unless it applies every day) → work-week fallback. The one implementation.
+- Shift-anchored windows with night shifts; wall times become instants per date in the tenant's zone
+  (`zonedTime`, DST-tested on London). A punch in overlapping windows goes to the **open session**,
+  else the nearest start (S3 both ways). Out-of-window punches are reported, never paired.
+- Dedupe, first-in/last-out or multi-session pairing (odd punch reported), break deduction, grace,
+  half-day and absent floors, overtime with cap, the FR-C-08 order, a compact reason trail.
+- Corrections re-applied after computing: a corrected time re-runs the arithmetic; the uncorrected
+  values are kept as the snapshot. A result hash makes an unchanged recompute write nothing.
+- **28 unit tests** — A4–A8, S1–S6, DST, determinism, corrections — first run green.
+
+**Built — around it**
+- `computeDays`: batched loads, writes only changed rows, records status/hours changes with the
+  trigger, **removes** rows outside employment. The preview is the same code with `write: false`.
+- Queue: `markDirty` (idempotent, never future dates — OQ-416), `drainQueue` (SKIP LOCKED, whole batch
+  then per-employee savepoints on failure, backoff, surfaced after 8 tries), day opener that catches
+  up missed days, company-wide gap detector, status endpoint. **A job runner** now exists: in-process,
+  per tenant, from `instrumentation.ts` (OQ-126).
+- Triggers where the change lives (FR-R-03): holidays, work week, timezone, hire, status change,
+  termination, rehire.
+- **Corrections**: HR direct (self-approved), employee request through a **configurable approval chain
+  resolved at submission** (OQ-606/407 → OQ-128), manager step falls to HR *with the reason* when there
+  is no manager account, HR override recorded as such, withdraw, reverse (a new record), bulk outage
+  resolution (the only bulk path), payroll-lock hook for 07.
+- **Shifts**: editing a shift in use is refused with the day count until the caller chooses *future
+  only* (old rules kept under a dated name; assignments, pattern days and future overrides move to a
+  copy) or *recompute history*; delete refused naming what uses it; patterns frozen once assigned
+  (OQ-129); bulk assignment = one audit entry naming the count; overlaps carved like 02's history;
+  overrides; swaps (both or neither); roster in a fixed number of queries (tested by counting them).
+- 33 API routes, 10 permissions with the spec's grants, 6 settings.
+- **Screens** (ui-ux-pro-max, existing tokens): daily grid with the filtering summary strip and
+  warning bands *above* the table, "not prepared yet" instead of an empty list; day explanation (every
+  punch with how it was used, trail in plain language, computed vs corrected, correct / request /
+  withdraw / reverse); employee month (calendar + table, average in-time, shift runs); corrections queue
+  with the chain step by step; unmatched IDs; outages (explicit selection before "mark present"); recompute
+  with preview-first and the queue made visible; raw punches; shifts with a live "what this means";
+  pattern builder; roster (source on hover, overrides outlined, per-person list on phones). UNKNOWN is
+  dashed and outlined — different in shape from ABSENT.
+
+**Found along the way**
+- My probe's first run "failed" three checks: `punch_time` is a zone-less UTC column and a psql literal
+  with `+05` silently drops the offset. The app was right; the probe was wrong. Worth remembering for
+  anyone seeding punches by hand.
+- Turbopack in the container served 404 for new nested routes until a second restart.
+- A PowerShell read-modify-write mangled every em dash in `schema.prisma`; repaired before commit.
+- Employment status is not dated, so FR-C-19 cannot be exact for past days — **OQ-125**.
+
+**Verification** — HTTP smoke **35/35** (every screen; shift create/validation; assignment; drain;
+PRESENT 8:05 and MISSING_PUNCH computed from punches; the day explanation; the employee lands on their
+own month and sees only themselves; request → manager queue → reject needs a reason → approve → day
+recomputed LATE with the snapshot kept; preview shows no change; shift-in-use and delete refusals;
+roster; CSV export). **208 unit · 178 integration (24 new) · DB suite · tsc and lint clean.**
+
+**Not built — and why**
+- Ingestion: /iclock and the collector, quarantine, FUTURE/UNPARSEABLE flags on arrival, keeping the
+  unmatched-PIN aggregate current → **OQ-319**. The table, the list and "assign" are built and tested.
+- Notifications — unmatched-PIN and gap alerts, correction reminders, "ask employees to confirm" → 05.
+- ON_LEAVE from approved leave → 06 (OQ-410: a bulk recompute belongs in 06's release). Period lock → 07.
+- Overtime approval flow (OQ-130), bulk-approve in the queue, partial-device gaps (OQ-127), shift
+  assignment history on the employee profile (the month view shows the shift runs).
+- Browser visual check — same credential guard as before; owed.
+
+**Next** — step 6 continues with feature 05 (Notifications). Decisions: OQ-125…130 plus earlier ones.
 
 ### 2026-09-28 — Session 32: Feature 03 — settings, holidays, isWorkingDay, terminals (step 6 begins)
 
