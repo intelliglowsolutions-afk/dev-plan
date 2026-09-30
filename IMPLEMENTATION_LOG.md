@@ -52,15 +52,15 @@ Source documents:
 | Tenant isolation | ✅ **Verified end to end**: no context → 0 rows; per-tenant context → only that tenant; cross-tenant INSERT refused |
 | Test harness — canonical fixture, two tenants, injected clock | ✅ Built |
 | Database test suite (`npm run test:db`) | ✅ **All passing** (RLS coverage now includes the 14 attendance tables) |
-| Unit test suite — Vitest (`npm test`) | ✅ **230 tests passing** (28 attendance engine, 22 notifications incl. SMTP against a fake server) |
-| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **198 tests passing**, mutation-checked |
+| Unit test suite — Vitest (`npm test`) | ✅ **246 tests passing** (28 attendance engine, 22 notifications incl. SMTP against a fake server, 16 leave rules) |
+| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **215 tests passing**, mutation-checked (17 leave, including a real two-connection race) |
 | Typecheck (`npx tsc --noEmit`) | ✅ **clean** (run `next typegen` first when routes change) |
 | **Stack proven over HTTP** — `next dev`, Auth.js sign-in, forced change, revocation, scoping | ✅ 2026-09-28 |
 | 01/02 **contract layer** — permission catalogue, authorization, scope, audit | ✅ Built and tested |
 | 01 auth — Auth.js wiring, password hashing, lockout, sessions | ✅ Built and tested |
 | Seed — permissions, system roles per tenant, first super admin | ✅ Built, idempotent, verified |
 | `protectedRoute` wrapper + `GET /api/employees` | ✅ Built, typechecks |
-| **Version control** | ✅ `hrm-system` 17 commits, **14 unpushed**; `dev-plan` a repo with no remote. **Pushing needs your credentials** |
+| **Version control** | ✅ `hrm-system` **16 commits unpushed** (latest `fa1d0bb`); `dev-plan` a repo with no remote. **Pushing needs your credentials** |
 | Sign-in and forced change-password screens (UI, skill-grounded) | ✅ 2026-09-28 |
 | **Feature 01 API** — users, roles, permissions, audit log, invite/reset, audited sign-in | ✅ 2026-09-28 |
 | **Feature 01 screens** — shell, users, invite, user detail, roles + matrix, audit log, reset/invite, /403 | ✅ 2026-09-28 (visual check in a browser still owed — see Session 30) |
@@ -74,7 +74,9 @@ Source documents:
 | Feature 04 remainders — ingestion (/iclock, collector, quarantine, unmatched-PIN maintenance) on OQ-319; alerts and reminders on 05; ON_LEAVE from 06; period lock from 07 | ⬜ Deferred, listed in Session 33 |
 | **Feature 05 Notifications** — catalogue, `notify()`, worker, local outbox + SMTP, digests, the 01–04 backlog, bell, list, preferences, template editor, delivery log | ✅ 2026-09-30 (browser visual check owed) |
 | Feature 05 remainders — delivery webhooks (OQ-503), inline actions in the list, snooze (OQ-511), per-type test-send policy (OQ-512), password-changed notice on the reset-link path | ⬜ Deferred, listed in Session 34 |
-| Feature 06 (Leave) | ⬜ Next — seeding blocked on OQ-601b (entitlements); the build is not |
+| **Feature 06 Leave** — types, policies + assignments, append-only ledger + snapshots, requests with live cost, approval chains with delegation and escalation, grants/carry-over/expiry/settlement engines, calendar, attendance reads approved leave, screens | ✅ 2026-09-30 (browser visual check owed; real entitlements wait on OQ-601b) |
+| Feature 06 remainders — attachments UI, per-type/length routing, minimum staffing (warn only), comp-off, hours-based leave, fiscal-year HR views (OQ-134) | ⬜ Deferred, listed in Session 35 |
+| Feature 07 (Payroll) | ⬜ Next — blocked on OQ-701 for components; the mechanism can start |
 
 **Toolchain on this machine:** no Node, npm, or git — but **Docker works**, so the toolchain runs
 in containers (`docker run --rm -v C:\Dev\hrm-system:/app node:20-alpine …`), and git runs as
@@ -159,6 +161,7 @@ gap.
 | OQ-131 | **Email is sent by a small SMTP client written on Node's own `net`/`tls`** (STARTTLS, TLS, AUTH PLAIN, one recipient) because no mail library was installed and packages need your approval. Nodemailer is the standard choice and a drop-in behind the transport interface — approve it, or keep the in-house client. | 2026-09-30 | Open |
 | OQ-132 | **One-time links in notification events.** Invite and reset links must ride in the event until the worker sends them (the token is only stored hashed). They are removed from the event once its email is final, and hidden in the local-outbox copy — but they rest in the database for up to one worker tick (~30 s), or longer if delivery is retrying. Accept, or encrypt the context at rest. | 2026-09-30 | Open |
 | OQ-133 | **No automatic deletion** (OQ-1002) means `notification_deliveries` and `local_emails` grow without bound. Fine for years at this size; worth a decision before it is not. | 2026-09-30 | Open |
+| OQ-134 | **Fiscal leave years in two HR views.** The balances table and the carry-over year picker assume calendar years; per-person balances and every engine honour a policy's fiscal basis. Harmless while all policies are calendar-year (the default, OQ-602). | 2026-09-30 | Open — fix before any fiscal-year policy |
 | OQ-118 | **Device-event retention.** Does "no automatic deletion" (OQ-1002 et al.) extend to machine logs? Without a sweep or transition-only logging, one terminal writes >1M rows a year. | 2026-09-28 | Open — before feature 04 ingestion |
 | OQ-006 | The two source documents the plan is built on (`HRM_SYSTEM_PLANNING_INSTRUCTIONS.md`, `HRM_SYSTEM_DEPLOYMENT.md`) are not present anywhere under `C:\Dev`. | 2026-09-15 | Open |
 | OQ-101 | Auth library: Auth.js (NextAuth) v5 vs hand-rolled sessions. Plan assumes hand-rolled. | 2026-09-15 | Open — needs decision before build |
@@ -239,6 +242,64 @@ gap.
 ---
 
 ## Session entries
+
+### 2026-09-30 — Session 35: Feature 06 — leave management
+
+**Built — the engine** (`src/lib/leave`, commit `a42921e`)
+- **Ledger, append-only at the database** (OQ-613): `hrm_app` holds INSERT and SELECT on
+  `leave_ledger_entries`, nothing else — a correction is a new entry that points at the old one.
+  Snapshots (the four numbers: entitled / used / pending / available) are rebuilt in the same
+  transaction as every append, with a checker that can repair them (`POST /api/leave/balances/rebuild`).
+- **Per-employee advisory lock** around every balance-changing path, so two requests racing for the
+  last two days cannot both pass — proven by an integration test on two real connections.
+- **Requests**: cost priced from shifts, work week and holidays, split by leave year across 31
+  December; a submitted request *reserves* its days (D-05), approval releases the reservation and
+  writes TAKEN, cancellation refunds days from today on (past days only by HR — OQ-615).
+  `leave_request_days` carries `isApproved` with a partial unique index: one approved leave per person
+  per day, enforced by Postgres, not by hope. Validation: employment periods, probation, notice,
+  longest request, overlap (named), balance with the policy's negative limit, backdating with reason.
+- **Approval chains** reuse 04's presets (policy override, else the tenant setting), resolved and
+  stored at submission; delegation applied at submission; overdue steps **escalate to the approver's
+  manager, never auto-approve**; COST_CHANGED makes an approver confirm a figure that moved.
+- **Engines**, each idempotent by a period key unique on the ledger: annual grants and monthly
+  accrual (pro-rated on join/exit), year-end carry-over (cap, expiry date), expiry of unused carried
+  days, the weekly expiring-balance warning, and a leaver's settlement (pro-rate back, then encash or
+  forfeit). Daily jobs on the existing runner; `leave.release_recompute` runs once to reclassify
+  attendance (OQ-410).
+- **Attendance** (04) now reads approved leave days, and holiday-impact counts them.
+- **Seed**: Annual (carry 5, expires 03-31, 7 days' notice), Casual, Medical (confidential, note after
+  2 days) with company-wide *example* policies at **0 days**, flagged "set the entitlement" — OQ-601b
+  is still the user's.
+
+**Built — API and screens** (commit `fa1d0bb`): 27 routes under `/api/leave`. Screens in the existing
+tokens and components (minimalist admin direction; `ui-ux-pro-max` was not re-invoked this session —
+its rules from earlier features were applied: status in words, not colour; 44px targets; labels and
+errors on fields; live regions):
+`/leave` (balance cards with the ledger behind each, requests with withdraw/cancel stating the refund
+first), `/leave/request` (live cost panel, half days, clash and note warnings, HR "record for"),
+`/leave/approvals` (balance, recent leave, clash and escalation clock on the row; reject needs a
+reason; delegation), `/leave/calendar` (month grid, pending dashed, confidential already redacted, same
+data as a list), `/leave/balances` + per person (ledger with running total, adjust dialog),
+`/admin/leave` + policy pages (policy as a sentence, unset entitlements flagged, assignments,
+entitlement-change confirm, "which policy applies"), `/admin/leave/engine` (grants, carry-over and
+settlement, each preview-then-apply; run history). Leave nav group; the profile's Leave tab links in.
+
+**Verification** — HTTP probe **34/34** (every screen; grants run twice write once; request → reserve
+→ overlap refused → manager approves → calendar → cancel refunds; employee refused approval and
+settings; ledger privileges). **246 unit · 215 integration · tsc and lint clean.** The probe set
+**Annual 20 / Casual 10 days in the dev database only** — probe values, not an answer to OQ-601b.
+
+**Found along the way**
+- `pg_advisory_xact_lock` has no `(bigint, bigint)` form; the key needs `::int` casts.
+- **OQ-134** (new): the HR balances table and the carry-over year picker assume calendar leave years.
+  Per-employee balances and all engines honour a fiscal-year policy; those two views do not yet.
+
+**Not built — and why**: attachment upload on the request form (documents exist in 02; wiring owed);
+per-type or per-length routing and minimum-staffing blocks (clash is a warning only — OQ-611);
+comp-off and hours-based leave (OQ-610, OQ-603); draft requests (OQ-618). Browser visual check owed.
+
+**Next** — feature 07 (Payroll). Components wait on **OQ-701**; the run mechanism, periods and the
+attendance/leave inputs can be built first.
 
 ### 2026-09-30 — Session 34: Feature 05 — notifications
 
