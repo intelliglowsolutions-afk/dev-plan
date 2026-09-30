@@ -52,15 +52,15 @@ Source documents:
 | Tenant isolation | ✅ **Verified end to end**: no context → 0 rows; per-tenant context → only that tenant; cross-tenant INSERT refused |
 | Test harness — canonical fixture, two tenants, injected clock | ✅ Built |
 | Database test suite (`npm run test:db`) | ✅ **All passing** (RLS coverage now includes the 14 attendance tables) |
-| Unit test suite — Vitest (`npm test`) | ✅ **208 tests passing** (28 are the attendance engine on synthetic punches) |
-| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **178 tests passing**, mutation-checked |
+| Unit test suite — Vitest (`npm test`) | ✅ **230 tests passing** (28 attendance engine, 22 notifications incl. SMTP against a fake server) |
+| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **198 tests passing**, mutation-checked |
 | Typecheck (`npx tsc --noEmit`) | ✅ **clean** (run `next typegen` first when routes change) |
 | **Stack proven over HTTP** — `next dev`, Auth.js sign-in, forced change, revocation, scoping | ✅ 2026-09-28 |
 | 01/02 **contract layer** — permission catalogue, authorization, scope, audit | ✅ Built and tested |
 | 01 auth — Auth.js wiring, password hashing, lockout, sessions | ✅ Built and tested |
 | Seed — permissions, system roles per tenant, first super admin | ✅ Built, idempotent, verified |
 | `protectedRoute` wrapper + `GET /api/employees` | ✅ Built, typechecks |
-| **Version control** | ✅ `hrm-system` 16 commits, **13 unpushed**; `dev-plan` a repo with no remote. **Pushing needs your credentials** |
+| **Version control** | ✅ `hrm-system` 17 commits, **14 unpushed**; `dev-plan` a repo with no remote. **Pushing needs your credentials** |
 | Sign-in and forced change-password screens (UI, skill-grounded) | ✅ 2026-09-28 |
 | **Feature 01 API** — users, roles, permissions, audit log, invite/reset, audited sign-in | ✅ 2026-09-28 |
 | **Feature 01 screens** — shell, users, invite, user detail, roles + matrix, audit log, reset/invite, /403 | ✅ 2026-09-28 (visual check in a browser still owed — see Session 30) |
@@ -72,7 +72,9 @@ Source documents:
 | Feature 03 remainders — /iclock wiring and unknown-device panel (OQ-319), offline alerts (05), SVG logos, 12-month holiday grid, applying date formats app-wide | ⬜ Deferred, listed in Session 32 |
 | **Feature 04 engine + API + screens** — shifts, patterns, roster, attendance days, corrections with approval chains, queue, day opener, gap detector | ✅ 2026-09-29 (browser visual check owed) |
 | Feature 04 remainders — ingestion (/iclock, collector, quarantine, unmatched-PIN maintenance) on OQ-319; alerts and reminders on 05; ON_LEAVE from 06; period lock from 07 | ⬜ Deferred, listed in Session 33 |
-| Feature 05 (Notifications) | ⬜ Next (step 6 continues) |
+| **Feature 05 Notifications** — catalogue, `notify()`, worker, local outbox + SMTP, digests, the 01–04 backlog, bell, list, preferences, template editor, delivery log | ✅ 2026-09-30 (browser visual check owed) |
+| Feature 05 remainders — delivery webhooks (OQ-503), inline actions in the list, snooze (OQ-511), per-type test-send policy (OQ-512), password-changed notice on the reset-link path | ⬜ Deferred, listed in Session 34 |
+| Feature 06 (Leave) | ⬜ Next — seeding blocked on OQ-601b (entitlements); the build is not |
 
 **Toolchain on this machine:** no Node, npm, or git — but **Docker works**, so the toolchain runs
 in containers (`docker run --rm -v C:\Dev\hrm-system:/app node:20-alpine …`), and git runs as
@@ -154,6 +156,9 @@ gap.
 | OQ-128 | **Correction approval chains are three presets** (manager · manager then HR · HR), a tenant setting, resolved and stored at submission, with HR override. OQ-606/407 asked for "configurable"; per-type or per-length rules are 06's to add on the same module (`src/lib/approvals/chain.ts`). | 2026-09-29 | Open — confirm presets suffice |
 | OQ-129 | **Rotating patterns are frozen once assigned** (days cannot change; create a new one). Shifts use FR-S-11's future-only / recompute choice; a pattern has no equivalent "copy" that keeps history right. | 2026-09-29 | Open — confirm |
 | OQ-130 | **Overtime** = hours beyond expected *minus* the threshold (FR-C-15 literally), so 40 minutes over with a 30-minute threshold is 10 minutes of overtime — not 40. Overtime approval itself has no endpoint yet (OQ-405: "approved elsewhere"). | 2026-09-29 | Open — confirm the arithmetic; approval flow owed |
+| OQ-131 | **Email is sent by a small SMTP client written on Node's own `net`/`tls`** (STARTTLS, TLS, AUTH PLAIN, one recipient) because no mail library was installed and packages need your approval. Nodemailer is the standard choice and a drop-in behind the transport interface — approve it, or keep the in-house client. | 2026-09-30 | Open |
+| OQ-132 | **One-time links in notification events.** Invite and reset links must ride in the event until the worker sends them (the token is only stored hashed). They are removed from the event once its email is final, and hidden in the local-outbox copy — but they rest in the database for up to one worker tick (~30 s), or longer if delivery is retrying. Accept, or encrypt the context at rest. | 2026-09-30 | Open |
+| OQ-133 | **No automatic deletion** (OQ-1002) means `notification_deliveries` and `local_emails` grow without bound. Fine for years at this size; worth a decision before it is not. | 2026-09-30 | Open |
 | OQ-118 | **Device-event retention.** Does "no automatic deletion" (OQ-1002 et al.) extend to machine logs? Without a sweep or transition-only logging, one terminal writes >1M rows a year. | 2026-09-28 | Open — before feature 04 ingestion |
 | OQ-006 | The two source documents the plan is built on (`HRM_SYSTEM_PLANNING_INSTRUCTIONS.md`, `HRM_SYSTEM_DEPLOYMENT.md`) are not present anywhere under `C:\Dev`. | 2026-09-15 | Open |
 | OQ-101 | Auth library: Auth.js (NextAuth) v5 vs hand-rolled sessions. Plan assumes hand-rolled. | 2026-09-15 | Open — needs decision before build |
@@ -235,6 +240,61 @@ gap.
 
 ## Session entries
 
+### 2026-09-30 — Session 34: Feature 05 — notifications
+
+**Built — the contract** (`src/lib/notifications`)
+- **Catalogue** of 16 types declared in code (D-01): recipient rules as data, the permission a
+  recipient must hold over the subject for the link to be worth sending (FR-R-03, re-checked at send
+  time), mandatory types with the reason shown, digest eligibility and defaults, shipped wording, and a
+  sample context that both types `notify()` (FR-T-02) and feeds the preview. A unit test renders every
+  shipped template with its own sample and checks no variable is undeclared or sensitive — FR-D-11 at
+  build time rather than in production.
+- **`notify()`**: one insert in the caller's transaction, idempotent by key (acceptance 1, 2).
+  **`supersede()`** marks items someone else handled; an event superseded before the worker reached it
+  is never resolved and says so (`superseded_at`, a second small migration).
+- **Worker** on the job runner every 30 s: resolve (dedupe — acceptance 5; inactive users dropped except
+  account types; an employee with no account is emailed at work or recorded *undeliverable* —
+  acceptance 14; preferences — acceptance 6; quiet hours), claim with SKIP LOCKED, **send outside any
+  transaction**, record; backoff 1/5/30/120/720 min then FAILED (acceptance 8); a hard bounce suppresses
+  the address and later sends are SKIPPED with the reason (acceptance 9); a broken override falls back
+  to the shipped wording and raises an alert (acceptance 11); daily digest at the configured hour, none
+  when empty (acceptance 12); failure-rate alert **in the app only** (FR-N-05).
+- **Delivery modes**: `LOCAL_OUTBOX` by default — nothing leaves the machine, every email viewable in the
+  log, one-time links hidden in the stored copy — or SMTP through an in-house client (**OQ-131**).
+  Switching to SMTP is change-controlled.
+
+**The backlog now sends** — invite and reset (the links go only by email once SMTP is on; acceptance 13 —
+there was no 01 outbox table to drop), password changed, suspended; correction pending (to the current
+chain step) and decided, with the pending item superseded for everyone told; missing punch, marked
+absent and overtime for recent finished days only (a history recompute sends nothing); terminal offline
+(one per transition — acceptance 3), outage unresolved, unmatched ID, holidays running out, document
+expiring, attendance stalled — every key names the *condition*, not the check.
+
+**Screens** (ui-ux-pro-max, the guideline refs in 05 ui-ux.md): bell with a stable badge slot and one
+atomic live region; click-open panel with Escape/arrows; full list with three distinct empty states and
+superseded items dimmed with who handled them; preferences generated from the catalogue, saved per
+toggle, mandatory types stated not greyed (acceptance 7); template editor with insertable variable
+chips, validation on blur with the available list (acceptance 10), sandboxed live preview, reset,
+test-send; delivery log with the health strip first, local-email viewer, retry, suppressions and
+release; company defaults; a failing-email banner on every screen for admins.
+
+**Found along the way**
+- The one-time link problem (**OQ-132**): the reset token is stored hashed, so the worker can only send
+  the link if it rides in the event — now scrubbed once the email is final.
+- Moving the delivery pass to a transaction *runner* made it testable inside rolled-back transactions
+  with a fake SMTP server on localhost — acceptance 8 and 9 are real network behaviour, not mocks.
+
+**Verification** — HTTP **31/31** with the app's own worker delivering (invite reaches the outbox with
+the link hidden; a correction lifts the manager's badge, approval supersedes it and tells the employee;
+preferences; templates; health; permission refusals). **230 unit · 198 integration · DB suite · tsc and
+lint clean.**
+
+**Not built — and why**: delivery webhooks (OQ-503 — generic SMTP reports only what it reports);
+approve-in-place in the list; snooze (OQ-511); a per-type test-send policy (OQ-512); the
+password-changed notice on the reset-link path (the change-password path has it); leave types (06).
+Browser visual check still owed.
+
+**Next** — feature 06 (Leave). Seeding waits on **OQ-601b**; the build does not.
 ### 2026-09-29 — Session 33: Feature 04 — attendance engine, shifts, corrections, screens
 
 **Order followed from the plan:** engine and shifts first, fed synthetic punches; ingestion last,
