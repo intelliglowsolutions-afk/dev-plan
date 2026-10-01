@@ -52,15 +52,15 @@ Source documents:
 | Tenant isolation | ✅ **Verified end to end**: no context → 0 rows; per-tenant context → only that tenant; cross-tenant INSERT refused |
 | Test harness — canonical fixture, two tenants, injected clock | ✅ Built |
 | Database test suite (`npm run test:db`) | ✅ **All passing** (RLS coverage now includes the 14 attendance tables) |
-| Unit test suite — Vitest (`npm test`) | ✅ **271 tests passing** (28 attendance engine, 22 notifications incl. SMTP against a fake server, 16 leave rules, 25 payroll engine) |
-| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **237 tests passing**, mutation-checked (17 leave, 22 payroll) |
+| Unit test suite — Vitest (`npm test`) | ✅ **285 tests passing** (28 attendance engine, 22 notifications incl. SMTP against a fake server, 16 leave rules, 25 payroll engine, 14 portal) |
+| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **250 tests passing**, mutation-checked (17 leave, 22 payroll, 13 portal) |
 | Typecheck (`npx tsc --noEmit`) | ✅ **clean** (run `next typegen` first when routes change) |
 | **Stack proven over HTTP** — `next dev`, Auth.js sign-in, forced change, revocation, scoping | ✅ 2026-09-28 |
 | 01/02 **contract layer** — permission catalogue, authorization, scope, audit | ✅ Built and tested |
 | 01 auth — Auth.js wiring, password hashing, lockout, sessions | ✅ Built and tested |
 | Seed — permissions, system roles per tenant, first super admin | ✅ Built, idempotent, verified |
 | `protectedRoute` wrapper + `GET /api/employees` | ✅ Built, typechecks |
-| **Version control** | ✅ `hrm-system` **17 commits unpushed** (latest `07df0bb`); `dev-plan` a repo with no remote. **Pushing needs your credentials** |
+| **Version control** | ✅ `hrm-system` **18 commits unpushed** (latest `032b449`); `dev-plan` a repo with no remote. **Pushing needs your credentials** |
 | Sign-in and forced change-password screens (UI, skill-grounded) | ✅ 2026-09-28 |
 | **Feature 01 API** — users, roles, permissions, audit log, invite/reset, audited sign-in | ✅ 2026-09-28 |
 | **Feature 01 screens** — shell, users, invite, user detail, roles + matrix, audit log, reset/invite, /403 | ✅ 2026-09-28 (visual check in a browser still owed — see Session 30) |
@@ -78,7 +78,9 @@ Source documents:
 | Feature 06 remainders — attachments UI, per-type/length routing, minimum staffing (warn only), comp-off, hours-based leave, fiscal-year HR views (OQ-134) | ⬜ Deferred, listed in Session 35 |
 | **Feature 07 Payroll** — decimal + formula engine, components, bracket tables, structures, dated compensation with proposed arrears, bank details, pay calendar, run lifecycle with exceptions and variance, the period lock, payslips with trails and access log, adjustments, off-cycle runs, bank and accounting exports, screens | ✅ 2026-10-01 (browser visual check owed; **real components wait on OQ-701** — only labelled examples are seeded) |
 | Feature 07 remainders — PDF and emailed payslips (OQ-136), structures by group (OQ-137), mid-period pay split (OQ-138), cut-off settlement (OQ-139), reminder jobs, drag re-ordering of components, the bank's own file format (OQ-708) | ⬜ Deferred, listed in Session 36 |
-| Feature 08 (Self-service portal) | ⬜ Next — OQ-802 (phones or a kiosk) and OQ-805 (second language) shape it |
+| **Feature 08 Self-service portal** — employee shell (bottom nav / sidebar), home, my time, leave, pay, profile with change requests, documents, directory; routing by permission; HR's change-request queue and field settings | ✅ 2026-10-01 (**the 375px visual review, acceptance 11, is owed** — it needs a browser; built on the defaults for OQ-802 and OQ-805) |
+| Feature 08 remainders — photos (OQ-142), document upload (OQ-807), PWA (OQ-812), payslip PDF (OQ-136), the no-account headcount for HR (D-08), a second language (OQ-805), kiosk mode (OQ-802) | ⬜ Deferred, listed in Session 37 |
+| Feature 09 (Performance) | ⬜ Next in the order (03…09, 11, 10) — OQ-901 (does the company run reviews, and how) decides its size |
 
 **Toolchain on this machine:** no Node, npm, or git — but **Docker works**, so the toolchain runs
 in containers (`docker run --rm -v C:\Dev\hrm-system:/app node:20-alpine …`), and git runs as
@@ -170,6 +172,10 @@ gap.
 | OQ-138 | **A pay change in the middle of a period** uses the salary in force on the last employed day for the whole period, and says so on the payslip. A split by days is owed; today the difference can be paid as an adjustment. | 2026-10-01 | Open |
 | OQ-139 | **Days after the cut-off are assumed, noted on the payslip, and NOT settled automatically.** FR-A-04 wants a system-generated settlement in the next period comparing assumed with actual. Not built: a run calculated after its period ends has no assumed days at all, which is the simple way to avoid the question. | 2026-10-01 | Open — needed only if payroll runs before month end |
 | OQ-140 | **What the calculator assumes, to confirm with OQ-705:** an ABSENT day and unpaid leave reduce paid days; a HALF_DAY counts as half a day absent; lateness deducts nothing; a past working day with no attendance record counts as worked (noted on the payslip); only APPROVED overtime is available to formulas. A MARGINAL bracket table charges each slice at its row's rate plus the landing row's fixed amount. | 2026-10-01 | Open — confirm |
+| OQ-141 | **Feature 08 was built on two unanswered defaults.** OQ-802: people use their own phones (not a shared kiosk — which would need short sessions and pay hidden behind a PIN). OQ-805: English only; the portal's wording is gathered in `src/lib/portal/words.ts` and `fields.ts` so a second language has one place to go. | 2026-10-01 | Open — confirm both |
+| OQ-142 | **No photos in the portal.** 02's photo endpoint is scoped by `employee.read`, which an employee holds for themselves only, so colleagues' photos would be refused. The directory shows names without pictures and there is no "change my photo". Needs a decision on whether a photo is directory data. | 2026-10-01 | Open |
+| OQ-143 | **"Who else is off" is not in the portal.** 08 proposed a department list of colleagues' leave; OQ-803 was answered in 06 as "employees see their own leave only", and the EMPLOYEE role holds `leave.read` at SELF. The portal follows the answer, not the proposal. | 2026-10-01 | Open — reopen OQ-803 if a team view is wanted |
+| OQ-144 | **The portal addresses an attendance day by date** (`/api/me/attendance/2026-09-12`), not by 04's day id as 08 api-design.md wrote. A date is what the person and a notification link know, and it exposes no internal id. Marital status, named in OQ-801, is not a field on the employee record, so it is not in the catalogue. | 2026-10-01 | Open — note |
 | OQ-118 | **Device-event retention.** Does "no automatic deletion" (OQ-1002 et al.) extend to machine logs? Without a sweep or transition-only logging, one terminal writes >1M rows a year. | 2026-09-28 | Open — before feature 04 ingestion |
 | OQ-006 | The two source documents the plan is built on (`HRM_SYSTEM_PLANNING_INSTRUCTIONS.md`, `HRM_SYSTEM_DEPLOYMENT.md`) are not present anywhere under `C:\Dev`. | 2026-09-15 | Open |
 | OQ-101 | Auth library: Auth.js (NextAuth) v5 vs hand-rolled sessions. Plan assumes hand-rolled. | 2026-09-15 | Open — needs decision before build |
@@ -250,6 +256,76 @@ gap.
 ---
 
 ## Session entries
+
+### 2026-10-01 — Session 37: Feature 08 — employee self-service portal
+
+**Held to D-01: almost no new domain logic.** The portal reads and calls 02–07 at `SELF` scope; no
+figure is computed in this feature's code (acceptance 13). The one place the plan's own screen was
+doing arithmetic — days refundable on cancelling leave — moved into 06 (`refundSplit`) so the admin
+page and the portal cannot disagree.
+
+**Built — the one new mechanism** (migration `20261003000000_self_service`, two tables, RLS)
+- A **code-declared field catalogue** (`src/lib/portal/fields.ts`): for each detail on a person's own
+  record, its plain label, how a value is checked, the default policy (edit yourself / ask HR / see
+  only / hidden) and which policies the company may choose. **Bank details and pay are not in the
+  catalogue at all** — the enforcement of FR-P-10 is their absence, which no setting can change. The
+  employee number and work email can only ever be shown or hidden.
+- **Self-edits and approved requests both write through 02's `updateEmployee`** (FR-P-04), so 02's
+  validation and audit apply; an approval that 02 refuses fails rather than marking "approved" over
+  an unchanged record. One pending request per field, in the database. A request whose field stopped
+  being requestable is not applied. Declining needs a reason, which the employee sees on the field
+  and on their home screen.
+- Notifications name the field and never its value; the audit records a personal detail as changed,
+  not what it changed to — both tested.
+
+**Built — the façade and the words**
+- `/api/me/*` — no employee id is ever sent, so a bug cannot fumble one. `/api/me/dashboard`
+  assembles the home screen in one request: no pay figure, no internal status, and a section the
+  caller lacks permission for is absent rather than empty. `/api/directory` is 02's
+  work-details-only projection (OQ-811), selecting by name only what a colleague may know.
+- **The plain-language layer** (`words.ts`, pure, unit-tested): 04's statuses and reason trail and
+  06's ledger as sentences. `UNKNOWN` reads *"The attendance terminal wasn't recording that day. This
+  isn't counted against you — HR will sort it out."* (acceptance 6). A state with no words is shown
+  as nothing, never as its internal name; today's card is a sentence or silence (D-06).
+
+**Built — the shell and screens** (`ui-ux-pro-max` loaded this session; mobile guidelines queried:
+fixed elements and safe areas, touch targets, `inputmode`)
+- Bottom navigation on a phone, the sidebar from 768px; 16px text and 44px targets; `dvh`;
+  safe-area padding; one fixed bar at a time — the nav steps aside on the leave form so the cost bar
+  can stay in view. The context is always named, and someone with both shells gets a labelled switch.
+- Home · My time (a month as a list, a day in sentences, "report a problem" as three plain choices
+  that create 04's correction request) · Leave (the answer first, the ledger behind "How is this
+  worked out?", 06's request flow in one column) · Pay (07's payslip, now one shared component) ·
+  Profile (rendered by policy; emergency contacts self-managed; one line on where to go for bank
+  details) · Documents · Directory (search-first, org position as an indented list) · More.
+- **Routing by permission** (FR-S-02): "portal-only" means every permission is about your own record.
+  Such a person lands on `/portal`, is redirected from the admin versions of their own screens, and
+  gets the portal shell even around pages both shells share — so no admin navigation is ever visible
+  (acceptance 1). A manager stays on the admin side with a "My portal" link.
+- HR: the change-request queue (`/admin/change-requests`) and which fields need approval
+  (`/admin/self-service`).
+
+**Verification** — 14 unit and 13 integration tests. **285 unit · 250 integration · database suite ·
+tsc and lint clean.** HTTP probe **56/57** on a clean run: landing and redirects per role, every
+screen, self-edit vs request, the catalogue refusing bank and pay keys, a change request end to end,
+directory keys, the manager refused HR's decision. The one miss was the probe comparing two counts as
+text ("11" < "3"); the audit entries and the absence of leaked values were confirmed by query.
+Docker Desktop hung mid-probe and was restarted; the first, interrupted run had passed every check up
+to that point.
+
+**Not verified — and it matters here:** acceptance 11, the 375px review. The screens were written
+mobile-first, but nobody has looked at them on a phone-width screen. For this feature the interface
+*is* the deliverable, so this is the most important thing still owed.
+
+**Decisions taken, to confirm** — OQ-141…OQ-144 above.
+
+**Not built — and why**: photos (OQ-142); "who else is off" (OQ-143); document upload (OQ-807 — no
+review queue to put them in); the payslip PDF (OQ-136); a PWA (OQ-812); caching the dashboard
+(OQ-810 — not needed at this size); the count of employees with no account, for HR (D-08); links from
+a pay comparison line to the leave that caused it; a second language and kiosk mode (OQ-141).
+
+**Next** — feature 09 (Performance), by the build order 03…09, 11, 10. **OQ-901** — whether the
+company runs reviews at all, and how — decides whether it is goals plus feedback or a full cycle.
 
 ### 2026-10-01 — Session 36: Feature 07 — payroll
 
