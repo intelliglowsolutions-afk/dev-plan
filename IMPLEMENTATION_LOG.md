@@ -52,15 +52,15 @@ Source documents:
 | Tenant isolation | ✅ **Verified end to end**: no context → 0 rows; per-tenant context → only that tenant; cross-tenant INSERT refused |
 | Test harness — canonical fixture, two tenants, injected clock | ✅ Built |
 | Database test suite (`npm run test:db`) | ✅ **All passing** (RLS coverage now includes the 14 attendance tables) |
-| Unit test suite — Vitest (`npm test`) | ✅ **246 tests passing** (28 attendance engine, 22 notifications incl. SMTP against a fake server, 16 leave rules) |
-| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **215 tests passing**, mutation-checked (17 leave, including a real two-connection race) |
+| Unit test suite — Vitest (`npm test`) | ✅ **271 tests passing** (28 attendance engine, 22 notifications incl. SMTP against a fake server, 16 leave rules, 25 payroll engine) |
+| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **237 tests passing**, mutation-checked (17 leave, 22 payroll) |
 | Typecheck (`npx tsc --noEmit`) | ✅ **clean** (run `next typegen` first when routes change) |
 | **Stack proven over HTTP** — `next dev`, Auth.js sign-in, forced change, revocation, scoping | ✅ 2026-09-28 |
 | 01/02 **contract layer** — permission catalogue, authorization, scope, audit | ✅ Built and tested |
 | 01 auth — Auth.js wiring, password hashing, lockout, sessions | ✅ Built and tested |
 | Seed — permissions, system roles per tenant, first super admin | ✅ Built, idempotent, verified |
 | `protectedRoute` wrapper + `GET /api/employees` | ✅ Built, typechecks |
-| **Version control** | ✅ `hrm-system` **16 commits unpushed** (latest `fa1d0bb`); `dev-plan` a repo with no remote. **Pushing needs your credentials** |
+| **Version control** | ✅ `hrm-system` **17 commits unpushed** (latest `07df0bb`); `dev-plan` a repo with no remote. **Pushing needs your credentials** |
 | Sign-in and forced change-password screens (UI, skill-grounded) | ✅ 2026-09-28 |
 | **Feature 01 API** — users, roles, permissions, audit log, invite/reset, audited sign-in | ✅ 2026-09-28 |
 | **Feature 01 screens** — shell, users, invite, user detail, roles + matrix, audit log, reset/invite, /403 | ✅ 2026-09-28 (visual check in a browser still owed — see Session 30) |
@@ -76,7 +76,9 @@ Source documents:
 | Feature 05 remainders — delivery webhooks (OQ-503), inline actions in the list, snooze (OQ-511), per-type test-send policy (OQ-512), password-changed notice on the reset-link path | ⬜ Deferred, listed in Session 34 |
 | **Feature 06 Leave** — types, policies + assignments, append-only ledger + snapshots, requests with live cost, approval chains with delegation and escalation, grants/carry-over/expiry/settlement engines, calendar, attendance reads approved leave, screens | ✅ 2026-09-30 (browser visual check owed; real entitlements wait on OQ-601b) |
 | Feature 06 remainders — attachments UI, per-type/length routing, minimum staffing (warn only), comp-off, hours-based leave, fiscal-year HR views (OQ-134) | ⬜ Deferred, listed in Session 35 |
-| Feature 07 (Payroll) | ⬜ Next — blocked on OQ-701 for components; the mechanism can start |
+| **Feature 07 Payroll** — decimal + formula engine, components, bracket tables, structures, dated compensation with proposed arrears, bank details, pay calendar, run lifecycle with exceptions and variance, the period lock, payslips with trails and access log, adjustments, off-cycle runs, bank and accounting exports, screens | ✅ 2026-10-01 (browser visual check owed; **real components wait on OQ-701** — only labelled examples are seeded) |
+| Feature 07 remainders — PDF and emailed payslips (OQ-136), structures by group (OQ-137), mid-period pay split (OQ-138), cut-off settlement (OQ-139), reminder jobs, drag re-ordering of components, the bank's own file format (OQ-708) | ⬜ Deferred, listed in Session 36 |
+| Feature 08 (Self-service portal) | ⬜ Next — OQ-802 (phones or a kiosk) and OQ-805 (second language) shape it |
 
 **Toolchain on this machine:** no Node, npm, or git — but **Docker works**, so the toolchain runs
 in containers (`docker run --rm -v C:\Dev\hrm-system:/app node:20-alpine …`), and git runs as
@@ -135,7 +137,7 @@ gap.
 | OQ-318 | With no comm key available on the device (OQ-307), how is the push endpoint protected? | 2026-09-18 | ✅ **Resolved 2026-09-18** — `DEVICE-INGESTION-SECURITY.md`: a per-site collector holds the credential (03 D-08b), with a network tunnel as an equal-strength alternative and IP pinning + quarantine in every deployment |
 | OQ-319 | **New, and blocks ingestion:** is this one hosted installation serving many tenants, or one installation per company? It decides whether the collector is necessary or the LAN is already the trust boundary. | 2026-09-18 | Open — answer before building ingestion |
 | OQ-320…323 | Collector details: API key vs mTLS · does the device's Server Address accept a path · who installs and updates the collector · buffer and alert thresholds. | 2026-09-18 | Open |
-| OQ-701 | **Still needed.** The actual pay components and how each is calculated. No default is possible. | 2026-09-15 | Open — blocks feature 07 |
+| OQ-701 | **Still needed.** The actual pay components and how each is calculated. No default is possible. | 2026-09-15 | Open — the mechanism is built (2026-10-01) and runs on five labelled EXAMPLE components; real payroll cannot start until these are replaced |
 | OQ-601b | **Still needed.** Entitlement days for Annual / Casual / Medical, and whether they vary by grade or employment type. Types confirmed 2026-09-18. | 2026-09-18 | Open — blocks feature 06 seeding |
 | OQ-000 | SenseFace 2A manual not found on the dev machine. Deployment doc's §8 summary is used for now; the manual is needed for the exact push payload shapes in Attendance `api-design.md`. | 2026-09-11 | Open |
 | OQ-001 | Confirm feature list and build order (Step 1). | 2026-09-11 | ✅ Resolved 2026-09-11 |
@@ -162,6 +164,12 @@ gap.
 | OQ-132 | **One-time links in notification events.** Invite and reset links must ride in the event until the worker sends them (the token is only stored hashed). They are removed from the event once its email is final, and hidden in the local-outbox copy — but they rest in the database for up to one worker tick (~30 s), or longer if delivery is retrying. Accept, or encrypt the context at rest. | 2026-09-30 | Open |
 | OQ-133 | **No automatic deletion** (OQ-1002) means `notification_deliveries` and `local_emails` grow without bound. Fine for years at this size; worth a decision before it is not. | 2026-09-30 | Open |
 | OQ-134 | **Fiscal leave years in two HR views.** The balances table and the carry-over year picker assume calendar years; per-person balances and every engine honour a policy's fiscal basis. Harmless while all policies are calendar-year (the default, OQ-602). | 2026-09-30 | Open — fix before any fiscal-year policy |
+| OQ-135 | **Who runs payroll and who approves it.** There is no seeded payroll-officer or approver role, so `HR_ADMIN` holds run, approve, finalise, publish, adjust and export; only reopen stays with the super admin. The two acts are recorded separately (OQ-707), but one person can do both. Real segregation needs two custom roles — which the role editor can already make. | 2026-10-01 | Open — decide the roles before the first real run |
+| OQ-136 | **Payslip PDFs are not generated or emailed.** FR-L-05 (revised 2026-09-18) wants an emailed, password-protected PDF. That needs a PDF library — a package, so your approval — and a decision on the password scheme (employee code + date of birth is common and weak). Until then the payslip page prints cleanly and "Print or save as PDF" is the PDF; the notification links to the payslip and carries no figures. | 2026-10-01 | Open — approve a library and choose the scheme |
+| OQ-137 | **Salary structures are chosen per pay record**, not assigned by group (FR-S-02 asked for employment type / department / grade with most-specific-wins, as leave policies have). Simpler and explicit; costs a click per person. | 2026-10-01 | Open — build group assignment if the headcount makes it worth it |
+| OQ-138 | **A pay change in the middle of a period** uses the salary in force on the last employed day for the whole period, and says so on the payslip. A split by days is owed; today the difference can be paid as an adjustment. | 2026-10-01 | Open |
+| OQ-139 | **Days after the cut-off are assumed, noted on the payslip, and NOT settled automatically.** FR-A-04 wants a system-generated settlement in the next period comparing assumed with actual. Not built: a run calculated after its period ends has no assumed days at all, which is the simple way to avoid the question. | 2026-10-01 | Open — needed only if payroll runs before month end |
+| OQ-140 | **What the calculator assumes, to confirm with OQ-705:** an ABSENT day and unpaid leave reduce paid days; a HALF_DAY counts as half a day absent; lateness deducts nothing; a past working day with no attendance record counts as worked (noted on the payslip); only APPROVED overtime is available to formulas. A MARGINAL bracket table charges each slice at its row's rate plus the landing row's fixed amount. | 2026-10-01 | Open — confirm |
 | OQ-118 | **Device-event retention.** Does "no automatic deletion" (OQ-1002 et al.) extend to machine logs? Without a sweep or transition-only logging, one terminal writes >1M rows a year. | 2026-09-28 | Open — before feature 04 ingestion |
 | OQ-006 | The two source documents the plan is built on (`HRM_SYSTEM_PLANNING_INSTRUCTIONS.md`, `HRM_SYSTEM_DEPLOYMENT.md`) are not present anywhere under `C:\Dev`. | 2026-09-15 | Open |
 | OQ-101 | Auth library: Auth.js (NextAuth) v5 vs hand-rolled sessions. Plan assumes hand-rolled. | 2026-09-15 | Open — needs decision before build |
@@ -242,6 +250,86 @@ gap.
 ---
 
 ## Session entries
+
+### 2026-10-01 — Session 36: Feature 07 — payroll
+
+**Built — the engine, with no database** (`src/lib/payroll/decimal.ts`, `formula.ts`, `calc.ts`)
+- **Exact decimals on `bigint`** (D-05): parsed from text, ten places of working precision, rounded
+  half away from zero, printed as text. No float is created on the calculation path. Written in-house
+  rather than adding a decimal package; no bigint literals, because the project compiles to ES2017.
+- **A closed formula grammar** (D-02), parsed to a tree and walked — arithmetic, comparisons, `?:`,
+  `min max round floor ceil abs`, `bracket(TABLE, value)`. No `eval`, no property access, no way to
+  name anything undeclared; bounded at 500 characters, 32 levels, 200 nodes. Acceptance 2 is a unit
+  test that throws `process.exit(1)`, `constructor(...)`, `require('fs')` and friends at it.
+- **`calculate(snapshot)`** (D-03, D-08): components in order, each line carrying the formula, the
+  substituted arithmetic and the rounding; totals reconciled against the lines; a *problem* instead of
+  a payslip for no compensation, a formula error, a missing manual amount, or negative net.
+- A unit test caught a real hazard: name lookups that read `obj[key]` find `toString` on the
+  prototype. The calculator's lookups are own-property only, and component codes must be capitals.
+
+**Built — database and services** (migration `20261002000000_payroll`, 18 tables, RLS on all)
+- In the database, not in hope: one regular run per period, one active bank account per employee,
+  one live payslip per employee per run, `net = gross − deductions` as a CHECK, and the access log
+  and export record INSERT/SELECT-only for the application.
+- **Components** validated when saved (acceptance 1): unknown names with what is available, forward
+  references, and a re-ordering that would put a component after something that uses it. A tester
+  (US-02). Bracket tables. Structures refuse a component whose inputs are not in the structure.
+- **Compensation** as dated history (D-09); a new record must take effect after the latest. A
+  backdated change **re-calculates each affected finalised payslip from its own snapshot** and
+  proposes the difference as arrears for review (acceptance 11) — the payslips do not change.
+  Bank details are versioned, and a change notifies the employee without the account in the message.
+  **No figure reaches the audit log** (NFR-05) — tested.
+- **Runs** (D-04, D-10): population with exclusions and reasons; calculation isolates each employee;
+  ten exception kinds, each with where it is fixed; acknowledgements and manual amounts survive
+  recalculation; variance against the previous period with a likely cause; approval and finalisation
+  are two recorded acts (acceptance 8); publish is separate from finalise; reopen is super-admin,
+  needs a reason, releases the lock, supersedes published payslips and must be recalculated before
+  approval (acceptance 10). A paid run is not reopened.
+- **The period lock** (FR-K) — the stub 04 and 06 shipped with is now real: per employee, per tenant,
+  naming the period, the finalisation date and the adjustment route (acceptance 9). The correction
+  and leave paths now pass the employee, so someone not in the run is not locked (FR-K-05).
+- **Payslips** render from their own row and snapshot (acceptance 3 — tested after changing the
+  salary, the formula, the component's name and the department). Own + published, or `payroll.read`,
+  which is logged; a manager sees nobody's but their own. Year to date from finalised payslips.
+- **Adjustments** are paid once, as their own line with the reason shown; a second run holding the
+  same adjustment is told its figures are stale. **Off-cycle runs** pay adjustments only and lock
+  nothing. **Exports**: bank CSV with exclusions listed (acceptance 12) and an accounting summary,
+  each stored with its content and checksum.
+- 41 API routes; one monthly job that keeps the calendar a year ahead. **Nothing that moves money
+  runs unattended.**
+
+**Built — screens** (`ui-ux-pro-max` loaded first this time; its guideline lookups for step
+indicators, bulk actions, wide tables and colour-only status matched 07 `ui-ux.md`): `/payroll` with
+the lifecycle as a progress track and what is still pending before the cut-off; the run workspace
+(overview with change against last period, exceptions with bulk acknowledge for warnings only,
+variance, payslips and hand-entered amounts); the payslip with each line's working, a comparison with
+the previous one, print styles and the access log; `/me/payslips`; salaries (no figures on the list)
+and a pay change that shows its consequence before saving; adjustments; components with the formula
+editor, insertable names and the test panel; bracket tables with a lookup preview; structures; the pay
+calendar. A "Pay" nav group — a manager sees only "My payslips".
+
+**Seed**: five components and one structure per tenant, **flagged as examples** (basic pro-rated by
+paid days, overtime, a fixed allowance, a bonus and a deduction entered by hand). No tax table.
+
+**Verification** — 25 engine unit tests and 22 integration tests covering acceptance 1–15. **271 unit
+· 237 integration · database suite · tsc and lint clean.** HTTP probe **74/75** over a full lifecycle
+(configure → open → calculate → exceptions → approve → finalise → lock refuses a correction and a
+leave → publish → export → reopen → recalculate → pay → backdated raise proposes arrears). The one
+miss was the probe's own assertion: it looked for any four-digit number in the "payslip ready"
+notification and matched the year in "August 2026"; a direct query confirmed the event holds only the
+period name. The probe left the dev database with an August 2026 run, PAID, for one employee.
+
+**Decisions taken, to confirm** — OQ-135…OQ-140 in the table above.
+
+**Not built — and why**: PDF generation and emailed payslips (OQ-136, needs a package); structures
+by group (OQ-137); a mid-period pay split (OQ-138); automatic cut-off settlement (OQ-139); the run,
+approval and stale-rates reminder jobs; drag or move-up/down re-ordering of components (the order is
+a number, and the list shows the result); the bank's own file format (OQ-708); loans (OQ-706); an
+approver sampling view (OQ-718). Calculation is synchronous in the request (OQ-715) — fine at this
+size. Browser visual check owed.
+
+**Next** — feature 08 (self-service portal). OQ-802 and OQ-805 shape it; much of what it shows
+(own attendance, leave, payslips) now exists and needs a lighter shell rather than new logic.
 
 ### 2026-09-30 — Session 35: Feature 06 — leave management
 
