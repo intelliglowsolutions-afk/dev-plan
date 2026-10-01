@@ -128,9 +128,8 @@ Grouped by feature. None of this needs an answer first.
 
 **10 Recruitment and onboarding**
 - ~~Editors for pipeline stages and scorecard forms~~ — done 2026-10-01 (Session 42)
-- A Reschedule button (the API exists)
-- Confirmation message after a retention deletion (today the page just shows "Nothing is due")
-- Copy the CV into the employee's documents on hire
+- ~~A Reschedule button~~, ~~confirmation after a retention deletion~~, ~~copy the CV into the
+  employee's documents on hire~~ — done 2026-10-01 (Session 43)
 - Send the login invite as part of the hire
 - A list endpoint for offers
 - Drag on the pipeline board
@@ -168,9 +167,12 @@ None of this has been started. The app runs only in a local development containe
 
 ## 6. Housekeeping
 
-- Remove `dev-stale-f10` and `dev-stale-f11` from the app container's `.next` volume.
-- The dev-cache fault (new routes under a dynamic segment return a 404 page) has now happened
-  four times. Worth finding the cause rather than moving the cache aside again.
+- Remove `dev-stale-f10`, `dev-stale-f10b`, `dev-stale-f10c` and `dev-stale-f11` from the app
+  container's `.next` volume (old dev caches moved aside; nothing uses them).
+- ~~The dev-cache fault~~ — addressed in Session 43: `npm run dev` now empties the dev server's
+  compile cache at every start. Watch that it holds.
+- Docker Desktop's VM has 3.7 GB; the dev server reaches about 2 GB after a full probe. Giving
+  Docker more memory would make the hangs less likely.
 - New tables without a foreign key into the existing set must be added by hand to the truncate list
   in `prisma/fixtures/canonical.sql`, or test data survives fixture reloads.
 - Git is now installed on the host; the log's toolchain note still describes running it in a container.
