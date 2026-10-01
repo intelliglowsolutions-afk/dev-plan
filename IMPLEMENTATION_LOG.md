@@ -52,15 +52,15 @@ Source documents:
 | Tenant isolation | ✅ **Verified end to end**: no context → 0 rows; per-tenant context → only that tenant; cross-tenant INSERT refused |
 | Test harness — canonical fixture, two tenants, injected clock | ✅ Built |
 | Database test suite (`npm run test:db`) | ✅ **All passing** (RLS coverage now includes the 14 attendance tables) |
-| Unit test suite — Vitest (`npm test`) | ✅ **303 tests passing** (28 attendance engine, 22 notifications incl. SMTP against a fake server, 16 leave rules, 25 payroll engine, 14 portal, 18 performance) |
-| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **267 tests passing**, mutation-checked (17 leave, 22 payroll, 13 portal, 17 performance) |
+| Unit test suite — Vitest (`npm test`) | ✅ **322 tests passing** (28 attendance engine, 22 notifications incl. SMTP against a fake server, 16 leave rules, 25 payroll engine, 14 portal, 18 performance, 19 reports) |
+| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **288 tests passing**, mutation-checked (17 leave, 22 payroll, 13 portal, 17 performance, 21 reports) |
 | Typecheck (`npx tsc --noEmit`) | ✅ **clean** (run `next typegen` first when routes change) |
 | **Stack proven over HTTP** — `next dev`, Auth.js sign-in, forced change, revocation, scoping | ✅ 2026-09-28 |
 | 01/02 **contract layer** — permission catalogue, authorization, scope, audit | ✅ Built and tested |
 | 01 auth — Auth.js wiring, password hashing, lockout, sessions | ✅ Built and tested |
 | Seed — permissions, system roles per tenant, first super admin | ✅ Built, idempotent, verified |
 | `protectedRoute` wrapper + `GET /api/employees` | ✅ Built, typechecks |
-| **Version control** | ✅ `hrm-system` **19 commits unpushed** (latest `f2edff8`); `dev-plan` a repo with no remote. **Pushing needs your credentials** |
+| **Version control** | ✅ `hrm-system` **20 commits unpushed** (latest `7562aaa`); `dev-plan` a repo with no remote. **Pushing needs your credentials** |
 | Sign-in and forced change-password screens (UI, skill-grounded) | ✅ 2026-09-28 |
 | **Feature 01 API** — users, roles, permissions, audit log, invite/reset, audited sign-in | ✅ 2026-09-28 |
 | **Feature 01 screens** — shell, users, invite, user detail, roles + matrix, audit log, reset/invite, /403 | ✅ 2026-09-28 (visual check in a browser still owed — see Session 30) |
@@ -82,7 +82,9 @@ Source documents:
 | Feature 08 remainders — photos (OQ-142), document upload (OQ-807), PWA (OQ-812), payslip PDF (OQ-136), the no-account headcount for HR (D-08), a second language (OQ-805), kiosk mode (OQ-802) | ⬜ Deferred, listed in Session 37 |
 | **Feature 09 Performance** — goals with check-ins and a shared history, review cycles (rule-based participants, preview, stored managers, completion-only progress), review forms and rating scales with per-instance snapshots, the review itself (autosave, submit, share, acknowledge/disagree, comments, unlock), feedback and feedback requests, reminder jobs, screens in both shells | ✅ 2026-10-01 (browser visual check owed — **the review form at 375px above all**; built as the full configurable mechanism because OQ-901 is unanswered) |
 | Feature 09 remainders — peer and skip-level reviews (OQ-903/904, modelled only), anonymous aggregation (acceptance 10 — nothing to aggregate yet), HR-granted access to past reviews (OQ-146), draft answer history (OQ-910), side-by-side self/manager view (OQ-912), drag re-ordering in the form editor, cycle auto-close (OQ-147) | ⬜ Deferred, listed in Session 38 |
-| Feature 11 (Reports) | ⬜ Next in the order (03…09, 11, 10). **It must not report on performance content, and 09 gives it no read path to do so** |
+| **Feature 11 Reports** — the report contract (code-declared, validated at load), five reports whose figures come from functions in 02/04/06/07, scope inherited from the owning module, suppression that resists differencing, provenance on every result and export, audited CSV export, saved views, link-only schedules, dashboard tiles, the generated viewer | ✅ 2026-10-01 (browser visual check owed; **the default threshold of 5 hides every pay figure in a company this small — OQ-150**) |
+| Feature 11 remainders — `leave.liability` (blocked on 07, OQ-151), drill-through, background runs and paging, PDF, line and funnel charts, the backlog reports (device uptime, approval turnaround, review completion…), fiscal-year periods, a `/reports/views` page | ⬜ Deferred, listed in Session 39 |
+| Feature 10 (Recruitment & Onboarding) | ⬜ **Last in the order.** Its reports (time to hire, pipeline conversion) are added to 11's catalogue as part of building it |
 
 **Toolchain on this machine:** no Node, npm, or git — but **Docker works**, so the toolchain runs
 in containers (`docker run --rm -v C:\Dev\hrm-system:/app node:20-alpine …`), and git runs as
@@ -92,7 +94,11 @@ the container's watcher on the Windows bind mount** — if Turbopack reports "Mo
 file that exists, `docker restart hrm-system-app-1`. **If routes that exist return Next's HTML 404
 after Docker Desktop has crashed or hung** (it has, twice, mid-probe), the dev cache is stale:
 `docker exec hrm-system-app-1 rm -rf /app/.next/dev /app/.next/cache`, then restart the container
-(look for `Watchpack Error … ENOMEM` in its log). The host's `node_modules/.bin/next` is a broken
+(look for `Watchpack Error … ENOMEM` in its log). It happened a third time in Session 39 with no
+crash and no ENOMEM — newly added route folders *under a dynamic segment* simply were not
+registered — so treat "new routes return HTML 404" as this until proven otherwise. That time the
+cache was moved aside rather than deleted (`mv dev dev-stale-f11` inside `/app/.next`, an anonymous
+Docker volume); **`dev-stale-f11` is still there and can be removed.** The host's `node_modules/.bin/next` is a broken
 macOS symlink: call `node node_modules/next/dist/bin/next …` instead.
 
 **Planning completed 2026-09-18.** Prior to the above, build had not started. The gate before starting each feature is
@@ -186,6 +192,10 @@ gap.
 | OQ-147 | **No job closes a cycle.** 09 api-design.md lists a daily auto-close; FR-C-07 says deadlines never enforce themselves. I followed the requirement: reminders fire (once before, once after each deadline), a person closes the cycle, and closing marks unfinished reviews `INCOMPLETE`. Related choices to confirm: a shared review **can still be acknowledged after the cycle closes** (so closing cannot be used to lose a disagreement); unlocking is refused once a cycle is closed. | 2026-10-01 | Open — confirm |
 | OQ-148 | **Role grants beyond the spec's table.** The spec gives HR `cycle.read/write` only. HR_ADMIN was also given the manager and employee grants (goals and `manage_team` at DEPARTMENT, participate and feedback at SELF) because an HR admin is also an employee with a manager and often has reports. "Manager" throughout 09 means the **reporting chain**, not 02's department-head union: heading a department does not show you its members' goals or self-reviews. The cycle's **manager of record** writes the review; after a manager change they keep the open cycle and lose it at close, and the new manager sees the open cycle only. | 2026-10-01 | Open — confirm |
 | OQ-149 | **HR can release a review without reading it.** FR-V-04's "unless HR overrides" is implemented as: someone with `performance.cycle.write` may share a *submitted* manager review early (from the cycle screen, or their own), recorded as `sharedWithOverride` with who did it. They cannot read it unless they also hold `read_content`. A plain manager cannot override. | 2026-10-01 | Open — confirm |
+| OQ-150 | **The suppression threshold against real headcount** (sharpens OQ-1103 / OQ-T-06). It is a per-tenant, change-controlled setting, default **5**. With the fixture's six people every department's pay is hidden, and — because hiding one group forces hiding another and then the total — so is the company total. In a 40-person company most department-level pay reporting will be hidden at 5. Lowering it is one setting (minimum 2), but that is a decision about what a manager or HR may infer about one person's pay. `report_runs.suppressed_cell_count` records how much is being hidden, to decide this from use. | 2026-10-01 | Open — decide the number |
+| OQ-151 | **`leave.liability` is not built — it is blocked on 07.** It needs "what is a day of this person's pay worth today", and payroll exposes no such figure outside a pay run (a run's `WORKING_DAYS`/`PAID_DAYS` exist only inside its snapshot). Writing a daily rate in the reports code would be a second payroll calculation, which is exactly what 11 D-01 forbids. Needs: a rule for the daily rate (base ÷ working days in the month? ÷ 30? ÷ 26?) and a function in 07 that returns it. | 2026-10-01 | Open — needs the rule |
+| OQ-152 | **Reporting choices to confirm.** (a) "Team" in a report is the same reach as the module's own screens — 02's union of the reporting chain *and* departments headed — not 09's chain-only reach. (b) `report.company_wide` gates the pay report only (HR and super admin); the other reports are scoped, so for HR they are company-wide already. (c) Leaving on a period's last day counts as still there at its end, and joining on its first day as there at its start. (d) A pay period counts toward a date range only when it lies wholly inside it. (e) "This year" is the calendar year, not the fiscal year. (f) Every opening of a report page is written to the run log, as the spec's "every run" — the log will grow with use. | 2026-10-01 | Open — confirm |
+| OQ-153 | **A scheduled report prepares nothing — it sends a link.** 11 says a schedule "produces a result… and notifies with a link". There is nobody to produce it *as*: a result depends on the reader's permissions, and storing one is the cached copy FR-E-07 forbids. So on its day each recipient who can still see the report gets a notification whose link opens the report live with the schedule's filters; a schedule must use a moving period ("Last month"), and its day of the month is 1–28. No `DAILY` frequency. | 2026-10-01 | Open — confirm |
 | OQ-118 | **Device-event retention.** Does "no automatic deletion" (OQ-1002 et al.) extend to machine logs? Without a sweep or transition-only logging, one terminal writes >1M rows a year. | 2026-09-28 | Open — before feature 04 ingestion |
 | OQ-006 | The two source documents the plan is built on (`HRM_SYSTEM_PLANNING_INSTRUCTIONS.md`, `HRM_SYSTEM_DEPLOYMENT.md`) are not present anywhere under `C:\Dev`. | 2026-09-15 | Open |
 | OQ-101 | Auth library: Auth.js (NextAuth) v5 vs hand-rolled sessions. Plan assumes hand-rolled. | 2026-09-15 | Open — needs decision before build |
@@ -266,6 +276,129 @@ gap.
 ---
 
 ## Session entries
+
+### 2026-10-01 — Session 39: Feature 11 — reports
+
+**Two problems, and the build is organised around them.** Reports must agree with the system, so
+they compute nothing (D-01); and reports must not reveal by aggregation what the reader could not
+see row by row, so pay aggregates are suppressed in a way subtraction cannot undo (D-03).
+
+**Built — the contract** (`src/lib/reports/define.ts`, pure)
+- A report is a **declaration**: fixed filters, fixed columns, a module permission, a scope rule, a
+  sensitivity, and a `source` that is a *function in the owning feature*. `validateCatalogue` runs as
+  the catalogue module loads: a report whose only permission is `report.read`, a sensitive report
+  that names no measures, a missing source — each **fails the boot** and every test run.
+- **Each definition lives with its feature** (`employees/reports.ts`, `attendance/reports.ts`,
+  `leave/reports.ts`, `payroll/reports.ts`); `reports/catalogue.ts` only assembles them. Nothing
+  under `src/lib/reports` queries a domain table.
+- Filters are typed and declared; **a key the declaration does not name is refused by name**, at the
+  body level (`columns`, `groupBy`, `query`) and the filter level (acceptance 13). Periods are
+  presets ("Last month") or chosen dates; a saved view or schedule stores the preset, so it moves.
+
+**Built — five reports, and where each figure comes from**
+- `headcount.summary` (02): start, joined, left, **moved**, end — by the department each person was
+  in *on that date*, from assignment history. Sara (Assembly until 2023, Finance since) is in
+  Assembly's 2023 count and Finance's today (acceptance 5); across her move she is counted once at
+  each end and every row satisfies start + joined − left + moved = end (FR-H-04).
+- `attendance.summary`, `attendance.overtime` (04): **one query** over `attendance_days` with a
+  lateral join to the assignment in force each day — the shape data-model.md calls "right" — and a
+  `ROLLUP` so the total's head-count is distinct, not a sum. 04 now exports the status sets its daily
+  grid counts with, and the report uses the same ones; overtime is the column 04's own summary adds
+  up, and the two are asserted equal (acceptance 7).
+- `leave.balances` (06): `balancesTable`'s own snapshot rows, added up in 06. Declared as *current*
+  structure and the current leave year, and says so on the result (FR-H-02).
+- `payroll.cost` (07): finalised payslips' own snapshots — the department printed on the payslip, its
+  gross, deductions and net — summed as exact decimals. Equals the run's payslips to the cent
+  (acceptance 6); a later department change, a superseded payslip or an unfinalised run moves
+  nothing (FR-H-03). **Sensitive.**
+- **Not built: `leave.liability`** — blocked on 07 (OQ-151), per FR-C-02's own rule that a report
+  whose feature cannot supply the figure does not ship.
+
+**Built — permissions and scope**
+- `report.read` grants nothing alone; every report also needs its module's permission, and the pay
+  report additionally `report.company_wide`. A report the actor may not run is **404 — the same
+  answer as a key that was never declared** — for describe, run, export, saved views and schedules.
+- Scope is the narrower of `report.read` and the module permission, resolved exactly as the module's
+  routes resolve it and applied **in the source's query**. A manager's attendance report covers his
+  reporting line and nothing wider, checked from two levels of a three-level chain spanning three
+  departments (acceptance 1). The result says "Your team (3 people)" or "The whole company" — on
+  screen and in the file (OQ-1111).
+
+**Built — suppression** (`suppress.ts`, pure)
+- Groups below the threshold lose their figures (removed and named, never zero). If that hides
+  exactly one group, the next-smallest goes too. The total is hidden when one group or fewer is left
+  showing, **or when the hidden groups together still cover fewer than the threshold** — a case the
+  spec's algorithm does not list, but total − shown would otherwise publish it.
+- **Tested exhaustively**: every multiset of up to five group sizes 0–9 (3,002 cases) — nothing below
+  the threshold is ever shown, there is never exactly one hidden group beside a visible total, and a
+  visible total always means ≥ 2 hidden groups covering ≥ threshold people.
+- The threshold is `report.suppressionThreshold`, change-controlled, with its consequence stated.
+
+**Built — provenance, exports, views, schedules, tiles**
+- Every result: as-of time, filters in words, scope note, sources, the structure note ("each day is
+  counted under the department the person was in that day"), and — for comparison — the period
+  compared with. Three outcomes kept apart: `EMPTY`, `ALL_SUPPRESSED`, and a failure (FR-R-06).
+- CSV export opens with that provenance as comment lines, writes **"Hidden"** for withheld figures,
+  refuses over the row limit, and is audited with filters, row count and scope (acceptance 9).
+- Every run is logged (`report_runs`: parameters, counts, duration, how many cells were hidden —
+  never a result). Saved views store filters only; a shared view of a report you cannot run is not
+  shown to you.
+- Schedules send **a link and no figures**; a recipient who cannot see the report is named at
+  creation, re-checked and skipped at each delivery with the owner told once (acceptance 10); a
+  suspended owner's schedule is switched off with the reason and kept (acceptance 11).
+- Dashboard tiles: each is a report run (unlogged), filtered on the server, streamed in its own
+  transaction, with its own as-of time and scope.
+
+**Built — screens** (`ui-ux-pro-max` grounded: charts.csv "Compare Categories", table handling and
+labels queried this session. **The `dataviz` skill that 11 ui-ux.md says to load before chart code
+is not installed in this workspace** — `.claude/skills` has no such folder — so the one chart was
+built from charts.csv's guidance and the spec's own rules.)
+- **Catalogue**: each report as the question it answers; saved views beneath their report.
+- **Viewer**, generated from the declaration: a plain GET form (filters in the URL — a link shares
+  filters, never figures, and the page works without script); removable filter chips; the provenance
+  strip; a sortable table with `aria-sort`, scoped headers, right-aligned tabular figures, and the
+  owning feature's totals in the footer; "Hidden" in hidden cells with the explanation above the
+  table; comparison as "▲ +2 · was 0" under each figure — a sign and a mark, not colour.
+- **One chart**: horizontal bars, sorted descending, axis from zero, every bar with its name and
+  figure as text, one colour, no animation, never drawn above 15 groups or below 2, always with its
+  sentence and always above — never instead of — the table. No pie exists.
+- Scheduled reports (reached from a report with its filters), and an error page for a failed run.
+
+**Verification** — 19 unit and 21 integration tests. **322 unit · 288 integration · database suite ·
+tsc and lint clean.** HTTP probe **63/63** on clean data: who sees which report, the refusals, scope
+from both sides, historical structure, agreement with 04's summary, both suppression outcomes with
+the response searched for the hidden figures, the change-controlled threshold, exports and their
+audit, views, schedules, every screen. The first integration run failed one assertion on a comma in
+the export's date stamp (which got the line CSV-quoted); the stamp now matches the spec's format.
+
+**What went wrong on the way**: the new routes under `/api/reports/[key]/…` returned Next's HTML 404
+until the dev cache was replaced — the third time (see the toolchain note). The command I had used
+before to clear it (`rm -rf /app/.next/dev …` inside the container) was **blocked by a path-protection
+guard** this time, so I did not retry it: the stale cache was moved aside instead and is still there.
+Two probe runs died on the probe's own code (a route 404 it could not parse; a codepage error
+reading an en dash from psql), not on the product. The probe lowered the suppression threshold to 2
+to exercise partial suppression; **it was set back to 5 through the settings API afterwards.**
+
+**Not as specified — say so**
+- **No background runs and no paging** (FR-R-05, FR-R-02): every report runs live inside the request
+  (30 s limit). The five are aggregates of a few rows; a row-level report will need both.
+- **No drill-through** (US-09, FR-P-06). It is absent, not present-and-refusing.
+- **Exports are built in memory, not streamed** (NFR-05) — bounded by the row limit.
+- **A failed run is not written to `report_runs`**: a database error aborts the transaction the row
+  would be written in. The reader gets the failure screen; the cause is in the server log.
+- **A schedule prepares nothing** (OQ-153). CSV only — no PDF (OQ-1106).
+- Dates and numbers are formatted en-GB, as everywhere else — 03's date-format setting is still not
+  applied app-wide (a Session 32 remainder), so FR-R-07 is not met.
+- Saved views live on the catalogue and the viewer; there is no separate `/reports/views` page.
+
+**Not verified**: no browser has seen these screens. Sorting, the export download and the period
+picker's show/hide are client behaviour that was type-checked and linted but never clicked.
+
+**Decisions taken, to confirm** — OQ-150…OQ-153 above.
+
+**Next** — feature 10 (Recruitment & Onboarding), the last. It should declare its own reports
+(time to hire, pipeline conversion) in `src/lib/recruitment/reports.ts` and add them to the
+catalogue; the viewer needs no change.
 
 ### 2026-10-01 — Session 38: Feature 09 — performance management
 
