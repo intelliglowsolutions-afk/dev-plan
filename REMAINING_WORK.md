@@ -84,7 +84,7 @@ For each: keyboard-only use, visible focus, dark mode if used, and nothing scrol
 Grouped by feature. None of this needs an answer first.
 
 **01 Auth and roles**
-- `/forgot-password` screen (was waiting on notifications, which now exist)
+- ~~`/forgot-password` screen~~ — done 2026-10-01 (Session 41)
 - Revoking a single session
 - A user edit form
 

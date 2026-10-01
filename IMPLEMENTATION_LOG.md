@@ -53,7 +53,7 @@ Source documents:
 | Test harness — canonical fixture, two tenants, injected clock | ✅ Built |
 | Database test suite (`npm run test:db`) | ✅ **All passing** (RLS coverage now includes the 14 attendance tables) |
 | Unit test suite — Vitest (`npm test`) | ✅ **339 tests passing** (28 attendance engine, 22 notifications incl. SMTP against a fake server, 16 leave rules, 25 payroll engine, 14 portal, 18 performance, 19 reports, 17 recruitment) |
-| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **310 tests passing**, mutation-checked (17 leave, 22 payroll, 13 portal, 17 performance, 21 reports, 22 recruitment and onboarding) |
+| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **314 tests passing**, mutation-checked (17 leave, 22 payroll, 13 portal, 17 performance, 21 reports, 22 recruitment and onboarding) |
 | Typecheck (`npx tsc --noEmit`) | ✅ **clean** (run `next typegen` first when routes change) |
 | **Stack proven over HTTP** — `next dev`, Auth.js sign-in, forced change, revocation, scoping | ✅ 2026-09-28 |
 | 01/02 **contract layer** — permission catalogue, authorization, scope, audit | ✅ Built and tested |
@@ -64,7 +64,7 @@ Source documents:
 | Sign-in and forced change-password screens (UI, skill-grounded) | ✅ 2026-09-28 |
 | **Feature 01 API** — users, roles, permissions, audit log, invite/reset, audited sign-in | ✅ 2026-09-28 |
 | **Feature 01 screens** — shell, users, invite, user detail, roles + matrix, audit log, reset/invite, /403 | ✅ 2026-09-28 (visual check in a browser still owed — see Session 30) |
-| Feature 01 remainders — /forgot-password (needs 05), per-session revoke, user edit form | ⬜ Deferred, listed in Session 30 |
+| Feature 01 remainders — per-session revoke, user edit form (`/forgot-password` built in Session 41) | ⬜ Deferred, listed in Session 30 |
 | **Feature 02 API** — employees, dated history, lifecycle, departments, positions, org chart, documents, CSV import/export | ✅ 2026-09-28 |
 | **Feature 02 screens** — list, create/edit, tabbed profile, lifecycle dialogs, import wizard, org chart, departments, positions | ✅ 2026-09-28 (browser visual check still owed) |
 | Feature 02 remainders — history correction endpoint, scheduler, org-chart pan/zoom/export, drag re-parenting | ⬜ Deferred, listed in Session 31 |
@@ -206,6 +206,7 @@ gap.
 | OQ-158 | **What the hire does and does not do.** It creates the employee (on probation, through 02), links the candidate, fills the request, closes its postings when the last place is filled, and issues the checklist. It does **not** set pay, a shift or a leave policy — the screen says so before and after, and the example checklist carries those three as tasks. It does not invite them to sign in (a link to Users is offered), does not copy the CV into their employee documents, and personal email/phone are carried over only if the person hiring holds `employee.read_sensitive`. **A hire cannot be undone** (OQ-1013): a mistaken one is corrected in the employee record. | 2026-10-01 | Open — confirm |
 | OQ-159 | **Retention is a reminder and a button, never a job.** Unsuccessful candidates get a date (decision + `recruitment.retentionMonths`, placeholder 6 — OQ-1002 still needs a qualified answer). Past it, HR is reminded weekly and deletes by typing the count shown. Deleting removes name, contact details, CV files, notes, consent text, scorecards and offer figures, and **keeps the application row** — role, stage reached, dates — so statistics survive (OQ-1011). People who asked to stay on file are skipped and counted separately; there is no expiry on "on file". Hired candidates are never due. Notes are deleted with the candidate, not earlier (OQ-1012). | 2026-10-01 | Open — confirm; answer OQ-1002 |
 | OQ-160 | **Onboarding choices.** Tasks owned by "HR" or "IT" have no single owner: anyone with `onboarding.write` can do them, they are reminded about only on the board, and **there is no IT role** — IT tasks are HR's in practice (OQ-1010). A manager's tasks go to the manager at the time of hire and do not follow a manager change. The board shows people starting within ninety days. A new starter sees only their own tasks, and only once they have a login. A task that requires a document is completed by the upload, which goes onto their employee record as type "Other". | 2026-10-01 | Open — confirm |
+| OQ-161 | **Asking for a reset link does not sign anyone out.** An admin-issued reset ends the user's sessions and forces a change at next sign-in; the self-service request does neither, because anyone can type anyone's address into a public form and that must not be a way to sign a colleague out. Sessions end when the link is *used* (FR-A-10). A new request does retire the previous unused link — including one an administrator issued — limited to three an hour per address. Invited and suspended accounts are sent nothing and told the same as everyone else. | 2026-10-01 | Open — confirm |
 | OQ-118 | **Device-event retention.** Does "no automatic deletion" (OQ-1002 et al.) extend to machine logs? Without a sweep or transition-only logging, one terminal writes >1M rows a year. | 2026-09-28 | Open — before feature 04 ingestion |
 | OQ-006 | The two source documents the plan is built on (`HRM_SYSTEM_PLANNING_INSTRUCTIONS.md`, `HRM_SYSTEM_DEPLOYMENT.md`) are not present anywhere under `C:\Dev`. | 2026-09-15 | Open |
 | OQ-101 | Auth library: Auth.js (NextAuth) v5 vs hand-rolled sessions. Plan assumes hand-rolled. | 2026-09-15 | Open — needs decision before build |
@@ -286,6 +287,41 @@ gap.
 ---
 
 ## Session entries
+
+### 2026-10-01 — Session 41: Git on the host, both repos pushed, and `/forgot-password`
+
+**Done**
+
+- **Git for Windows installed** (winget, `C:\Program Files\Git`). Both repos pushed: `hrm-system` to
+  its existing remote, `dev-plan` to a new one (`github.com/intelliglowsolutions-afk/dev-plan`). The
+  user signed in to GitHub themselves; the credential is held by Git Credential Manager.
+- **`REMAINING_WORK.md`** added to `dev-plan`: decisions, verification owed, blocked and ready build
+  work, going live, housekeeping, and a suggested order.
+- **Self-service password reset** (01 US-04, FR-A-09) — the first "ready" item:
+  - `src/lib/auth/password-forgot.ts` — `requestPasswordReset()`. The account is found through
+    `hrm_auth`, the link is created and the email queued in one tenant transaction, and the request
+    is audited (`auth.password_reset_requested`, no actor, the caller's address). It reuses 05's
+    existing `account.password_reset` notification, whose link is scrubbed once sent.
+  - One answer for every address, and a 400 ms floor so a found address and an unknown one take the
+    same time. Limits per 01 api-design.md: 5 an hour per connection (refused, 429), 3 an hour per
+    address (answered alike, does nothing).
+  - `POST /api/auth/password/forgot`, `/forgot-password` (page, form, action), a "Forgot password?"
+    link on sign-in in place of "ask an administrator", and "Request a new link" on the dead-link
+    screen.
+- **Tests** — four integration tests added to `invite-and-reset.test.ts` (9 in the file, all
+  passing): a working link that signs nobody out; nothing sent for unknown, invited and suspended
+  addresses; both limits; the timing floor. `tsc` and lint clean. HTTP probe 13/13.
+- **Seen in a browser** — this page needs no sign-in, so it was the first screen actually looked at:
+  empty, field error and sent states, at desktop and 375px, dark theme. One fix came out of it (the
+  instruction and "Back to sign in" were repeated on the sent state).
+
+**Decisions taken, to confirm** — OQ-161.
+
+**Not done** — the full unit and integration suites were not re-run after this change (only the
+affected file, plus type-check and lint); nothing else was touched.
+
+**Next** — per `REMAINING_WORK.md`: the editors for pipeline stages and scorecard forms (feature 10),
+then the rest of section 4. Sections 1 and 2 are still waiting on the user.
 
 ### 2026-10-01 — Session 40: Feature 10 — recruitment and onboarding. **Every feature is now built.**
 
