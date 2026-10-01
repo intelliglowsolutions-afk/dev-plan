@@ -53,7 +53,7 @@ Source documents:
 | Test harness — canonical fixture, two tenants, injected clock | ✅ Built |
 | Database test suite (`npm run test:db`) | ✅ **All passing** (RLS coverage now includes the 14 attendance tables) |
 | Unit test suite — Vitest (`npm test`) | ✅ **339 tests passing** (28 attendance engine, 22 notifications incl. SMTP against a fake server, 16 leave rules, 25 payroll engine, 14 portal, 18 performance, 19 reports, 17 recruitment) |
-| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **317 tests passing** (17 leave, 22 payroll, 13 portal, 17 performance, 21 reports, 22 recruitment and onboarding) |
+| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **319 tests passing** (17 leave, 22 payroll, 13 portal, 17 performance, 21 reports, 22 recruitment and onboarding) |
 | Typecheck (`npx tsc --noEmit`) | ✅ **clean** (run `next typegen` first when routes change) |
 | **Stack proven over HTTP** — `next dev`, Auth.js sign-in, forced change, revocation, scoping | ✅ 2026-09-28 |
 | 01/02 **contract layer** — permission catalogue, authorization, scope, audit | ✅ Built and tested |
@@ -64,7 +64,7 @@ Source documents:
 | Sign-in and forced change-password screens (UI, skill-grounded) | ✅ 2026-09-28 |
 | **Feature 01 API** — users, roles, permissions, audit log, invite/reset, audited sign-in | ✅ 2026-09-28 |
 | **Feature 01 screens** — shell, users, invite, user detail, roles + matrix, audit log, reset/invite, /403 | ✅ 2026-09-28 (visual check in a browser still owed — see Session 30) |
-| Feature 01 remainders — per-session revoke, user edit form (`/forgot-password` built in Session 41) | ⬜ Deferred, listed in Session 30 |
+| Feature 01 remainders — `/forgot-password` (Session 41), per-session sign-out and the account edit form (Session 44) | ✅ 2026-10-01 — none left |
 | **Feature 02 API** — employees, dated history, lifecycle, departments, positions, org chart, documents, CSV import/export | ✅ 2026-09-28 |
 | **Feature 02 screens** — list, create/edit, tabbed profile, lifecycle dialogs, import wizard, org chart, departments, positions | ✅ 2026-09-28 (browser visual check still owed) |
 | Feature 02 remainders — history correction endpoint, scheduler, org-chart pan/zoom/export, drag re-parenting | ⬜ Deferred, listed in Session 31 |
@@ -289,6 +289,34 @@ gap.
 ---
 
 ## Session entries
+
+### 2026-10-01 — Session 44: Feature 01's last two remainders — sign one session out, edit an account
+
+**Done**
+
+- **Sign one session out.** `revokeUserSession()` and `DELETE /api/users/:id/sessions/:sessionId`.
+  The session is matched on the user as well as its id, so another account's session id addressed
+  through this one is "not found". Same escalation rule as "Sign out everywhere". Audited as
+  `user.session_revoked` with the address. On the user page each session row has a "Sign out".
+- **Edit an account** — the email and the employee link, in a dialog on the user page, over the
+  `updateUser` / `PATCH /api/users/:id` that already existed. The employee list is people with no
+  account plus whoever is linked now. Allowed on your own account; blocked only when the target
+  holds access the actor does not.
+- **A behaviour change in `updateUser`:** correcting the email now **retires any invite or reset
+  link already sent** — it went to the old address, and the usual reason for the correction is
+  that the invite reached the wrong person. The dialog says so, and tells the admin to issue a new
+  invite. Password and sessions are untouched. Changing only the employee link retires nothing.
+
+**Verified** — two integration tests added (25 in `users.test.ts`); full suites: unit 339,
+integration 319; `tsc` and lint clean. HTTP probe 7/7: of two live sessions one is ended and the
+other still works; another account's session id is a 404; an employee is refused; a taken address
+is refused on the field. Not seen in a browser (behind sign-in).
+
+**To confirm** — changing an account's email sends no notice to either address. An admin who can
+edit an email can already reset the password, so this adds no new power, but a "your sign-in
+address was changed" notice to the old address would be the careful thing. Say if you want it.
+
+**Next** — `REMAINING_WORK.md` section 4, feature 02 onward.
 
 ### 2026-10-01 — Session 43: Three small hiring items, the dev-cache fault, and a 500 that should have been a 422
 

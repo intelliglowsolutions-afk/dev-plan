@@ -85,8 +85,8 @@ Grouped by feature. None of this needs an answer first.
 
 **01 Auth and roles**
 - ~~`/forgot-password` screen~~ — done 2026-10-01 (Session 41)
-- Revoking a single session
-- A user edit form
+- ~~Revoking a single session~~, ~~a user edit form~~ — done 2026-10-01 (Session 44). Feature 01
+  has no remainders left.
 
 **02 Employees**
 - History correction endpoint
