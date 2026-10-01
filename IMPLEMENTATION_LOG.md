@@ -52,15 +52,15 @@ Source documents:
 | Tenant isolation | ✅ **Verified end to end**: no context → 0 rows; per-tenant context → only that tenant; cross-tenant INSERT refused |
 | Test harness — canonical fixture, two tenants, injected clock | ✅ Built |
 | Database test suite (`npm run test:db`) | ✅ **All passing** (RLS coverage now includes the 14 attendance tables) |
-| Unit test suite — Vitest (`npm test`) | ✅ **322 tests passing** (28 attendance engine, 22 notifications incl. SMTP against a fake server, 16 leave rules, 25 payroll engine, 14 portal, 18 performance, 19 reports) |
-| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **288 tests passing**, mutation-checked (17 leave, 22 payroll, 13 portal, 17 performance, 21 reports) |
+| Unit test suite — Vitest (`npm test`) | ✅ **339 tests passing** (28 attendance engine, 22 notifications incl. SMTP against a fake server, 16 leave rules, 25 payroll engine, 14 portal, 18 performance, 19 reports, 17 recruitment) |
+| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **310 tests passing**, mutation-checked (17 leave, 22 payroll, 13 portal, 17 performance, 21 reports, 22 recruitment and onboarding) |
 | Typecheck (`npx tsc --noEmit`) | ✅ **clean** (run `next typegen` first when routes change) |
 | **Stack proven over HTTP** — `next dev`, Auth.js sign-in, forced change, revocation, scoping | ✅ 2026-09-28 |
 | 01/02 **contract layer** — permission catalogue, authorization, scope, audit | ✅ Built and tested |
 | 01 auth — Auth.js wiring, password hashing, lockout, sessions | ✅ Built and tested |
 | Seed — permissions, system roles per tenant, first super admin | ✅ Built, idempotent, verified |
 | `protectedRoute` wrapper + `GET /api/employees` | ✅ Built, typechecks |
-| **Version control** | ✅ `hrm-system` **20 commits unpushed** (latest `7562aaa`); `dev-plan` a repo with no remote. **Pushing needs your credentials** |
+| **Version control** | ✅ `hrm-system` **21 commits unpushed** (latest `47a1a5e`); `dev-plan` a repo with no remote. **Pushing needs your credentials** |
 | Sign-in and forced change-password screens (UI, skill-grounded) | ✅ 2026-09-28 |
 | **Feature 01 API** — users, roles, permissions, audit log, invite/reset, audited sign-in | ✅ 2026-09-28 |
 | **Feature 01 screens** — shell, users, invite, user detail, roles + matrix, audit log, reset/invite, /403 | ✅ 2026-09-28 (visual check in a browser still owed — see Session 30) |
@@ -84,7 +84,9 @@ Source documents:
 | Feature 09 remainders — peer and skip-level reviews (OQ-903/904, modelled only), anonymous aggregation (acceptance 10 — nothing to aggregate yet), HR-granted access to past reviews (OQ-146), draft answer history (OQ-910), side-by-side self/manager view (OQ-912), drag re-ordering in the form editor, cycle auto-close (OQ-147) | ⬜ Deferred, listed in Session 38 |
 | **Feature 11 Reports** — the report contract (code-declared, validated at load), five reports whose figures come from functions in 02/04/06/07, scope inherited from the owning module, suppression that resists differencing, provenance on every result and export, audited CSV export, saved views, link-only schedules, dashboard tiles, the generated viewer | ✅ 2026-10-01 (browser visual check owed; **the default threshold of 5 hides every pay figure in a company this small — OQ-150**) |
 | Feature 11 remainders — `leave.liability` (blocked on 07, OQ-151), drill-through, background runs and paging, PDF, line and funnel charts, the backlog reports (device uptime, approval turnaround, review completion…), fiscal-year periods, a `/reports/views` page | ⬜ Deferred, listed in Session 39 |
-| Feature 10 (Recruitment & Onboarding) | ⬜ **Last in the order.** Its reports (time to hire, pipeline conversion) are added to 11's catalogue as part of building it |
+| **Feature 10 Recruitment & Onboarding** — requests to hire with approval, postings, the public job page and application form, the pipeline with stalled-candidate marking, rejection (reason + never-sent internal note) and withdrawal, interviews with independent scorecards, offers behind their own permission, the hire through 02 in one transaction with a write-nothing preview, onboarding checklists relative to the start date, retention dry run and deletion by confirmed count, a sixth report | ✅ 2026-10-01 (browser visual check owed — **the public page and the scorecard form above all**; built whole although OQ-1001 and OQ-1003 are unanswered — OQ-154) |
+| Feature 10 remainders — editing pipeline stages and scorecard forms (examples only, no screen), drag on the board, reference/background checks, e-signature, a candidate status page, interviewers without accounts, the automatic login invite, CV copied to the employee's documents on hire, reversing a hire, a pipeline-conversion report | ⬜ Deferred, listed in Session 40 |
+| **All eleven features are built.** What remains is in the "remainders" rows above, the open questions below, and everything that needs a browser or your credentials | — |
 
 **Toolchain on this machine:** no Node, npm, or git — but **Docker works**, so the toolchain runs
 in containers (`docker run --rm -v C:\Dev\hrm-system:/app node:20-alpine …`), and git runs as
@@ -98,7 +100,8 @@ after Docker Desktop has crashed or hung** (it has, twice, mid-probe), the dev c
 crash and no ENOMEM — newly added route folders *under a dynamic segment* simply were not
 registered — so treat "new routes return HTML 404" as this until proven otherwise. That time the
 cache was moved aside rather than deleted (`mv dev dev-stale-f11` inside `/app/.next`, an anonymous
-Docker volume); **`dev-stale-f11` is still there and can be removed.** The host's `node_modules/.bin/next` is a broken
+Docker volume); **`dev-stale-f11` is still there and can be removed.** A fourth time in Session 40, same cause (feature 10's routes
+under `[id]`), same fix: **`dev-stale-f10` is there too.** The host's `node_modules/.bin/next` is a broken
 macOS symlink: call `node node_modules/next/dist/bin/next …` instead.
 
 **Planning completed 2026-09-18.** Prior to the above, build had not started. The gate before starting each feature is
@@ -196,6 +199,13 @@ gap.
 | OQ-151 | **`leave.liability` is not built — it is blocked on 07.** It needs "what is a day of this person's pay worth today", and payroll exposes no such figure outside a pay run (a run's `WORKING_DAYS`/`PAID_DAYS` exist only inside its snapshot). Writing a daily rate in the reports code would be a second payroll calculation, which is exactly what 11 D-01 forbids. Needs: a rule for the daily rate (base ÷ working days in the month? ÷ 30? ÷ 26?) and a function in 07 that returns it. | 2026-10-01 | Open — needs the rule |
 | OQ-152 | **Reporting choices to confirm.** (a) "Team" in a report is the same reach as the module's own screens — 02's union of the reporting chain *and* departments headed — not 09's chain-only reach. (b) `report.company_wide` gates the pay report only (HR and super admin); the other reports are scoped, so for HR they are company-wide already. (c) Leaving on a period's last day counts as still there at its end, and joining on its first day as there at its start. (d) A pay period counts toward a date range only when it lies wholly inside it. (e) "This year" is the calendar year, not the fiscal year. (f) Every opening of a report page is written to the run log, as the spec's "every run" — the log will grow with use. | 2026-10-01 | Open — confirm |
 | OQ-153 | **A scheduled report prepares nothing — it sends a link.** 11 says a schedule "produces a result… and notifies with a link". There is nobody to produce it *as*: a result depends on the reader's permissions, and storing one is the cached copy FR-E-07 forbids. So on its day each recipient who can still see the report gets a notification whose link opens the report live with the schedule's filters; a schedule must use a moving period ("Last month"), and its day of the month is 1–28. No `DAILY` frequency. | 2026-10-01 | Open — confirm |
+| OQ-154 | **Feature 10 was built whole, without answers to OQ-1001 and OQ-1003.** OQ-1001 asked whether the recruitment half is worth having at all; OQ-1003 whether there should be a public application form — the system's only write surface open to the internet. Both exist. The form can be switched off with one setting (`recruitment.publicFormEnabled`): the job page then shows the role and no form, and candidates are entered by HR. If the answer to OQ-1001 is "onboarding only", the hiring screens go unused and onboarding still works — but a checklist is issued **only by a hire**, so that answer needs a "start onboarding for this employee" button that does not exist yet. | 2026-10-01 | Open — answer OQ-1001/1003 |
+| OQ-155 | **The public form's defences, to confirm.** Five submissions an hour per connection and sixty per posting, held in the app's memory (one process — the same limit as sign-in's, 01 OQ-109); a hidden field and a minimum time-to-fill, both of which thank the sender and store nothing; the CV judged by its content, PDF or Word, 5 MB. **No CAPTCHA** — CLAUDE.md forbids adding a package for one, and none was asked for. Every successful submission gets the same sentence and no identifier; the same address applying twice makes two candidates, linked for staff as "has applied before", because working out "you already applied" on a public endpoint would tell a stranger who has. CV is optional (OQ-1014). | 2026-10-01 | Open — confirm; decide on CAPTCHA |
+| OQ-156 | **Who sees what in hiring.** HR sees everything. A hiring manager sees the requests *they* are the hiring manager of, their candidates and interviews — read-only: moving, rejecting and offers are HR's. `DEPARTMENT` scope on the recruitment permissions therefore means "my own requisitions", not 02's department reach. **HR approves requisitions** (OQ-1004) and nothing stops the person who raised one approving it. Offer terms need `recruitment.offer.read` (HR only); without it a hiring manager learns an offer exists and its status, not the figure; the figure is in no audit entry. An interviewer needs an account (OQ-1008) and, with no other access, can open the CV only through their interview. | 2026-10-01 | Open — confirm |
+| OQ-157 | **Scorecards are hidden from everyone until all are in — HR included.** FR-I-04 protects interviewers from each other's views; I applied it to HR and the super admin too, because the rows are simply not fetched while one is outstanding. The consequence: **one interviewer who never submits hides the rest indefinitely.** Cancelling the interview does not release them. Needs a rule — HR may release early (recorded, as 09's override is), or remove an interviewer. Also: a submitted scorecard cannot be edited, only commented on; feedback is deleted with the candidate's details. | 2026-10-01 | Open — decide the release rule |
+| OQ-158 | **What the hire does and does not do.** It creates the employee (on probation, through 02), links the candidate, fills the request, closes its postings when the last place is filled, and issues the checklist. It does **not** set pay, a shift or a leave policy — the screen says so before and after, and the example checklist carries those three as tasks. It does not invite them to sign in (a link to Users is offered), does not copy the CV into their employee documents, and personal email/phone are carried over only if the person hiring holds `employee.read_sensitive`. **A hire cannot be undone** (OQ-1013): a mistaken one is corrected in the employee record. | 2026-10-01 | Open — confirm |
+| OQ-159 | **Retention is a reminder and a button, never a job.** Unsuccessful candidates get a date (decision + `recruitment.retentionMonths`, placeholder 6 — OQ-1002 still needs a qualified answer). Past it, HR is reminded weekly and deletes by typing the count shown. Deleting removes name, contact details, CV files, notes, consent text, scorecards and offer figures, and **keeps the application row** — role, stage reached, dates — so statistics survive (OQ-1011). People who asked to stay on file are skipped and counted separately; there is no expiry on "on file". Hired candidates are never due. Notes are deleted with the candidate, not earlier (OQ-1012). | 2026-10-01 | Open — confirm; answer OQ-1002 |
+| OQ-160 | **Onboarding choices.** Tasks owned by "HR" or "IT" have no single owner: anyone with `onboarding.write` can do them, they are reminded about only on the board, and **there is no IT role** — IT tasks are HR's in practice (OQ-1010). A manager's tasks go to the manager at the time of hire and do not follow a manager change. The board shows people starting within ninety days. A new starter sees only their own tasks, and only once they have a login. A task that requires a document is completed by the upload, which goes onto their employee record as type "Other". | 2026-10-01 | Open — confirm |
 | OQ-118 | **Device-event retention.** Does "no automatic deletion" (OQ-1002 et al.) extend to machine logs? Without a sweep or transition-only logging, one terminal writes >1M rows a year. | 2026-09-28 | Open — before feature 04 ingestion |
 | OQ-006 | The two source documents the plan is built on (`HRM_SYSTEM_PLANNING_INSTRUCTIONS.md`, `HRM_SYSTEM_DEPLOYMENT.md`) are not present anywhere under `C:\Dev`. | 2026-09-15 | Open |
 | OQ-101 | Auth library: Auth.js (NextAuth) v5 vs hand-rolled sessions. Plan assumes hand-rolled. | 2026-09-15 | Open — needs decision before build |
@@ -276,6 +286,108 @@ gap.
 ---
 
 ## Session entries
+
+### 2026-10-01 — Session 40: Feature 10 — recruitment and onboarding. **Every feature is now built.**
+
+`hrm-system` commit `47a1a5e` (105 files). Build order 03 → 04 → 05 → 06 → 07 → 08 → 09 → 11 → 10 is
+complete.
+
+**Done**
+
+- **Schema** — migration `20261006000000_recruitment_onboarding`: 19 tables (requisitions, postings,
+  pipeline templates and stages, candidates, applications, stage events, candidate documents,
+  consents and notes, scorecard templates, interviews, scorecards, answers and comments, offers,
+  onboarding templates, task definitions and tasks), check constraints, REVOKEs, RLS on all of them,
+  and one `SECURITY DEFINER` function, `resolve_public_posting(slug)`, which returns the tenant of a
+  **published** posting and nothing else — the only thing readable before a tenant context exists.
+- **Permissions** — 14 keys. HR holds all; a manager reads and raises requisitions, reads candidates,
+  schedules interviews and reads onboarding, each for *their own* roles or reports; everyone with an
+  account can submit a scorecard they are assigned and read their own onboarding tasks.
+- **`src/lib/recruitment/`** — `rules` (pure: text cleaning, public-form validation, automation
+  signs, stalled, scorecard visibility, date offsets), `requisitions`, `pipeline`, `candidates`,
+  `public`, `interviews`, `offers`, `retention`, `jobs`, `reports`. **`src/lib/onboarding/service`**.
+- **The public form** (`POST /api/public/applications`, `/jobs/[slug]`) — hand-written, sharing
+  nothing with `protectedRoute`. Same-origin only; size refused from the declared length before the
+  body is read; rate-limited; the CV stored and checked before any row is written; the notice the
+  applicant saw stored as text; one answer for every success; no identifier returned.
+- **44 API routes** under `/api/recruitment/**`, `/api/onboarding/**`, `/api/me/onboarding-tasks`.
+- **Screens** — `/recruitment` (requests to hire), `/recruitment/requisitions/[id]`,
+  `/recruitment/postings/[id]/pipeline` (a "Move to" menu on each card — **no dragging**; a filter
+  for those waiting too long), `/recruitment/candidates/[id]`, `/recruitment/interviews/mine`,
+  `/recruitment/interviews/[id]` (own scorecard with autosave and "Saved 10:42"; everyone's side by
+  side once all are in), `/recruitment/scorecards/[id]` (redirects its interviewer to the interview),
+  `/recruitment/applications/[id]/hire` (three steps: confirm, fill the gaps, review — will / will
+  also / **will not**), `/recruitment/retention`, `/onboarding`, `/onboarding/employees/[id]`,
+  `/admin/onboarding/templates` (Move up / Move down, offsets said back in words),
+  `/portal/onboarding`. Navigation: a "Hiring" group; "Onboarding checklists" under Administration;
+  "Getting started" and "My interviews" in the portal. Portal home gained two actions (onboarding
+  tasks to do; interview feedback owed).
+- **Elsewhere** — 05 gained a `contextEmail` recipient rule so a notification can go to an address
+  that is not a user (the applicant), with the address scrubbed from the event once sent, and twelve
+  types; 03 gained six settings; 06 gained `onApprovedLeave()`; 11 gained a sixth report,
+  `recruitment.applications` ("Applications and time to hire"), and an optional `scopeNote`; the job
+  runner calls `runRecruitmentJobs` (offer expiry, scorecard reminders, stalled candidates, the
+  weekly retention review, onboarding reminders).
+- **The canonical fixture now truncates the hiring tables.** They carry a tenant id with no foreign
+  key to anything the fixture already reset, so `TRUNCATE … CASCADE` left them behind and four probe
+  runs' worth of requisitions survived "reloads" until a test noticed. **Any later table without a
+  foreign key into the existing set has to be added to that list by hand.**
+
+**Verified**
+
+- Unit **339**, integration **310**, database suite — all passing. `tsc` and lint clean.
+- **HTTP probe 83/83** (`f10_probe.py`, in the session scratchpad): a draft posting is a 404 to the
+  public; publishing waits for approval; the public page carries no ids; a repeat application gets
+  the identical answer; a PNG named `.pdf` is refused and leaves no candidate; the hidden field is
+  thanked and not stored; the sixth submission is turned away; another site's form is refused; the
+  hiring manager sees their role and not another's, and cannot move or reject; the internal note
+  cannot be sent as the message; before all scorecards are in nobody — HR included — sees another's;
+  the hiring manager does not see pay; no audit entry holds the figure; the preview writes nothing;
+  a duplicate employee number fails the hire whole with 02's words; the hire creates the employee,
+  checklist, fills the request, closes the posting and sets no salary; a required document cannot
+  be skipped; a manager can do the manager's task and not HR's; the retention dry run has no names;
+  the wrong count deletes nothing; the right count removes the person and keeps the application;
+  every screen renders for the right person and redirects the wrong one.
+- **Not verified: anything visual.** No browser session was used (a guard refused typing the test
+  password into one, and that stands). Owed: the public page and form at phone width, the scorecard
+  form, the pipeline board with many cards, the hire steps' focus handling, the template editor.
+
+**Departs from the spec, or is not built**
+
+- **No screen to edit pipeline stages or scorecard forms.** One of each is seeded as a labelled
+  example per tenant (`ensureExamples`), plus an example onboarding checklist. Changing stages or
+  criteria today means changing rows. The onboarding checklist *does* have its editor.
+- The board has no drag and drop — by choice (keyboard and touch parity, 10 ui-ux.md allows it).
+- Rejection reasons are a fixed list in code, not configurable.
+- Posting text is plain text. No formatting, no HTML.
+- Interview times are entered in the browser's timezone and shown in the company's.
+- `GET /api/recruitment/offers` (a list) is not built; an offer is read on its candidate.
+- Rescheduling exists in the API (`PATCH /interviews/:id`) with no button; the screen has Cancel.
+- Bulk rejection exists in the API and action, wired to the board's selection; not probed over HTTP.
+- No candidate status page, references, background checks or e-signature (OQ-1006, 1007, 1009).
+- The report is applications-by-posting with median days to hire. A stage-by-stage conversion
+  funnel needs 11's funnel chart, which was itself deferred.
+- After a successful purge the retention page re-renders to "Nothing is due" and the confirmation
+  sentence is not shown; the audit entry is the record.
+
+**Decisions taken, to confirm** — OQ-154…OQ-160 above. OQ-157 (one silent interviewer hides
+everyone's feedback) and OQ-154 (no way to start onboarding without a hire) are the two that would
+bite first in real use.
+
+**Next**
+
+Nothing is left in the build order. In rough order of value:
+
+1. **You:** push both repos (21 commits in `hrm-system`; `dev-plan` has no remote) — needs your
+   credentials. Then the browser pass that has been owed since Session 30, now across all eleven
+   features; the portal at 375px, the public job page and the payslip are the ones to start with.
+2. **Answers that change what exists:** OQ-701 (real pay components), OQ-601b (real leave
+   entitlements), OQ-319 (terminal ingestion — attendance has no real punches until this is
+   settled), OQ-150 (suppression threshold), OQ-157, OQ-1002.
+3. **Then the remainders rows**, starting with the ones other features are waiting on: device
+   ingestion (04), the daily-rate function in 07 that unblocks `leave.liability` (OQ-151),
+   `/forgot-password` (01, now that 05 exists).
+4. Both `dev-stale-f10` and `dev-stale-f11` in the app container's `.next` volume can be removed.
 
 ### 2026-10-01 — Session 39: Feature 11 — reports
 
