@@ -52,15 +52,15 @@ Source documents:
 | Tenant isolation | ✅ **Verified end to end**: no context → 0 rows; per-tenant context → only that tenant; cross-tenant INSERT refused |
 | Test harness — canonical fixture, two tenants, injected clock | ✅ Built |
 | Database test suite (`npm run test:db`) | ✅ **All passing** (RLS coverage now includes the 14 attendance tables) |
-| Unit test suite — Vitest (`npm test`) | ✅ **285 tests passing** (28 attendance engine, 22 notifications incl. SMTP against a fake server, 16 leave rules, 25 payroll engine, 14 portal) |
-| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **250 tests passing**, mutation-checked (17 leave, 22 payroll, 13 portal) |
+| Unit test suite — Vitest (`npm test`) | ✅ **303 tests passing** (28 attendance engine, 22 notifications incl. SMTP against a fake server, 16 leave rules, 25 payroll engine, 14 portal, 18 performance) |
+| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **267 tests passing**, mutation-checked (17 leave, 22 payroll, 13 portal, 17 performance) |
 | Typecheck (`npx tsc --noEmit`) | ✅ **clean** (run `next typegen` first when routes change) |
 | **Stack proven over HTTP** — `next dev`, Auth.js sign-in, forced change, revocation, scoping | ✅ 2026-09-28 |
 | 01/02 **contract layer** — permission catalogue, authorization, scope, audit | ✅ Built and tested |
 | 01 auth — Auth.js wiring, password hashing, lockout, sessions | ✅ Built and tested |
 | Seed — permissions, system roles per tenant, first super admin | ✅ Built, idempotent, verified |
 | `protectedRoute` wrapper + `GET /api/employees` | ✅ Built, typechecks |
-| **Version control** | ✅ `hrm-system` **18 commits unpushed** (latest `032b449`); `dev-plan` a repo with no remote. **Pushing needs your credentials** |
+| **Version control** | ✅ `hrm-system` **19 commits unpushed** (latest `f2edff8`); `dev-plan` a repo with no remote. **Pushing needs your credentials** |
 | Sign-in and forced change-password screens (UI, skill-grounded) | ✅ 2026-09-28 |
 | **Feature 01 API** — users, roles, permissions, audit log, invite/reset, audited sign-in | ✅ 2026-09-28 |
 | **Feature 01 screens** — shell, users, invite, user detail, roles + matrix, audit log, reset/invite, /403 | ✅ 2026-09-28 (visual check in a browser still owed — see Session 30) |
@@ -80,14 +80,19 @@ Source documents:
 | Feature 07 remainders — PDF and emailed payslips (OQ-136), structures by group (OQ-137), mid-period pay split (OQ-138), cut-off settlement (OQ-139), reminder jobs, drag re-ordering of components, the bank's own file format (OQ-708) | ⬜ Deferred, listed in Session 36 |
 | **Feature 08 Self-service portal** — employee shell (bottom nav / sidebar), home, my time, leave, pay, profile with change requests, documents, directory; routing by permission; HR's change-request queue and field settings | ✅ 2026-10-01 (**the 375px visual review, acceptance 11, is owed** — it needs a browser; built on the defaults for OQ-802 and OQ-805) |
 | Feature 08 remainders — photos (OQ-142), document upload (OQ-807), PWA (OQ-812), payslip PDF (OQ-136), the no-account headcount for HR (D-08), a second language (OQ-805), kiosk mode (OQ-802) | ⬜ Deferred, listed in Session 37 |
-| Feature 09 (Performance) | ⬜ Next in the order (03…09, 11, 10) — OQ-901 (does the company run reviews, and how) decides its size |
+| **Feature 09 Performance** — goals with check-ins and a shared history, review cycles (rule-based participants, preview, stored managers, completion-only progress), review forms and rating scales with per-instance snapshots, the review itself (autosave, submit, share, acknowledge/disagree, comments, unlock), feedback and feedback requests, reminder jobs, screens in both shells | ✅ 2026-10-01 (browser visual check owed — **the review form at 375px above all**; built as the full configurable mechanism because OQ-901 is unanswered) |
+| Feature 09 remainders — peer and skip-level reviews (OQ-903/904, modelled only), anonymous aggregation (acceptance 10 — nothing to aggregate yet), HR-granted access to past reviews (OQ-146), draft answer history (OQ-910), side-by-side self/manager view (OQ-912), drag re-ordering in the form editor, cycle auto-close (OQ-147) | ⬜ Deferred, listed in Session 38 |
+| Feature 11 (Reports) | ⬜ Next in the order (03…09, 11, 10). **It must not report on performance content, and 09 gives it no read path to do so** |
 
 **Toolchain on this machine:** no Node, npm, or git — but **Docker works**, so the toolchain runs
 in containers (`docker run --rm -v C:\Dev\hrm-system:/app node:20-alpine …`), and git runs as
 `alpine/git` against the bind-mounted repo. The app runs with
 `docker compose up -d --build app` (dev target, hot reload). **New files are not always picked up by
 the container's watcher on the Windows bind mount** — if Turbopack reports "Module not found" for a
-file that exists, `docker restart hrm-system-app-1`. The host's `node_modules/.bin/next` is a broken
+file that exists, `docker restart hrm-system-app-1`. **If routes that exist return Next's HTML 404
+after Docker Desktop has crashed or hung** (it has, twice, mid-probe), the dev cache is stale:
+`docker exec hrm-system-app-1 rm -rf /app/.next/dev /app/.next/cache`, then restart the container
+(look for `Watchpack Error … ENOMEM` in its log). The host's `node_modules/.bin/next` is a broken
 macOS symlink: call `node node_modules/next/dist/bin/next …` instead.
 
 **Planning completed 2026-09-18.** Prior to the above, build had not started. The gate before starting each feature is
@@ -176,6 +181,11 @@ gap.
 | OQ-142 | **No photos in the portal.** 02's photo endpoint is scoped by `employee.read`, which an employee holds for themselves only, so colleagues' photos would be refused. The directory shows names without pictures and there is no "change my photo". Needs a decision on whether a photo is directory data. | 2026-10-01 | Open |
 | OQ-143 | **"Who else is off" is not in the portal.** 08 proposed a department list of colleagues' leave; OQ-803 was answered in 06 as "employees see their own leave only", and the EMPLOYEE role holds `leave.read` at SELF. The portal follows the answer, not the proposal. | 2026-10-01 | Open — reopen OQ-803 if a team view is wanted |
 | OQ-144 | **The portal addresses an attendance day by date** (`/api/me/attendance/2026-09-12`), not by 04's day id as 08 api-design.md wrote. A date is what the person and a notification link know, and it exposes no internal id. Marital status, named in OQ-801, is not a field on the employee record, so it is not in the catalogue. | 2026-10-01 | Open — note |
+| OQ-145 | **Feature 09 was built without an answer to OQ-901** (does the company run formal reviews, and how). What exists is the whole configurable mechanism — cycles, forms, optional rating scales — with one scale and one form seeded **as labelled examples** and no cycle. If the answer is "goals and feedback only", the cycle and form screens simply go unused; if it is a specific process, it is configuration, not code. OQ-902 (ratings or not) is likewise left to the form: a form with no rating question works. | 2026-10-01 | Open — answer OQ-901/902 |
+| OQ-146 | **Who can read review content.** `performance.read_content` and `performance.unlock` are granted to no role. But a **super admin holds every permission implicitly** (01's design), so a super admin can read any released review — logged each time, and shown in the review's "who has opened this" list. FR-V-06's "nobody by default" therefore means "nobody but the owner account". Also not built: FR-V-09's "HR grants a new manager access to past reviews" — today that is done by granting `performance.read_content`, which is all-or-nothing. A per-review grant needs a decision and a table. | 2026-10-01 | Open — confirm, decide on per-review grants |
+| OQ-147 | **No job closes a cycle.** 09 api-design.md lists a daily auto-close; FR-C-07 says deadlines never enforce themselves. I followed the requirement: reminders fire (once before, once after each deadline), a person closes the cycle, and closing marks unfinished reviews `INCOMPLETE`. Related choices to confirm: a shared review **can still be acknowledged after the cycle closes** (so closing cannot be used to lose a disagreement); unlocking is refused once a cycle is closed. | 2026-10-01 | Open — confirm |
+| OQ-148 | **Role grants beyond the spec's table.** The spec gives HR `cycle.read/write` only. HR_ADMIN was also given the manager and employee grants (goals and `manage_team` at DEPARTMENT, participate and feedback at SELF) because an HR admin is also an employee with a manager and often has reports. "Manager" throughout 09 means the **reporting chain**, not 02's department-head union: heading a department does not show you its members' goals or self-reviews. The cycle's **manager of record** writes the review; after a manager change they keep the open cycle and lose it at close, and the new manager sees the open cycle only. | 2026-10-01 | Open — confirm |
+| OQ-149 | **HR can release a review without reading it.** FR-V-04's "unless HR overrides" is implemented as: someone with `performance.cycle.write` may share a *submitted* manager review early (from the cycle screen, or their own), recorded as `sharedWithOverride` with who did it. They cannot read it unless they also hold `read_content`. A plain manager cannot override. | 2026-10-01 | Open — confirm |
 | OQ-118 | **Device-event retention.** Does "no automatic deletion" (OQ-1002 et al.) extend to machine logs? Without a sweep or transition-only logging, one terminal writes >1M rows a year. | 2026-09-28 | Open — before feature 04 ingestion |
 | OQ-006 | The two source documents the plan is built on (`HRM_SYSTEM_PLANNING_INSTRUCTIONS.md`, `HRM_SYSTEM_DEPLOYMENT.md`) are not present anywhere under `C:\Dev`. | 2026-09-15 | Open |
 | OQ-101 | Auth library: Auth.js (NextAuth) v5 vs hand-rolled sessions. Plan assumes hand-rolled. | 2026-09-15 | Open — needs decision before build |
@@ -256,6 +266,124 @@ gap.
 ---
 
 ## Session entries
+
+### 2026-10-01 — Session 38: Feature 09 — performance management
+
+**The visibility rules are the design, not a layer over it.** 09 says FR-V governs every other
+section, so it was built first and everything else composes it. One function —
+`reviewVisibilityFilter` in `src/lib/performance/visibility.ts` — is the `where` clause of every
+review read. A review the actor may not see is absent from the result, so the answer is **404, never
+403** (a 403 would confirm that a review exists and that someone wrote something).
+
+**Built — schema** (migration `20261004000000_performance`, 16 tables, RLS on all; check-ins, goal
+changes, review comments and the read log are append-only by `REVOKE`). No table has a foreign key to
+attendance, leave or payroll, and **a unit test fails if any performance source file imports from
+them or queries their tables** (D-04, FR-X-01, acceptance 12). A second test fails on anything that
+averages or ranks (FR-X-02).
+
+**Built — the rules that are unusual**
+- **A draft is its author's alone.** To a manager — and to HR — a report's self-review is
+  "Submitted" or "Not submitted"; an untouched one and a half-written one are the same answer, with
+  no id to follow. Saving a draft notifies nobody and writes no audit entry (the audit log is read by
+  HR). The team screen was fetched before and after an employee saved a draft and is identical
+  (FR-V-03, FR-X-03, acceptance 2).
+- **Submitting is not sharing.** A submitted manager review is still invisible to the employee
+  through every route; sharing is a separate act from a separate control, and the screen says
+  "**Imran cannot see it yet**" where the mistake would be made (FR-V-02, acceptance 1).
+- **Not shared before the self-review is in** (FR-V-04) — unless its deadline has passed, or someone
+  with `performance.cycle.write` overrides, which is stored on the review and audited as its own
+  action. The refusal explains itself and says when sharing becomes possible (acceptance 3).
+- **HR sees completion, not content.** The progress endpoint reads states and never an answer.
+  `performance.read_content` is held by no role; a read by anyone who is neither the author nor the
+  subject — a manager reading a submitted self-review included — writes a read-log row, and the
+  review shows who has opened it (FR-V-06/07, acceptance 4, 5).
+- **Acknowledging means "seen".** Two options of equal weight and no default; not agreeing is its own
+  state and needs its note; there is no path that records agreement nobody gave (FR-R-05/06,
+  acceptance 7). After that the review is fixed; either person appends dated comments (acceptance 6).
+- **Unlock** needs `performance.unlock` and a reason, returns the review to its author as a draft —
+  so the employee stops seeing it — and first copies what the employee had recorded into the
+  review's comments, so reopening cannot erase a disagreement. The audit entry records the act, not
+  the words.
+- **Snapshots.** Each review stores the form as it was, scale wording included, and each rating
+  stores its label and definition. Rewriting the form and the scale mid-cycle changes nothing already
+  started, and a later re-save still resolves against the snapshot (acceptance 8, 9). The rating
+  label is resolved on the server; a client cannot supply one.
+- **Manager change** (FR-V-09, acceptance 11): the cycle's manager of record keeps writing and keeps
+  access while the cycle is open, and loses it at close unless still the manager; the new manager
+  sees the open cycle only, never past ones.
+
+**Built — the rest**
+- **Cycles**: participants by rule (everyone / departments / employment types, probation and hire-date
+  cut-offs, include and exclude by name); a preview that writes nothing and names who is left out and
+  why, and who cannot be reviewed in full; opening stores participants, their managers and their
+  department as at that day; `409 HAS_PROBLEMS` unless acknowledged. Closing records unfinished
+  reviews as `INCOMPLETE` — kept, never submitted for anyone.
+- **Goals**: owned by one person, worked on by two. Progress moves only by check-in (no edit, no
+  delete — the route has no such method). Every change writes a line both owners can read, e.g.
+  the manager's name beside *"Changed the target date from 2026-12-15 to 2026-11-30"*. Optional team visibility
+  per goal shows the goal and its progress, not the conversation.
+- **Feedback**: attributed; three audiences and no fourth — manager-only feedback tells its author,
+  before they write, that the subject can ask HR to see it (FR-B-06). No edit. Requests can be
+  declined with no reason asked or stored, are not repeated while open, and are reminded **once**.
+- **Jobs**: stage reminders (once before each deadline, once after), weekly overdue-goal notes to the
+  owner and manager only, the single feedback reminder, removing leavers from the active list, and
+  the examples for a new tenant. Nine notification types, none carrying what anyone wrote (NFR-03).
+- **31 routes** under `/api/performance/**`; the portal home gained "your review is ready to read" /
+  "your self-review is waiting" items.
+
+**Built — screens** (`ui-ux-pro-max` grounded: step indicators, labels, touch targets and spacing
+queried this session; its search had **no match for autosave feedback**, so that behaviour follows
+09's own ui-ux.md and is flagged as such)
+- **The review form**: one section at a time with "Section 2 of 5", free movement, every question
+  labelled and marked required or optional, rating levels shown **with their definitions** at the
+  point of choosing, goals inline with their recent check-ins. Autosave a moment after each change
+  and when the tab is hidden; "Saved 10:42" beside the navigation; a failure says "Couldn't save —
+  retrying. Keep this page open", keeps what was typed queued, and never re-renders the form under
+  the cursor. The last step names each unanswered required question as a link to its section.
+- **The visibility banner** on every review surface, one sentence per state, saying *who*.
+- Portal: My goals · a goal · My reviews · a review · Feedback. Admin: Team goals and reviews (dense
+  on purpose) · a review · Review cycles · a cycle (set-up, preview and open; then four stage bars, a
+  department table, a people table) · Review forms (move up/down, a preview per reviewer) · Rating
+  scales (a level with no definition is flagged as it is typed).
+
+**Verification** — 18 unit and 17 integration tests. **303 unit · 267 integration · database suite ·
+tsc and lint clean.** HTTP probe **94/95** on clean data: a cycle from draft to acknowledged with the
+rules checked from each side, goals, feedback, who lands where, the absent methods (405). The one
+miss was the probe expecting a report with no user account to have a self-review; the team screen
+was then checked directly. An earlier run scored 93/95 on two probe assertions that were wrong
+("40 %" split across two text nodes; "Not started" being the manager's *own* unwritten review) —
+both corrected in the probe, neither a product change.
+
+**What went wrong on the way**: Docker Desktop hung mid-probe (again) and was restarted; afterwards
+every route with a dynamic sibling (`reviews/mine` beside `reviews/[id]`) returned Next's HTML 404
+because the dev server's cache had been written during an out-of-memory directory scan. Clearing
+`.next/dev` fixed it — now in the toolchain note above. The first integration run failed in setup on
+a wrong fixture email, not on the code.
+
+**Not as specified — say so**
+- **The read log is written inside the request's transaction, not fire-and-forget** (NFR-05). Under
+  row-level security there is no connection outside the tenant transaction that could write it, and
+  a failed insert inside one would abort the read. It is one insert; if it ever matters, it needs a
+  queue.
+- Feedback has **no cycle link** (FR-B-01's optional one), and a manager sees feedback about a report
+  on the review-writing screen only, not on a page of its own.
+- Reordering in the form editor is by buttons only — no drag (UX-103 asks for both; buttons are the
+  accessible half).
+
+**Not verified**: no browser has looked at any of this. The review form is the screen the feature
+lives or dies by, and it was written for 375px but never seen at 375px. Autosave was exercised
+through its endpoint and action, not by typing in a browser — so acceptance 13 ("survives a browser
+crash, and the UI states when it last saved") is proven server-side only.
+
+**Not built — and why**: peer and skip-level reviews (OQ-903/904 — in the schema, no instances are
+created); anonymous aggregated feedback (acceptance 10 — it only exists inside a multi-reviewer
+cycle); per-review access grants (OQ-146); draft history (OQ-910); self and manager review side by
+side (OQ-912); cycle auto-close (OQ-147); calibration across managers.
+
+**Decisions taken, to confirm** — OQ-145…OQ-149 above.
+
+**Next** — feature 11 (Reports & Analytics), then 10. Note for 11: there is deliberately nothing in
+09 for it to read beyond cycle completion counts.
 
 ### 2026-10-01 — Session 37: Feature 08 — employee self-service portal
 
