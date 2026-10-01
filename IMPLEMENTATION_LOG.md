@@ -376,7 +376,9 @@ bite first in real use.
 
 **Next**
 
-Nothing is left in the build order. In rough order of value:
+Nothing is left in the build order. **The full list of what remains — decisions, verification,
+blocked and ready build work, going live — is in `REMAINING_WORK.md`** (added later the same day,
+after both repos were pushed). In rough order of value:
 
 1. **You:** push both repos (21 commits in `hrm-system`; `dev-plan` has no remote) — needs your
    credentials. Then the browser pass that has been owed since Session 30, now across all eleven
