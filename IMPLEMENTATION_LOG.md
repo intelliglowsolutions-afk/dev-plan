@@ -53,7 +53,7 @@ Source documents:
 | Test harness — canonical fixture, two tenants, injected clock | ✅ Built |
 | Database test suite (`npm run test:db`) | ✅ **All passing** (RLS coverage now includes the 14 attendance tables) |
 | Unit test suite — Vitest (`npm test`) | ✅ **339 tests passing** (28 attendance engine, 22 notifications incl. SMTP against a fake server, 16 leave rules, 25 payroll engine, 14 portal, 18 performance, 19 reports, 17 recruitment) |
-| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **314 tests passing**, mutation-checked (17 leave, 22 payroll, 13 portal, 17 performance, 21 reports, 22 recruitment and onboarding) |
+| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **317 tests passing** (17 leave, 22 payroll, 13 portal, 17 performance, 21 reports, 22 recruitment and onboarding) |
 | Typecheck (`npx tsc --noEmit`) | ✅ **clean** (run `next typegen` first when routes change) |
 | **Stack proven over HTTP** — `next dev`, Auth.js sign-in, forced change, revocation, scoping | ✅ 2026-09-28 |
 | 01/02 **contract layer** — permission catalogue, authorization, scope, audit | ✅ Built and tested |
@@ -85,7 +85,7 @@ Source documents:
 | **Feature 11 Reports** — the report contract (code-declared, validated at load), five reports whose figures come from functions in 02/04/06/07, scope inherited from the owning module, suppression that resists differencing, provenance on every result and export, audited CSV export, saved views, link-only schedules, dashboard tiles, the generated viewer | ✅ 2026-10-01 (browser visual check owed; **the default threshold of 5 hides every pay figure in a company this small — OQ-150**) |
 | Feature 11 remainders — `leave.liability` (blocked on 07, OQ-151), drill-through, background runs and paging, PDF, line and funnel charts, the backlog reports (device uptime, approval turnaround, review completion…), fiscal-year periods, a `/reports/views` page | ⬜ Deferred, listed in Session 39 |
 | **Feature 10 Recruitment & Onboarding** — requests to hire with approval, postings, the public job page and application form, the pipeline with stalled-candidate marking, rejection (reason + never-sent internal note) and withdrawal, interviews with independent scorecards, offers behind their own permission, the hire through 02 in one transaction with a write-nothing preview, onboarding checklists relative to the start date, retention dry run and deletion by confirmed count, a sixth report | ✅ 2026-10-01 (browser visual check owed — **the public page and the scorecard form above all**; built whole although OQ-1001 and OQ-1003 are unanswered — OQ-154) |
-| Feature 10 remainders — editing pipeline stages and scorecard forms (examples only, no screen), drag on the board, reference/background checks, e-signature, a candidate status page, interviewers without accounts, the automatic login invite, CV copied to the employee's documents on hire, reversing a hire, a pipeline-conversion report | ⬜ Deferred, listed in Session 40 |
+| Feature 10 remainders — (stage and scorecard editors built in Session 42) drag on the board, reference/background checks, e-signature, a candidate status page, interviewers without accounts, the automatic login invite, CV copied to the employee's documents on hire, reversing a hire, a pipeline-conversion report | ⬜ Deferred, listed in Session 40 |
 | **All eleven features are built.** What remains is in the "remainders" rows above, the open questions below, and everything that needs a browser or your credentials | — |
 
 **Toolchain on this machine:** no Node, npm, or git — but **Docker works**, so the toolchain runs
@@ -207,6 +207,7 @@ gap.
 | OQ-159 | **Retention is a reminder and a button, never a job.** Unsuccessful candidates get a date (decision + `recruitment.retentionMonths`, placeholder 6 — OQ-1002 still needs a qualified answer). Past it, HR is reminded weekly and deletes by typing the count shown. Deleting removes name, contact details, CV files, notes, consent text, scorecards and offer figures, and **keeps the application row** — role, stage reached, dates — so statistics survive (OQ-1011). People who asked to stay on file are skipped and counted separately; there is no expiry on "on file". Hired candidates are never due. Notes are deleted with the candidate, not earlier (OQ-1012). | 2026-10-01 | Open — confirm; answer OQ-1002 |
 | OQ-160 | **Onboarding choices.** Tasks owned by "HR" or "IT" have no single owner: anyone with `onboarding.write` can do them, they are reminded about only on the board, and **there is no IT role** — IT tasks are HR's in practice (OQ-1010). A manager's tasks go to the manager at the time of hire and do not follow a manager change. The board shows people starting within ninety days. A new starter sees only their own tasks, and only once they have a login. A task that requires a document is completed by the upload, which goes onto their employee record as type "Other". | 2026-10-01 | Open — confirm |
 | OQ-161 | **Asking for a reset link does not sign anyone out.** An admin-issued reset ends the user's sessions and forces a change at next sign-in; the self-service request does neither, because anyone can type anyone's address into a public form and that must not be a way to sign a colleague out. Sessions end when the link is *used* (FR-A-10). A new request does retire the previous unused link — including one an administrator issued — limited to three an hour per address. Invited and suspended accounts are sent nothing and told the same as everyone else. | 2026-10-01 | Open — confirm |
+| OQ-162 | **Editing hiring stages and scorecards.** (a) Both are gated by `recruitment.posting.write` (HR only) rather than a permission of their own — adding a key means a seed and role-matrix change; say if it should be separate. (b) Changing a set of stages changes it for **every role using it**, including ones mid-hiring; people stay in their stage, and a stage with people in it cannot be removed. There is no "copy this set" button. (c) The **last stage** is where a hired candidate is placed, whatever it is called — the editor says so. (d) Scale levels are renumbered 1…n in the order shown, so reordering or removing a level changes what a number means for *future* interviews; past feedback keeps the label it was given. (e) Nothing can be deleted, only switched off. | 2026-10-01 | Open — confirm |
 | OQ-118 | **Device-event retention.** Does "no automatic deletion" (OQ-1002 et al.) extend to machine logs? Without a sweep or transition-only logging, one terminal writes >1M rows a year. | 2026-09-28 | Open — before feature 04 ingestion |
 | OQ-006 | The two source documents the plan is built on (`HRM_SYSTEM_PLANNING_INSTRUCTIONS.md`, `HRM_SYSTEM_DEPLOYMENT.md`) are not present anywhere under `C:\Dev`. | 2026-09-15 | Open |
 | OQ-101 | Auth library: Auth.js (NextAuth) v5 vs hand-rolled sessions. Plan assumes hand-rolled. | 2026-09-15 | Open — needs decision before build |
@@ -287,6 +288,40 @@ gap.
 ---
 
 ## Session entries
+
+### 2026-10-01 — Session 42: Editors for hiring stages and interview scorecards
+
+**Done**
+
+- **`src/lib/recruitment/templates.ts`** — `adminPipelineTemplates`, `savePipelineTemplate`,
+  `adminScorecardTemplates`, `saveScorecardTemplate`.
+  - Stages are changed **in place by id**: renamed, reordered, re-flagged, added. People stay in
+    their stage; a candidate's history keeps the name the stage had when they entered it (it was
+    recorded on each move). Removing a stage with people in it is refused (`409 STAGE_IN_USE`,
+    naming the stage and the count). A stage sent without an id but with an existing stage's name
+    is treated as that stage, so saving a form twice without reloading cannot replace a stage it
+    has just created.
+  - There is always exactly one default set among those in use; the default and the last set in
+    use cannot be switched off.
+  - Scorecard items keep their key through a rename; new items get one from their name. Levels are
+    numbered from 1 in the order given. An interview copies the form when it is scheduled, so an
+    edit never reaches one already arranged — tested.
+- **Routes** — `GET`/`POST /api/recruitment/pipeline-templates` and `/scorecard-templates`.
+- **Screen** — `/admin/recruitment/templates`: both lists with their editors (Move up / Move down /
+  Remove, each move announced; no dragging), linked from Administration as "Hiring stages and
+  scorecards". Built on the same pattern as the onboarding checklist editor.
+- **Tests** — three integration tests added (25 in `recruitment.test.ts`). Full suites re-run:
+  **unit 339, integration 317**, `tsc` and lint clean. HTTP probe 7/7 (page renders, navigation,
+  a hiring manager is refused, both saves round-trip).
+
+**Not verified** — the screen in a browser: it needs a sign-in, which I do not do. The database
+suite was not re-run (no schema change).
+
+**Decisions taken, to confirm** — OQ-162.
+
+**Next** — per `REMAINING_WORK.md` section 4. The remaining small hiring items (a Reschedule
+button, the confirmation after a retention deletion, copying the CV on hire) are the natural
+follow-ons.
 
 ### 2026-10-01 — Session 41: Git on the host, both repos pushed, and `/forgot-password`
 

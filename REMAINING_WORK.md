@@ -127,7 +127,7 @@ Grouped by feature. None of this needs an answer first.
 - Drag re-ordering in the form editor
 
 **10 Recruitment and onboarding**
-- Editors for pipeline stages and scorecard forms (today: seeded examples only)
+- ~~Editors for pipeline stages and scorecard forms~~ — done 2026-10-01 (Session 42)
 - A Reschedule button (the API exists)
 - Confirmation message after a retention deletion (today the page just shows "Nothing is due")
 - Copy the CV into the employee's documents on hire
