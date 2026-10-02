@@ -108,8 +108,9 @@ Grouped by feature. None of this needs an answer first.
 **05 Notifications**
 - ~~Inline actions in the notification list~~, ~~snooze~~, ~~a password-changed notice on the
   reset-link path~~, ~~a test-send policy~~ — done 2026-10-02 (Session 47)
-- Inline decisions for the other approval notices (pay runs, profile changes, payroll adjustments):
-  each needs its own confirmation, so they still open their own screen
+- ~~Inline decisions for employee change requests~~ — done 2026-10-02 (Session 54), with the old
+  and new value shown. Pay-run approval and arrears review deliberately stay on their own
+  screens (OQ-171)
 - Delivery and bounce webhooks — blocked on the choice of mail service (OQ-503)
 
 **06 Leave**

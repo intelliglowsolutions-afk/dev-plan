@@ -217,6 +217,7 @@ gap.
 | OQ-168 | **Portal and review choices to confirm.** (a) The installable portal keeps **nothing on the phone**: no service worker, no offline pages — a lost or shared phone holds no pay or personal data, at the cost of needing a connection. (b) The self-review is shown beside the manager's review **by default, with no setting**, to the manager (once submitted) and the employee (once shared) only; HR readers with the content grant do not get the combined view. (c) Draft answer history stays unbuilt (latest answer only). | Built Session 50; say if any should differ |
 | OQ-169 | **Reports: four choices to confirm.** (a) *How long leave requests wait* is open to anyone who can approve leave, for the people in their reach, and is timed to the **final** decision in **calendar** days. (b) *Review completion* is for those who can see cycles (HR), not managers. (c) In the pipeline report an application that skipped a stage counts as having passed it. (d) "PDF export" is the browser's print-to-PDF and is **not** recorded as an export, unlike CSV; a branded server-made PDF (OQ-1106) is still open. | Built Session 51; say if any should differ |
 | OQ-170 | **Hiring: three choices to confirm.** (a) An invite sent as part of a hire goes to the **work email only** — never the address they applied from — and gives the **Employee** role only; anything more is granted afterwards in Users. (b) If the address already has a login the **whole hire is refused** rather than hiring without the invite. (c) The offers list is for those who may see the pay offered (HR); hiring managers do not get it. | Built Session 52; say if any should differ |
+| OQ-171 | **Notifications: which approvals can be decided in the list.** Corrections, leave, requests to hire and employee change requests can. **Pay-run approval and arrears review cannot** — they open their own screen, so pay is never approved without the figures in view. | Built Session 54; say if pay approvals should be inline too |
 | OQ-118 | **Device-event retention.** Does "no automatic deletion" (OQ-1002 et al.) extend to machine logs? Without a sweep or transition-only logging, one terminal writes >1M rows a year. | 2026-09-28 | Open — before feature 04 ingestion |
 | OQ-006 | The two source documents the plan is built on (`HRM_SYSTEM_PLANNING_INSTRUCTIONS.md`, `HRM_SYSTEM_DEPLOYMENT.md`) are not present anywhere under `C:\Dev`. | 2026-09-15 | Open |
 | OQ-101 | Auth library: Auth.js (NextAuth) v5 vs hand-rolled sessions. Plan assumes hand-rolled. | 2026-09-15 | Open — needs decision before build |
@@ -297,6 +298,32 @@ gap.
 ---
 
 ## Session entries
+
+### 2026-10-02 — Session 54: Feature 05 — deciding a change request from the notification list; pay approvals stay on their screens
+
+**Done**
+
+- **An employee's change request can be approved or declined in the notification list** (05
+  ui-ux.md). `profile.change_requested` joins corrections, leave and requests to hire as an inline
+  decision. Because that notice names the field and never the value, the list shows what the detail
+  was when they asked, what they want and their note above the buttons —
+  `changeRequestSummaries` reads them at the moment of looking, only for someone holding
+  `profile.change_request.decide`, and only while the request is pending. Nothing is added to the
+  stored notice. It calls the same action as HR's queue; declining still needs a reason.
+
+**Decided against, with the reason recorded in the code**
+
+- **Approving a pay run** and **reviewing arrears** are not decided inline. They are decisions
+  about money, made by reading the exceptions, the variance and the figures; an Approve button
+  beside a one-line notice would invite approving pay unread (07 D-04). Their notices keep linking
+  to their own screens. Struck from the ready list as a decision, not a debt — say if you want it
+  otherwise (OQ-171).
+
+**Verified** — `tsc` and lint clean; unit 358; integration 344 (+1); HTTP probe 6/6 (one check
+first failed on the probe's own unscoped query; the value was confirmed applied for the right
+company).
+
+**Next** — drill-through and background runs with paging (11): the last of the ready list.
 
 ### 2026-10-02 — Session 53: The daily job for dated employee changes (02), and leave years on HR's balances table (06)
 
