@@ -89,8 +89,10 @@ Grouped by feature. None of this needs an answer first.
   has no remainders left.
 
 **02 Employees**
-- History correction endpoint
-- Org chart: pan, zoom, export; drag to re-parent
+- ~~History correction endpoint~~, ~~org chart pan, zoom and print-to-PDF~~, ~~drag to re-parent
+  departments~~ — done 2026-10-02 (Session 45)
+- Org chart PNG export — needs an HTML-to-image package; **ask before adding one**
+- The nightly job that applies scheduled job changes (they are applied on first read each day today)
 
 **03 Settings**
 - SVG logos

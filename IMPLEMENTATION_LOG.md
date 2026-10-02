@@ -53,7 +53,7 @@ Source documents:
 | Test harness — canonical fixture, two tenants, injected clock | ✅ Built |
 | Database test suite (`npm run test:db`) | ✅ **All passing** (RLS coverage now includes the 14 attendance tables) |
 | Unit test suite — Vitest (`npm test`) | ✅ **339 tests passing** (28 attendance engine, 22 notifications incl. SMTP against a fake server, 16 leave rules, 25 payroll engine, 14 portal, 18 performance, 19 reports, 17 recruitment) |
-| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **319 tests passing** (17 leave, 22 payroll, 13 portal, 17 performance, 21 reports, 22 recruitment and onboarding) |
+| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **322 tests passing** (17 leave, 22 payroll, 13 portal, 17 performance, 21 reports, 22 recruitment and onboarding) |
 | Typecheck (`npx tsc --noEmit`) | ✅ **clean** (run `next typegen` first when routes change) |
 | **Stack proven over HTTP** — `next dev`, Auth.js sign-in, forced change, revocation, scoping | ✅ 2026-09-28 |
 | 01/02 **contract layer** — permission catalogue, authorization, scope, audit | ✅ Built and tested |
@@ -67,7 +67,7 @@ Source documents:
 | Feature 01 remainders — `/forgot-password` (Session 41), per-session sign-out and the account edit form (Session 44) | ✅ 2026-10-01 — none left |
 | **Feature 02 API** — employees, dated history, lifecycle, departments, positions, org chart, documents, CSV import/export | ✅ 2026-09-28 |
 | **Feature 02 screens** — list, create/edit, tabbed profile, lifecycle dialogs, import wizard, org chart, departments, positions | ✅ 2026-09-28 (browser visual check still owed) |
-| Feature 02 remainders — history correction endpoint, scheduler, org-chart pan/zoom/export, drag re-parenting | ⬜ Deferred, listed in Session 31 |
+| Feature 02 remainders — history correction, org-chart zoom/pan/print and drag re-parenting built in Session 45. **Left:** the nightly scheduler for dated changes, and a PNG export of the org chart (needs a package — ask first) | 🟡 2026-10-02 |
 | **Feature 03 API + screens** — settings registry, company profile, work week, holidays, `isWorkingDay`, terminal registry | ✅ 2026-09-28 (browser visual check owed) |
 | Feature 03 remainders — /iclock wiring and unknown-device panel (OQ-319), offline alerts (05), SVG logos, 12-month holiday grid, applying date formats app-wide | ⬜ Deferred, listed in Session 32 |
 | **Feature 04 engine + API + screens** — shifts, patterns, roster, attendance days, corrections with approval chains, queue, day opener, gap detector | ✅ 2026-09-29 (browser visual check owed) |
@@ -209,6 +209,7 @@ gap.
 | OQ-160 | **Onboarding choices.** Tasks owned by "HR" or "IT" have no single owner: anyone with `onboarding.write` can do them, they are reminded about only on the board, and **there is no IT role** — IT tasks are HR's in practice (OQ-1010). A manager's tasks go to the manager at the time of hire and do not follow a manager change. The board shows people starting within ninety days. A new starter sees only their own tasks, and only once they have a login. A task that requires a document is completed by the upload, which goes onto their employee record as type "Other". | 2026-10-01 | Open — confirm |
 | OQ-161 | **Asking for a reset link does not sign anyone out.** An admin-issued reset ends the user's sessions and forces a change at next sign-in; the self-service request does neither, because anyone can type anyone's address into a public form and that must not be a way to sign a colleague out. Sessions end when the link is *used* (FR-A-10). A new request does retire the previous unused link — including one an administrator issued — limited to three an hour per address. Invited and suspended accounts are sent nothing and told the same as everyone else. | 2026-10-01 | Open — confirm |
 | OQ-162 | **Editing hiring stages and scorecards.** (a) Both are gated by `recruitment.posting.write` (HR only) rather than a permission of their own — adding a key means a seed and role-matrix change; say if it should be separate. (b) Changing a set of stages changes it for **every role using it**, including ones mid-hiring; people stay in their stage, and a stage with people in it cannot be removed. There is no "copy this set" button. (c) The **last stage** is where a hired candidate is placed, whatever it is called — the editor says so. (d) Scale levels are renumbered 1…n in the order shown, so reordering or removing a level changes what a number means for *future* interviews; past feedback keeps the label it was given. (e) Nothing can be deleted, only switched off. | 2026-10-01 | Open — confirm |
+| OQ-163 | **What correcting history does and does not reach.** A corrected period changes every later answer read from history: headcount and attendance reports for those dates, and which manager a past period is attributed to. It does **not** touch payslips already issued (they carry their own snapshot), attendance days already computed, or leave already approved — and nothing warns that a correction falls inside a **finalised pay period**. Should a correction inside a locked period be refused, or flagged for payroll? Also: a correction marks the row with the same "backdated" flag a backdated transfer uses (the screen says "Backdated or corrected"); the audit log tells them apart. | 2026-10-02 | Open — decide the pay-period rule |
 | OQ-118 | **Device-event retention.** Does "no automatic deletion" (OQ-1002 et al.) extend to machine logs? Without a sweep or transition-only logging, one terminal writes >1M rows a year. | 2026-09-28 | Open — before feature 04 ingestion |
 | OQ-006 | The two source documents the plan is built on (`HRM_SYSTEM_PLANNING_INSTRUCTIONS.md`, `HRM_SYSTEM_DEPLOYMENT.md`) are not present anywhere under `C:\Dev`. | 2026-09-15 | Open |
 | OQ-101 | Auth library: Auth.js (NextAuth) v5 vs hand-rolled sessions. Plan assumes hand-rolled. | 2026-09-15 | Open — needs decision before build |
@@ -289,6 +290,53 @@ gap.
 ---
 
 ## Session entries
+
+### 2026-10-02 — Session 45: The email-change notice, and feature 02's ready work
+
+**Done**
+
+- **"Your sign-in address was changed"** (asked for by the user). New notification
+  `account.email_changed`, mandatory, email only, sent **to the old address** through the
+  `contextEmail` rule — by address, because the account now carries the new one. It does not say
+  what the new address is: where the change is a correction, the old address is someone else's.
+  Nothing is sent for an account that was only ever invited. `hrm-system` `dafd855`.
+- **Correcting history** (02 FR-H-05) — `correctAssignment()`,
+  `PATCH /api/employees/:id/assignments/:aid`, behind `employee.edit_history` (super admin), with a
+  required reason and its own audit action `employee.history_corrected` holding both versions.
+  - Job fields of any period can be corrected. If it is the period in effect today, **only the
+    corrected fields** reach the profile (the Session 31 lesson: history rows do not always record
+    every field, and copying a whole row wiped managers).
+  - A period's start can move, and the previous period's end moves with it. Not past a neighbour,
+    not across today, and not for the first period of a spell of employment (that is the hire date).
+  - Past periods are checked for existence only — a department since closed was real at the time.
+    The reporting-cycle check applies to the current period only.
+  - A "Correct" dialog on each row of Job & history; it sends only the fields that were changed, so
+    a value no longer in a picker is never rewritten by accident. `056e823`.
+- **Org chart: zoom, pan, fit, print** — `ChartViewport`, a client wrapper that scales (CSS `zoom`)
+  and scrolls the same server-rendered tree. No canvas, no library. Drag with a mouse, swipe on
+  touch, arrow keys once focused. "Print or save as PDF" uses the browser's print, landscape, with
+  the tree scaled to the page width. Below tablet width the tree gives way to the list, as specified.
+- **Departments: drag to re-parent** — drag a row by its handle onto another, or onto a "top level"
+  strip; a confirmation names both departments and says who will see a different set of people.
+  Mouse only and hidden from assistive technology on purpose: "Move to" in the Edit dialog remains
+  the keyboard and touch route. The server's cycle and depth checks are unchanged.
+
+**Verified** — three integration tests for history correction (30 in `employees.test.ts`), one
+extended for the notice; full suites **unit 339, integration 322**; `tsc` and lint clean. HTTP
+probes: history 9/9, org chart and departments 5/5 (controls render; an employee can open the chart).
+
+**Not verified — and this matters more than usual.** Zoom, pan, fit, print scaling and drag and drop
+are browser behaviour; none of it has been seen working, because both screens are behind sign-in.
+The probes prove the controls are on the page, not that dragging does what it should. Please try:
+zoom in and out and "Fit to screen" on `/org-chart`, print preview, and dragging a department.
+
+**Not built** — a PNG export of the chart (needs an HTML-to-image package; ask first), and the
+nightly job for scheduled job changes (still applied on the first read of each day).
+
+**Decisions taken, to confirm** — OQ-163.
+
+**Next** — `REMAINING_WORK.md` section 4, feature 03: SVG logos, the twelve-month holiday grid,
+applying the configured date format across the app.
 
 ### 2026-10-01 — Session 44: Feature 01's last two remainders — sign one session out, edit an account
 
