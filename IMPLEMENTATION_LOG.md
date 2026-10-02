@@ -218,6 +218,7 @@ gap.
 | OQ-169 | **Reports: four choices to confirm.** (a) *How long leave requests wait* is open to anyone who can approve leave, for the people in their reach, and is timed to the **final** decision in **calendar** days. (b) *Review completion* is for those who can see cycles (HR), not managers. (c) In the pipeline report an application that skipped a stage counts as having passed it. (d) "PDF export" is the browser's print-to-PDF and is **not** recorded as an export, unlike CSV; a branded server-made PDF (OQ-1106) is still open. | Built Session 51; say if any should differ |
 | OQ-170 | **Hiring: three choices to confirm.** (a) An invite sent as part of a hire goes to the **work email only** — never the address they applied from — and gives the **Employee** role only; anything more is granted afterwards in Users. (b) If the address already has a login the **whole hire is refused** rather than hiring without the invite. (c) The offers list is for those who may see the pay offered (HR); hiring managers do not get it. | Built Session 52; say if any should differ |
 | OQ-171 | **Notifications: which approvals can be decided in the list.** Corrections, leave, requests to hire and employee change requests can. **Pay-run approval and arrears review cannot** — they open their own screen, so pay is never approved without the figures in view. | Built Session 54; say if pay approvals should be inline too |
+| OQ-172 | **Reports: three choices to confirm.** (a) The records behind a row are **never** offered on the pay report, and the leave-wait list never shows the kind of leave. (b) A background run's result lives in the app's memory for ten minutes and is lost on restart (run it again); with more than one app instance this needs a shared store — tied to OQ-315. (c) Opening the records behind a row is not logged as an export: they are records the reader may already list. | Built Session 55; say if any should differ |
 | OQ-118 | **Device-event retention.** Does "no automatic deletion" (OQ-1002 et al.) extend to machine logs? Without a sweep or transition-only logging, one terminal writes >1M rows a year. | 2026-09-28 | Open — before feature 04 ingestion |
 | OQ-006 | The two source documents the plan is built on (`HRM_SYSTEM_PLANNING_INSTRUCTIONS.md`, `HRM_SYSTEM_DEPLOYMENT.md`) are not present anywhere under `C:\Dev`. | 2026-09-15 | Open |
 | OQ-101 | Auth library: Auth.js (NextAuth) v5 vs hand-rolled sessions. Plan assumes hand-rolled. | 2026-09-15 | Open — needs decision before build |
@@ -298,6 +299,41 @@ gap.
 ---
 
 ## Session entries
+
+### 2026-10-02 — Session 55: Feature 11 — the records behind a row, paging, and runs that go to the background. The ready list is empty
+
+**Done**
+
+- **The records behind a row** (FR-P-06, US-09). A report may declare `drill`: a second call into
+  the owning feature for one row, with the permission that lists those records. `drillReport`,
+  `POST /api/reports/:key/drill`, and a page at `/reports/:key/rows` reached from the row's name.
+  Offered only to someone who could have listed the records directly — otherwise the name is plain
+  text and the endpoint is a 404 — and within the narrowest of the reader's reaches. Five reports
+  have one:
+  - headcount → the people counted at the end of the period (taken from the same pass as the count);
+  - attendance and overtime → the same figures person by person, for the days each spent there;
+  - leave balances → who holds that leave type, with their four numbers;
+  - how long leave waits → the requests, with outcome and days — **never the kind of leave**.
+  A sensitive report **may not** declare one (checked when the catalogue loads): a list of who is
+  behind a pay figure is the disclosure suppression exists to prevent. Hiring and review-completion
+  reports offer none either: they name nobody by design.
+- **Paging** (FR-R-02). `page` / `pageSize` on a run return a slice; totals, row count and
+  comparison stay those of the whole result. The viewer's table shows 50 rows at a time, after
+  sorting, and says the totals are for all of them.
+- **Runs that take too long** (FR-R-05). A run is started in its own transaction and raced against
+  the new setting `report.backgroundThresholdSeconds` (5). In time: the result, as before. Not in
+  time: `202` with a run id, collected from `GET /api/reports/runs/:id` by the user who started it
+  and nobody else. Results are held in the process's memory for ten minutes and never written to
+  the database. The report page shows "Working out the figures…" while it renders.
+
+**Verified** — `tsc` and lint clean; unit 360 (+2); integration 347 (+3); HTTP probe 18/18,
+including a run forced to the background and collected, and a manager opening a row outside his
+reach (no records, not someone else's people).
+
+**Decisions taken, to confirm** — OQ-172.
+
+**Next** — `REMAINING_WORK.md` section 4 is finished. What is left needs you: the browser pass
+(section 2), the open questions (section 1), and the items blocked on them (section 3).
 
 ### 2026-10-02 — Session 54: Feature 05 — deciding a change request from the notification list; pay approvals stay on their screens
 

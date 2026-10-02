@@ -145,8 +145,8 @@ Grouped by feature. None of this needs an answer first.
   for any of them yet; each needs a decision that it is wanted
 
 **11 Reports**
-- Drill-through from a figure to its rows
-- Background runs and paging for large results
+- ~~Drill-through from a row to its records~~, ~~background runs~~, ~~paging~~ — done 2026-10-02
+  (Session 55). **Every ready item in this section is now done or struck with a reason.**
 - ~~A funnel chart and a pipeline-conversion report~~, ~~approval turnaround~~, ~~review completion~~,
   ~~fiscal-year periods~~, ~~print or save as PDF~~ — done 2026-10-02 (Session 51)
 - Line charts — with the first report that is a series over time
