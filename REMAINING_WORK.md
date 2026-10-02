@@ -105,9 +105,11 @@ Grouped by feature. None of this needs an answer first.
 - Nothing ready beyond ingestion (section 3)
 
 **05 Notifications**
-- Inline actions in the notification list
-- Snooze
-- A password-changed notice on the reset-link path
+- ~~Inline actions in the notification list~~, ~~snooze~~, ~~a password-changed notice on the
+  reset-link path~~, ~~a test-send policy~~ — done 2026-10-02 (Session 47)
+- Inline decisions for the other approval notices (pay runs, profile changes, payroll adjustments):
+  each needs its own confirmation, so they still open their own screen
+- Delivery and bounce webhooks — blocked on the choice of mail service (OQ-503)
 
 **06 Leave**
 - Attachments on a request (for example a sick note)

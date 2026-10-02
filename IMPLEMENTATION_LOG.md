@@ -53,7 +53,7 @@ Source documents:
 | Test harness — canonical fixture, two tenants, injected clock | ✅ Built |
 | Database test suite (`npm run test:db`) | ✅ **All passing** (RLS coverage now includes the 14 attendance tables) |
 | Unit test suite — Vitest (`npm test`) | ✅ **355 tests passing** (10 SVG checks, 6 date and time formats, 28 attendance engine, 22 notifications incl. SMTP against a fake server, 16 leave rules, 25 payroll engine, 14 portal, 18 performance, 19 reports, 17 recruitment) |
-| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **322 tests passing** (17 leave, 22 payroll, 13 portal, 17 performance, 21 reports, 22 recruitment and onboarding) |
+| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **326 tests passing** (17 leave, 22 payroll, 13 portal, 17 performance, 21 reports, 22 recruitment and onboarding) |
 | Typecheck (`npx tsc --noEmit`) | ✅ **clean** (run `next typegen` first when routes change) |
 | **Stack proven over HTTP** — `next dev`, Auth.js sign-in, forced change, revocation, scoping | ✅ 2026-09-28 |
 | 01/02 **contract layer** — permission catalogue, authorization, scope, audit | ✅ Built and tested |
@@ -73,7 +73,7 @@ Source documents:
 | **Feature 04 engine + API + screens** — shifts, patterns, roster, attendance days, corrections with approval chains, queue, day opener, gap detector | ✅ 2026-09-29 (browser visual check owed) |
 | Feature 04 remainders — ingestion (/iclock, collector, quarantine, unmatched-PIN maintenance) on OQ-319; alerts and reminders on 05; ON_LEAVE from 06; period lock from 07 | ⬜ Deferred, listed in Session 33 |
 | **Feature 05 Notifications** — catalogue, `notify()`, worker, local outbox + SMTP, digests, the 01–04 backlog, bell, list, preferences, template editor, delivery log | ✅ 2026-09-30 (browser visual check owed) |
-| Feature 05 remainders — delivery webhooks (OQ-503), inline actions in the list, snooze (OQ-511), per-type test-send policy (OQ-512), password-changed notice on the reset-link path | ⬜ Deferred, listed in Session 34 |
+| Feature 05 remainders — deciding from the list, snooze, the test-send policy and the password-changed notice on the reset path built in Session 47. **Left:** delivery webhooks (blocked, OQ-503) | 🟡 2026-10-02 |
 | **Feature 06 Leave** — types, policies + assignments, append-only ledger + snapshots, requests with live cost, approval chains with delegation and escalation, grants/carry-over/expiry/settlement engines, calendar, attendance reads approved leave, screens | ✅ 2026-09-30 (browser visual check owed; real entitlements wait on OQ-601b) |
 | Feature 06 remainders — attachments UI, per-type/length routing, minimum staffing (warn only), comp-off, hours-based leave, fiscal-year HR views (OQ-134) | ⬜ Deferred, listed in Session 35 |
 | **Feature 07 Payroll** — decimal + formula engine, components, bracket tables, structures, dated compensation with proposed arrears, bank details, pay calendar, run lifecycle with exceptions and variance, the period lock, payslips with trails and access log, adjustments, off-cycle runs, bank and accounting exports, screens | ✅ 2026-10-01 (browser visual check owed; **real components wait on OQ-701** — only labelled examples are seeded) |
@@ -211,6 +211,7 @@ gap.
 | OQ-162 | **Editing hiring stages and scorecards.** (a) Both are gated by `recruitment.posting.write` (HR only) rather than a permission of their own — adding a key means a seed and role-matrix change; say if it should be separate. (b) Changing a set of stages changes it for **every role using it**, including ones mid-hiring; people stay in their stage, and a stage with people in it cannot be removed. There is no "copy this set" button. (c) The **last stage** is where a hired candidate is placed, whatever it is called — the editor says so. (d) Scale levels are renumbered 1…n in the order shown, so reordering or removing a level changes what a number means for *future* interviews; past feedback keeps the label it was given. (e) Nothing can be deleted, only switched off. | 2026-10-01 | Open — confirm |
 | OQ-163 | **What correcting history does and does not reach.** A corrected period changes every later answer read from history: headcount and attendance reports for those dates, and which manager a past period is attributed to. It does **not** touch payslips already issued (they carry their own snapshot), attendance days already computed, or leave already approved — and nothing warns that a correction falls inside a **finalised pay period**. Should a correction inside a locked period be refused, or flagged for payroll? Also: a correction marks the row with the same "backdated" flag a backdated transfer uses (the screen says "Backdated or corrected"); the audit log tells them apart. | 2026-10-02 | Open — decide the pay-period rule |
 | OQ-164 | **How far the date and time format reaches.** The default is now **"31 Jan 2026"** (it was listed as 31/01/2026 but nothing read it; the worded month is what the app has always shown and cannot be misread as the American order). Choosing another format changes every full date and date-and-time on screens. It deliberately does **not** change dates written in words ("Tue 3 Mar", "March 2026"), exported files (CSV keeps ISO dates so spreadsheets parse them), or emails. A few clock-only stamps in Client Components still show 24-hour time. Say if exports or emails should follow the setting. | 2026-10-02 | Open — confirm the reach |
+| OQ-165 | **Snooze and the test-send policy were built on proposed answers** (OQ-511, OQ-512). Snooze: three fixed choices — in three hours, tomorrow at 09:00, next Monday at 09:00, in the company's timezone — with no custom time. A snoozed notice leaves the list and the badge, returns **unread**, and is not cleared by "Mark all read". **It does not hold back the email**, which has usually gone already, and it does not stop an approval escalating: snoozing a leave request does not pause its clock. Test-send: refused for five types — the invite and reset emails (a real-looking, dead sign-in link) and the three security alarms (password, sign-in address, bank details) — on the reasoning that a practice alarm teaches people to ignore the real one. Every other type can still be test-sent, so mail delivery can still be diagnosed. | 2026-10-02 | Open — confirm both |
 | OQ-118 | **Device-event retention.** Does "no automatic deletion" (OQ-1002 et al.) extend to machine logs? Without a sweep or transition-only logging, one terminal writes >1M rows a year. | 2026-09-28 | Open — before feature 04 ingestion |
 | OQ-006 | The two source documents the plan is built on (`HRM_SYSTEM_PLANNING_INSTRUCTIONS.md`, `HRM_SYSTEM_DEPLOYMENT.md`) are not present anywhere under `C:\Dev`. | 2026-09-15 | Open |
 | OQ-101 | Auth library: Auth.js (NextAuth) v5 vs hand-rolled sessions. Plan assumes hand-rolled. | 2026-09-15 | Open — needs decision before build |
@@ -291,6 +292,48 @@ gap.
 ---
 
 ## Session entries
+
+### 2026-10-02 — Session 47: Feature 05's ready work — decide from the list, snooze, test-send policy
+
+**Done**
+
+- **Deciding from the notification list** (05 ui-ux.md: "clear three correction requests without
+  leaving the list"). A notice that is still waiting on the reader — a correction request, a leave
+  request, a request to hire — carries Approve and Decline in the row. It calls the **same Server
+  Action as the approval screen**, so every rule there applies here; declining asks for the reason
+  first. A decision supersedes the notice, which dims and says who handled it. Leave whose cost
+  has changed since it was requested is sent to the full screen, which shows the new figures.
+  `listMine` returns `inline: { kind, id } | null`; a notice already superseded has none.
+- **Snooze** (OQ-511) — migration `20261007000000_notification_snooze` adds
+  `notification_deliveries.snoozed_until`. `snooze()`, `POST /api/notifications/:id/snooze`,
+  "Remind me later" in the row (three plain buttons, not a menu), a "Snoozed" filter that appears
+  only while something is snoozed, and "Bring back now". Snoozed items are out of the list and the
+  badge; they return unread, marked "you asked to be reminded". Reading something ends its snooze.
+  "Mark all read" leaves snoozed items alone. A handled notice cannot be snoozed.
+- **Test-send policy** (OQ-512) — `noTestSend` on a notification type, with the reason as a
+  sentence. Set on five types; the editor shows the reason in place of the button, and the service
+  refuses (`422 TEST_SEND_NOT_ALLOWED`) without recording a test as sent.
+- **Password-changed notice on the reset-link path** — redeeming a reset link now sends
+  `account.password_changed`, as changing it from inside always did. An accepted invite does not.
+
+**Verified** — four integration tests added (and one extended); full suites **unit 355,
+integration 326, database suite passing**; `tsc` and lint clean; no schema drift after the
+migration. HTTP probe 15/15: a correction request reaches the manager with the inline decision;
+snooze removes it from list and badge and the Snoozed view shows it; another person's cannot be
+snoozed; once decided the notice is handled and offers nothing; the editor explains the two
+refused test-sends.
+
+**Not verified** — clicking Approve and Decline in the list itself (they are Server Actions,
+reached only from a signed-in browser). The probe decided through the API route, which runs the
+same function. Worth one click of each when you do the browser pass.
+
+**Not built** — inline decisions for pay runs, profile changes and payroll adjustments: each has
+a confirmation of its own that does not fit a row. Delivery webhooks stay blocked on OQ-503.
+
+**Decisions taken, to confirm** — OQ-165.
+
+**Next** — `REMAINING_WORK.md` section 4, feature 06 (leave): attachments on a request, approval
+routing by type or length, the minimum-staffing warning.
 
 ### 2026-10-02 — Session 46: Feature 03's ready work — and a cache that was not one cache
 
