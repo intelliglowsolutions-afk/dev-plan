@@ -112,10 +112,10 @@ Grouped by feature. None of this needs an answer first.
 - Delivery and bounce webhooks — blocked on the choice of mail service (OQ-503)
 
 **06 Leave**
-- Attachments on a request (for example a sick note)
-- Approval routing by leave type or length
-- Minimum-staffing warning
-- Compensatory time off; hours-based leave
+- ~~Attachments on a request~~, ~~approval routing by length~~ (by type already existed, per
+  policy), ~~minimum-staffing warning~~ — done 2026-10-02 (Session 48)
+- Compensatory time off; hours-based leave — each is a sub-feature of its own and waits on a
+  decision (OQ-610, OQ-603)
 - Fiscal-year views for HR
 
 **07 Payroll**

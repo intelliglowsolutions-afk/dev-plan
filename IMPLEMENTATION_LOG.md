@@ -53,7 +53,7 @@ Source documents:
 | Test harness — canonical fixture, two tenants, injected clock | ✅ Built |
 | Database test suite (`npm run test:db`) | ✅ **All passing** (RLS coverage now includes the 14 attendance tables) |
 | Unit test suite — Vitest (`npm test`) | ✅ **355 tests passing** (10 SVG checks, 6 date and time formats, 28 attendance engine, 22 notifications incl. SMTP against a fake server, 16 leave rules, 25 payroll engine, 14 portal, 18 performance, 19 reports, 17 recruitment) |
-| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **326 tests passing** (17 leave, 22 payroll, 13 portal, 17 performance, 21 reports, 22 recruitment and onboarding) |
+| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **329 tests passing** (20 leave, 22 payroll, 13 portal, 17 performance, 21 reports, 22 recruitment and onboarding) |
 | Typecheck (`npx tsc --noEmit`) | ✅ **clean** (run `next typegen` first when routes change) |
 | **Stack proven over HTTP** — `next dev`, Auth.js sign-in, forced change, revocation, scoping | ✅ 2026-09-28 |
 | 01/02 **contract layer** — permission catalogue, authorization, scope, audit | ✅ Built and tested |
@@ -75,7 +75,7 @@ Source documents:
 | **Feature 05 Notifications** — catalogue, `notify()`, worker, local outbox + SMTP, digests, the 01–04 backlog, bell, list, preferences, template editor, delivery log | ✅ 2026-09-30 (browser visual check owed) |
 | Feature 05 remainders — deciding from the list, snooze, the test-send policy and the password-changed notice on the reset path built in Session 47. **Left:** delivery webhooks (blocked, OQ-503) | 🟡 2026-10-02 |
 | **Feature 06 Leave** — types, policies + assignments, append-only ledger + snapshots, requests with live cost, approval chains with delegation and escalation, grants/carry-over/expiry/settlement engines, calendar, attendance reads approved leave, screens | ✅ 2026-09-30 (browser visual check owed; real entitlements wait on OQ-601b) |
-| Feature 06 remainders — attachments UI, per-type/length routing, minimum staffing (warn only), comp-off, hours-based leave, fiscal-year HR views (OQ-134) | ⬜ Deferred, listed in Session 35 |
+| Feature 06 remainders — the note on a request, routing by length and the minimum-staffing warning built in Session 48. **Left:** comp-off (OQ-610), hours-based leave (OQ-603), fiscal-year HR views (OQ-134) | 🟡 2026-10-02 |
 | **Feature 07 Payroll** — decimal + formula engine, components, bracket tables, structures, dated compensation with proposed arrears, bank details, pay calendar, run lifecycle with exceptions and variance, the period lock, payslips with trails and access log, adjustments, off-cycle runs, bank and accounting exports, screens | ✅ 2026-10-01 (browser visual check owed; **real components wait on OQ-701** — only labelled examples are seeded) |
 | Feature 07 remainders — PDF and emailed payslips (OQ-136), structures by group (OQ-137), mid-period pay split (OQ-138), cut-off settlement (OQ-139), reminder jobs, drag re-ordering of components, the bank's own file format (OQ-708) | ⬜ Deferred, listed in Session 36 |
 | **Feature 08 Self-service portal** — employee shell (bottom nav / sidebar), home, my time, leave, pay, profile with change requests, documents, directory; routing by permission; HR's change-request queue and field settings | ✅ 2026-10-01 (**the 375px visual review, acceptance 11, is owed** — it needs a browser; built on the defaults for OQ-802 and OQ-805) |
@@ -212,6 +212,7 @@ gap.
 | OQ-163 | **What correcting history does and does not reach.** A corrected period changes every later answer read from history: headcount and attendance reports for those dates, and which manager a past period is attributed to. It does **not** touch payslips already issued (they carry their own snapshot), attendance days already computed, or leave already approved — and nothing warns that a correction falls inside a **finalised pay period**. Should a correction inside a locked period be refused, or flagged for payroll? Also: a correction marks the row with the same "backdated" flag a backdated transfer uses (the screen says "Backdated or corrected"); the audit log tells them apart. | 2026-10-02 | Open — decide the pay-period rule |
 | OQ-164 | **How far the date and time format reaches.** The default is now **"31 Jan 2026"** (it was listed as 31/01/2026 but nothing read it; the worded month is what the app has always shown and cannot be misread as the American order). Choosing another format changes every full date and date-and-time on screens. It deliberately does **not** change dates written in words ("Tue 3 Mar", "March 2026"), exported files (CSV keeps ISO dates so spreadsheets parse them), or emails. A few clock-only stamps in Client Components still show 24-hour time. Say if exports or emails should follow the setting. | 2026-10-02 | Open — confirm the reach |
 | OQ-165 | **Snooze and the test-send policy were built on proposed answers** (OQ-511, OQ-512). Snooze: three fixed choices — in three hours, tomorrow at 09:00, next Monday at 09:00, in the company's timezone — with no custom time. A snoozed notice leaves the list and the badge, returns **unread**, and is not cleared by "Mark all read". **It does not hold back the email**, which has usually gone already, and it does not stop an approval escalating: snoozing a leave request does not pause its clock. Test-send: refused for five types — the invite and reset emails (a real-looking, dead sign-in link) and the three security alarms (password, sign-in address, bank details) — on the reasoning that a practice alarm teaches people to ignore the real one. Every other type can still be test-sent, so mail delivery can still be diagnosed. | 2026-10-02 | Open — confirm both |
+| OQ-166 | **Leave: three choices to confirm.** (a) **Routing by length** is one number per policy — "also to HR when longer than N days" — and only lengthens a manager-only chain; it never removes a step. Routing by *type* was already there (each policy names its chain). (b) **Minimum staffing** is one number per department — the fewest people who should be in — counted over that department only, not its sub-departments, with a half day counting as away. It warns the person asking and the approver and **never blocks** (the proposed answer to OQ-611). It knows nothing of shifts or skills: "3 of 5 in" may still be the wrong three. (c) **The note on a request** is uploaded by the person the leave is for and stored on their employee record as a certificate; it can be opened by them, the approvers named on that request and HR — and each opening by someone else is in the audit log. It is therefore also visible in their documents list to anyone who can read their documents (HR, and themselves). | 2026-10-02 | Open — confirm |
 | OQ-118 | **Device-event retention.** Does "no automatic deletion" (OQ-1002 et al.) extend to machine logs? Without a sweep or transition-only logging, one terminal writes >1M rows a year. | 2026-09-28 | Open — before feature 04 ingestion |
 | OQ-006 | The two source documents the plan is built on (`HRM_SYSTEM_PLANNING_INSTRUCTIONS.md`, `HRM_SYSTEM_DEPLOYMENT.md`) are not present anywhere under `C:\Dev`. | 2026-09-15 | Open |
 | OQ-101 | Auth library: Auth.js (NextAuth) v5 vs hand-rolled sessions. Plan assumes hand-rolled. | 2026-09-15 | Open — needs decision before build |
@@ -292,6 +293,49 @@ gap.
 ---
 
 ## Session entries
+
+### 2026-10-02 — Session 48: Feature 06's ready work — the note, routing by length, thin cover
+
+Migration `20261008000000_leave_routing_staffing`: `leave_policies.hr_step_over_days`,
+`departments.min_staffing`, each with a range check.
+
+**Done**
+
+- **The note on a request** (FR-R-01, NFR-06/07) — `src/lib/leave/attachments.ts`,
+  `POST`/`GET /api/leave/requests/:id/attachment`. Until now a request could only point at a
+  document HR had already uploaded; an employee had no way to hand in a doctor's note. The person
+  the leave is for (or HR) uploads it from "My requests", in the admin shell or the portal. It is
+  stored through 02's document path — its content check, its size limit — as a certificate on
+  their record. It can be read by them, by the approvers named on the request's steps (a line
+  manager cannot open employee documents otherwise) and by HR; anyone else gets "not found". Each
+  reading by someone other than its owner is audited. The approver's queue links to it, or says
+  that a note is expected and missing.
+- **Routing by length** — a policy may say "also to HR when longer than N days". A manager-only
+  chain becomes manager-then-HR for such a request, the added step says why, and the cost preview
+  tells the person before they submit. (Routing by type already existed: each policy names a chain.)
+- **Minimum staffing** (OQ-611) — a department may say the fewest people who should be in. A
+  request that would take it below that on any day is warned about in the cost preview and in the
+  approver's queue, with the numbers ("only 1 of Assembly's 2 people would be in"). It never
+  blocks. Set in the department's Edit dialog; shown in the department list.
+- The portal's request form now shows every warning rather than only the first.
+
+**Verified** — three integration tests (20 in `leave.test.ts`); full suites **unit 355,
+integration 329, database suite passing**; `tsc` and lint clean; no drift after the migration.
+HTTP probe 22/22: the preview carries all three signals and the request still goes through; two
+steps are created; the note is refused when it is not what it claims, accepted from its owner,
+opened by the approver and HR as a sandboxed download, refused to others; the manager's approval
+passes a long request to HR, who sees why.
+
+**Not verified** — the file control in a browser (a hidden input with a label as the button, and
+the focus ring that goes with it). Everything behind it is tested.
+
+**Not built** — comp-off and hours-based leave: each is a sub-feature with its own open question
+(OQ-610, OQ-603), not a remainder. Fiscal-year views (OQ-134).
+
+**Decisions taken, to confirm** — OQ-166.
+
+**Next** — `REMAINING_WORK.md` section 4, feature 07 (payroll: reminder jobs, re-ordering
+components), then 08 and 09.
 
 ### 2026-10-02 — Session 47: Feature 05's ready work — decide from the list, snooze, test-send policy
 
