@@ -52,7 +52,7 @@ Source documents:
 | Tenant isolation | ✅ **Verified end to end**: no context → 0 rows; per-tenant context → only that tenant; cross-tenant INSERT refused |
 | Test harness — canonical fixture, two tenants, injected clock | ✅ Built |
 | Database test suite (`npm run test:db`) | ✅ **All passing** (RLS coverage now includes the 14 attendance tables) |
-| Unit test suite — Vitest (`npm test`) | ✅ **339 tests passing** (28 attendance engine, 22 notifications incl. SMTP against a fake server, 16 leave rules, 25 payroll engine, 14 portal, 18 performance, 19 reports, 17 recruitment) |
+| Unit test suite — Vitest (`npm test`) | ✅ **355 tests passing** (10 SVG checks, 6 date and time formats, 28 attendance engine, 22 notifications incl. SMTP against a fake server, 16 leave rules, 25 payroll engine, 14 portal, 18 performance, 19 reports, 17 recruitment) |
 | Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **322 tests passing** (17 leave, 22 payroll, 13 portal, 17 performance, 21 reports, 22 recruitment and onboarding) |
 | Typecheck (`npx tsc --noEmit`) | ✅ **clean** (run `next typegen` first when routes change) |
 | **Stack proven over HTTP** — `next dev`, Auth.js sign-in, forced change, revocation, scoping | ✅ 2026-09-28 |
@@ -69,7 +69,7 @@ Source documents:
 | **Feature 02 screens** — list, create/edit, tabbed profile, lifecycle dialogs, import wizard, org chart, departments, positions | ✅ 2026-09-28 (browser visual check still owed) |
 | Feature 02 remainders — history correction, org-chart zoom/pan/print and drag re-parenting built in Session 45. **Left:** the nightly scheduler for dated changes, and a PNG export of the org chart (needs a package — ask first) | 🟡 2026-10-02 |
 | **Feature 03 API + screens** — settings registry, company profile, work week, holidays, `isWorkingDay`, terminal registry | ✅ 2026-09-28 (browser visual check owed) |
-| Feature 03 remainders — /iclock wiring and unknown-device panel (OQ-319), offline alerts (05), SVG logos, 12-month holiday grid, applying date formats app-wide | ⬜ Deferred, listed in Session 32 |
+| Feature 03 remainders — SVG logos, the 12-month holiday calendar and the date/time format built in Session 46. **Left:** /iclock wiring and the unknown-device panel (blocked, OQ-319), offline-terminal alerts, and the date format in exports, emails and worded dates | 🟡 2026-10-02 |
 | **Feature 04 engine + API + screens** — shifts, patterns, roster, attendance days, corrections with approval chains, queue, day opener, gap detector | ✅ 2026-09-29 (browser visual check owed) |
 | Feature 04 remainders — ingestion (/iclock, collector, quarantine, unmatched-PIN maintenance) on OQ-319; alerts and reminders on 05; ON_LEAVE from 06; period lock from 07 | ⬜ Deferred, listed in Session 33 |
 | **Feature 05 Notifications** — catalogue, `notify()`, worker, local outbox + SMTP, digests, the 01–04 backlog, bell, list, preferences, template editor, delivery log | ✅ 2026-09-30 (browser visual check owed) |
@@ -167,7 +167,7 @@ gap.
 | OQ-119 | **Confirm the no-escalation rule** (added 2026-09-28, not in the spec): nobody may assign a role, edit a role's grants, or change/suspend/reset a user whose access exceeds their own. Without it HR_ADMIN (`user.assign_role` at ALL) can make colleagues SUPER_ADMIN and vice versa. Consequence: an HR admin cannot manage the owner's account. | 2026-09-28 | Open — confirm intended |
 | OQ-120 | Invite links live 60 minutes, same as reset links (ui-ux.md). Realistic for a link handed over in person; too short once invites are emailed and read the next morning. Revisit with feature 05. | 2026-09-28 | Open — revisit with 05 |
 | OQ-123 | **The application role can UPDATE the `tenants` table**, which has no RLS (it is the tenant list). Settings write the timezone and currency there, always for the session's own tenant — but nothing at the database level stops a bug from writing another tenant's row. Move per-tenant mutable fields to an RLS'd table, or grant hrm_app column-level UPDATE on its own row via a policy. | 2026-09-28 | Open — hardening |
-| OQ-124 | **SVG logos** are refused: SVG can carry script, and sanitising it safely needs a library (e.g. DOMPurify on the server). Approve a dependency, or keep PNG/JPEG only. | 2026-09-28 | Open |
+| OQ-124 | **SVG logos** — ~~refused pending a sanitiser library~~. **Accepted from Session 46 with no library:** an SVG is *refused* (never rewritten) if it contains anything active, is only ever shown through `<img>`, and is served with a CSP that forbids script and network access. Confirm you are content with a rejecting check rather than a sanitiser; the trade is that an unusual-but-harmless SVG may be refused and need re-exporting. | 2026-10-02 | Open — confirm |
 | OQ-121 | **Emergency contacts treated as personal data** (behind `employee.read_sensitive`, with the other personal fields). They are third parties' phone numbers; the spec left their visibility unstated. A manager therefore cannot see a team member's emergency contact. | 2026-09-28 | Open — confirm intended |
 | OQ-122 | **Terminating a department head does not clear the head.** The department keeps pointing at someone who has left, so no one gets that department through OQ-201's headship rule. Clear it automatically, or prompt? | 2026-09-28 | Open |
 | OQ-209 | Document volume: now a named volume `documents-data` in `docker-compose.yml`. **The backup story is still unwritten** — a database-only backup keeps document metadata and silently loses every file (02 NFR-05). | 2026-09-28 | Volume ✅; backup open |
@@ -210,6 +210,7 @@ gap.
 | OQ-161 | **Asking for a reset link does not sign anyone out.** An admin-issued reset ends the user's sessions and forces a change at next sign-in; the self-service request does neither, because anyone can type anyone's address into a public form and that must not be a way to sign a colleague out. Sessions end when the link is *used* (FR-A-10). A new request does retire the previous unused link — including one an administrator issued — limited to three an hour per address. Invited and suspended accounts are sent nothing and told the same as everyone else. | 2026-10-01 | Open — confirm |
 | OQ-162 | **Editing hiring stages and scorecards.** (a) Both are gated by `recruitment.posting.write` (HR only) rather than a permission of their own — adding a key means a seed and role-matrix change; say if it should be separate. (b) Changing a set of stages changes it for **every role using it**, including ones mid-hiring; people stay in their stage, and a stage with people in it cannot be removed. There is no "copy this set" button. (c) The **last stage** is where a hired candidate is placed, whatever it is called — the editor says so. (d) Scale levels are renumbered 1…n in the order shown, so reordering or removing a level changes what a number means for *future* interviews; past feedback keeps the label it was given. (e) Nothing can be deleted, only switched off. | 2026-10-01 | Open — confirm |
 | OQ-163 | **What correcting history does and does not reach.** A corrected period changes every later answer read from history: headcount and attendance reports for those dates, and which manager a past period is attributed to. It does **not** touch payslips already issued (they carry their own snapshot), attendance days already computed, or leave already approved — and nothing warns that a correction falls inside a **finalised pay period**. Should a correction inside a locked period be refused, or flagged for payroll? Also: a correction marks the row with the same "backdated" flag a backdated transfer uses (the screen says "Backdated or corrected"); the audit log tells them apart. | 2026-10-02 | Open — decide the pay-period rule |
+| OQ-164 | **How far the date and time format reaches.** The default is now **"31 Jan 2026"** (it was listed as 31/01/2026 but nothing read it; the worded month is what the app has always shown and cannot be misread as the American order). Choosing another format changes every full date and date-and-time on screens. It deliberately does **not** change dates written in words ("Tue 3 Mar", "March 2026"), exported files (CSV keeps ISO dates so spreadsheets parse them), or emails. A few clock-only stamps in Client Components still show 24-hour time. Say if exports or emails should follow the setting. | 2026-10-02 | Open — confirm the reach |
 | OQ-118 | **Device-event retention.** Does "no automatic deletion" (OQ-1002 et al.) extend to machine logs? Without a sweep or transition-only logging, one terminal writes >1M rows a year. | 2026-09-28 | Open — before feature 04 ingestion |
 | OQ-006 | The two source documents the plan is built on (`HRM_SYSTEM_PLANNING_INSTRUCTIONS.md`, `HRM_SYSTEM_DEPLOYMENT.md`) are not present anywhere under `C:\Dev`. | 2026-09-15 | Open |
 | OQ-101 | Auth library: Auth.js (NextAuth) v5 vs hand-rolled sessions. Plan assumes hand-rolled. | 2026-09-15 | Open — needs decision before build |
@@ -290,6 +291,58 @@ gap.
 ---
 
 ## Session entries
+
+### 2026-10-02 — Session 46: Feature 03's ready work — and a cache that was not one cache
+
+**Done**
+
+- **Date and time format, applied.** `company.dateFormat` and `company.timeFormat` existed and
+  nothing read them. Now:
+  - `src/lib/display-format.ts` — pure: the four date formats, 12/24-hour clock, date-and-time.
+  - `display-format.server.ts` — a per-request store (React `cache`) that `pageGuard` fills, so
+    `formatDateOnly()` / `formatDateTime()` / `whenIn()` / `dayMonth()` follow the company's choice
+    with no format argument threaded through their ~106 call sites.
+  - `components/format-context.tsx` — the same values for Client Components (`useFormats()`), put
+    in context by both shells.
+  - The request store is set from the page's own code, **not inside the database transaction** —
+    a transaction callback did not reliably see the request's store.
+- **Holiday calendar** — the twelve-month view, beside the list. Holidays marked by type (filled,
+  ringed, dashed — and named under each month, never colour alone), half days half-filled,
+  non-working days shaded, today outlined, weeks starting on the company's first day. For someone
+  who can edit, a day is a button (add, or change the holiday there) and the whole year is **one
+  tab stop** with arrow keys, Home/End and Page Up/Down. Everyone else gets it read-only and opens
+  on it; HR opens on the list.
+- **SVG logos** — accepted without a sanitiser: `src/lib/company/svg.ts` refuses a file containing
+  script, event handlers, script links, embedded documents, animation that rewrites attributes,
+  external references, DOCTYPE/entities or CDATA, and changes nothing. Served with
+  `Content-Security-Policy: default-src 'none'; …; sandbox`. It is only ever shown through `<img>`.
+
+**Found on the way — the important one**
+
+- **The settings cache was per bundle, not per process.** `const cache = new Map()` at module
+  level: pages, route handlers and Server Actions each got their own copy, so **a setting saved
+  through the API was invisible to pages until a restart** (seen: the settings overview still
+  showed the old date format after a successful save). The **rate limiter** had the same shape —
+  the sign-in form and the sign-in API counted separately — and so did the "due changes applied
+  today" memo. All three now live on `globalThis` through `src/lib/process-state.ts`, as the
+  database client already did. *This predates today and affected every setting, including the
+  timezone.* It is still one process's memory: more than one app instance needs a shared store
+  (OQ-109, unchanged).
+
+**Verified** — unit **355** (16 new), integration **322**, `tsc` and lint clean. HTTP probe 22/22:
+a scripted SVG is refused with the reason, a plain one is served with the inert headers; the
+calendar renders twelve months with full accessible names and a single tab stop; a format saved
+through the API reaches server pages, date-times and a Client Component at once, for another user
+of the same company, and reverts.
+
+**Not verified** — how the calendar looks and how the arrow keys feel (behind sign-in). The probe
+checks the markup, not the experience.
+
+**Decisions taken, to confirm** — OQ-164 (how far the format reaches; the default), OQ-124
+(rejecting check instead of a sanitiser).
+
+**Next** — `REMAINING_WORK.md` section 4, feature 05 (inline actions in the notification list,
+snooze, a password-changed notice on the reset-link path), then 06.
 
 ### 2026-10-02 — Session 45: The email-change notice, and feature 02's ready work
 

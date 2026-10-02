@@ -95,9 +95,11 @@ Grouped by feature. None of this needs an answer first.
 - The nightly job that applies scheduled job changes (they are applied on first read each day today)
 
 **03 Settings**
-- SVG logos
-- Twelve-month holiday grid
-- Applying the configured date format across the app
+- ~~SVG logos~~, ~~twelve-month holiday grid~~ — done 2026-10-02 (Session 46)
+- Date and time format: applied to every full date and date-time on screens (Session 46). **Still
+  in their own form:** dates written in words ("Tue 3 Mar", month titles), exported files, emails,
+  and clock-only times in a few Client Components (the notification bell, payroll and report
+  time stamps)
 
 **04 Attendance**
 - Nothing ready beyond ingestion (section 3)
