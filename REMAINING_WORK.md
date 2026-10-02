@@ -136,10 +136,10 @@ Grouped by feature. None of this needs an answer first.
 - ~~Editors for pipeline stages and scorecard forms~~ — done 2026-10-01 (Session 42)
 - ~~A Reschedule button~~, ~~confirmation after a retention deletion~~, ~~copy the CV into the
   employee's documents on hire~~ — done 2026-10-01 (Session 43)
-- Send the login invite as part of the hire
-- A list endpoint for offers
-- Drag on the pipeline board
-- References, background checks, e-signature, a candidate status page
+- ~~Send the login invite as part of the hire~~, ~~a list of offers~~ (endpoint and page), ~~drag on
+  the pipeline board~~ — done 2026-10-02 (Session 52)
+- References, background checks, e-signature, a candidate status page — no requirement written
+  for any of them yet; each needs a decision that it is wanted
 
 **11 Reports**
 - Drill-through from a figure to its rows

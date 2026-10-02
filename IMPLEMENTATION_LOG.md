@@ -216,6 +216,7 @@ gap.
 | OQ-167 | **Payroll reminders: how often, and to whom.** (a) *No run yet*: to everyone who can open a run, once when the cut-off is three days away and once after it passes; then silence, and none at all after fourteen days or for a company with no salaries set. (b) *Still to approve*: to everyone who can approve, once after a calculated run has waited a day and once when the pay date is two days away — two messages per calculation, not one a day (the spec said "daily"; I capped it, as every other reminder in the system is capped). A recalculation starts the count again. (c) *Rates not reviewed*: monthly, to those who configure components, naming them; a banded deduction with no review date counts as stale; the seeded examples do not. All three can be reworded, and (a) and (c) can be turned off per person. Nothing is ever calculated, approved or paid by a job. | 2026-10-02 | Open — confirm the cadence |
 | OQ-168 | **Portal and review choices to confirm.** (a) The installable portal keeps **nothing on the phone**: no service worker, no offline pages — a lost or shared phone holds no pay or personal data, at the cost of needing a connection. (b) The self-review is shown beside the manager's review **by default, with no setting**, to the manager (once submitted) and the employee (once shared) only; HR readers with the content grant do not get the combined view. (c) Draft answer history stays unbuilt (latest answer only). | Built Session 50; say if any should differ |
 | OQ-169 | **Reports: four choices to confirm.** (a) *How long leave requests wait* is open to anyone who can approve leave, for the people in their reach, and is timed to the **final** decision in **calendar** days. (b) *Review completion* is for those who can see cycles (HR), not managers. (c) In the pipeline report an application that skipped a stage counts as having passed it. (d) "PDF export" is the browser's print-to-PDF and is **not** recorded as an export, unlike CSV; a branded server-made PDF (OQ-1106) is still open. | Built Session 51; say if any should differ |
+| OQ-170 | **Hiring: three choices to confirm.** (a) An invite sent as part of a hire goes to the **work email only** — never the address they applied from — and gives the **Employee** role only; anything more is granted afterwards in Users. (b) If the address already has a login the **whole hire is refused** rather than hiring without the invite. (c) The offers list is for those who may see the pay offered (HR); hiring managers do not get it. | Built Session 52; say if any should differ |
 | OQ-118 | **Device-event retention.** Does "no automatic deletion" (OQ-1002 et al.) extend to machine logs? Without a sweep or transition-only logging, one terminal writes >1M rows a year. | 2026-09-28 | Open — before feature 04 ingestion |
 | OQ-006 | The two source documents the plan is built on (`HRM_SYSTEM_PLANNING_INSTRUCTIONS.md`, `HRM_SYSTEM_DEPLOYMENT.md`) are not present anywhere under `C:\Dev`. | 2026-09-15 | Open |
 | OQ-101 | Auth library: Auth.js (NextAuth) v5 vs hand-rolled sessions. Plan assumes hand-rolled. | 2026-09-15 | Open — needs decision before build |
@@ -296,6 +297,39 @@ gap.
 ---
 
 ## Session entries
+
+### 2026-10-02 — Session 52: Feature 10's ready work — the invite as part of a hire, an offers list, drag on the board
+
+**Done**
+
+- **The login invite can be part of the hire** (FR-H-05). `hire` takes `sendInvite: true` and
+  invites the new employee through feature 01's own `inviteUser` — its escalation check, audit
+  entry and email — as an **Employee** and nothing more, to their **work email**, in the same
+  transaction. It needs `user.write` as well as `recruitment.hire`. No work email, an address that
+  already has a login, or no right to invite: the hire is refused before anything is written, on
+  the field it concerns. Left unticked, the hire behaves as before and offers the invite afterwards.
+  With email off, the link comes back once to whoever hired, the same rule as inviting from Users.
+  The hire form has the tick box on its second step and says what the invite gives access to.
+- **An offers list** — `listOffers` and `GET /api/recruitment/offers?status=`, with a page at
+  `/recruitment/offers` linked from Hiring. It opens on offers that still need something (draft,
+  waiting for an answer, accepted and not yet hired) and each row says what, in words: "Send it",
+  "Answer due …", "Past its answer-by date", "Ready to hire". Needs `recruitment.offer.read`
+  (the pay offered is on every row) and is limited to the roles the reader sees candidates for.
+- **Drag on the pipeline board** — a card can be dragged to another column with a mouse. It calls
+  the same move as the "Move to" menu, which stays on every card as the keyboard and touch way;
+  the result of a drop is announced. Nothing is draggable for someone who may not move candidates.
+
+**Not built** — references, background checks, e-signature and a candidate status page: each is a
+feature of its own and none has a requirement written. They stay on the list as undecided scope.
+
+**Verified** — `tsc` and lint clean; unit 358; integration 341 (+2); HTTP probe 17/17. The drag
+itself is pointer behaviour and is checked only as far as markup and the shared move action — it
+needs the browser pass.
+
+**Decisions taken, to confirm** — OQ-170.
+
+**Next** — drill-through and background runs (11); inline decisions for the other approval notices
+(05); the nightly job for scheduled job changes (02); fiscal-year views for leave (06).
 
 ### 2026-10-02 — Session 51: Feature 11's ready work — three more reports, a funnel, fiscal-year periods, print
 
