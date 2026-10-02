@@ -53,7 +53,7 @@ Source documents:
 | Test harness — canonical fixture, two tenants, injected clock | ✅ Built |
 | Database test suite (`npm run test:db`) | ✅ **All passing** (RLS coverage now includes the 14 attendance tables) |
 | Unit test suite — Vitest (`npm test`) | ✅ **355 tests passing** (10 SVG checks, 6 date and time formats, 28 attendance engine, 22 notifications incl. SMTP against a fake server, 16 leave rules, 25 payroll engine, 14 portal, 18 performance, 19 reports, 17 recruitment) |
-| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **329 tests passing** (20 leave, 22 payroll, 13 portal, 17 performance, 21 reports, 22 recruitment and onboarding) |
+| Integration suite — app code vs real DB (`npm run test:integration`) | ✅ **333 tests passing** (20 leave, 26 payroll, 13 portal, 17 performance, 21 reports, 22 recruitment and onboarding) |
 | Typecheck (`npx tsc --noEmit`) | ✅ **clean** (run `next typegen` first when routes change) |
 | **Stack proven over HTTP** — `next dev`, Auth.js sign-in, forced change, revocation, scoping | ✅ 2026-09-28 |
 | 01/02 **contract layer** — permission catalogue, authorization, scope, audit | ✅ Built and tested |
@@ -77,7 +77,7 @@ Source documents:
 | **Feature 06 Leave** — types, policies + assignments, append-only ledger + snapshots, requests with live cost, approval chains with delegation and escalation, grants/carry-over/expiry/settlement engines, calendar, attendance reads approved leave, screens | ✅ 2026-09-30 (browser visual check owed; real entitlements wait on OQ-601b) |
 | Feature 06 remainders — the note on a request, routing by length and the minimum-staffing warning built in Session 48. **Left:** comp-off (OQ-610), hours-based leave (OQ-603), fiscal-year HR views (OQ-134) | 🟡 2026-10-02 |
 | **Feature 07 Payroll** — decimal + formula engine, components, bracket tables, structures, dated compensation with proposed arrears, bank details, pay calendar, run lifecycle with exceptions and variance, the period lock, payslips with trails and access log, adjustments, off-cycle runs, bank and accounting exports, screens | ✅ 2026-10-01 (browser visual check owed; **real components wait on OQ-701** — only labelled examples are seeded) |
-| Feature 07 remainders — PDF and emailed payslips (OQ-136), structures by group (OQ-137), mid-period pay split (OQ-138), cut-off settlement (OQ-139), reminder jobs, drag re-ordering of components, the bank's own file format (OQ-708) | ⬜ Deferred, listed in Session 36 |
+| Feature 07 remainders — the three reminder jobs and re-ordering of components built in Session 49. **Left, each waiting on an answer:** PDF and emailed payslips (OQ-136), structures by group (OQ-137), mid-period pay split (OQ-138), cut-off settlement (OQ-139), the bank's own file format (OQ-708) | 🟡 2026-10-02 |
 | **Feature 08 Self-service portal** — employee shell (bottom nav / sidebar), home, my time, leave, pay, profile with change requests, documents, directory; routing by permission; HR's change-request queue and field settings | ✅ 2026-10-01 (**the 375px visual review, acceptance 11, is owed** — it needs a browser; built on the defaults for OQ-802 and OQ-805) |
 | Feature 08 remainders — photos (OQ-142), document upload (OQ-807), PWA (OQ-812), payslip PDF (OQ-136), the no-account headcount for HR (D-08), a second language (OQ-805), kiosk mode (OQ-802) | ⬜ Deferred, listed in Session 37 |
 | **Feature 09 Performance** — goals with check-ins and a shared history, review cycles (rule-based participants, preview, stored managers, completion-only progress), review forms and rating scales with per-instance snapshots, the review itself (autosave, submit, share, acknowledge/disagree, comments, unlock), feedback and feedback requests, reminder jobs, screens in both shells | ✅ 2026-10-01 (browser visual check owed — **the review form at 375px above all**; built as the full configurable mechanism because OQ-901 is unanswered) |
@@ -213,6 +213,7 @@ gap.
 | OQ-164 | **How far the date and time format reaches.** The default is now **"31 Jan 2026"** (it was listed as 31/01/2026 but nothing read it; the worded month is what the app has always shown and cannot be misread as the American order). Choosing another format changes every full date and date-and-time on screens. It deliberately does **not** change dates written in words ("Tue 3 Mar", "March 2026"), exported files (CSV keeps ISO dates so spreadsheets parse them), or emails. A few clock-only stamps in Client Components still show 24-hour time. Say if exports or emails should follow the setting. | 2026-10-02 | Open — confirm the reach |
 | OQ-165 | **Snooze and the test-send policy were built on proposed answers** (OQ-511, OQ-512). Snooze: three fixed choices — in three hours, tomorrow at 09:00, next Monday at 09:00, in the company's timezone — with no custom time. A snoozed notice leaves the list and the badge, returns **unread**, and is not cleared by "Mark all read". **It does not hold back the email**, which has usually gone already, and it does not stop an approval escalating: snoozing a leave request does not pause its clock. Test-send: refused for five types — the invite and reset emails (a real-looking, dead sign-in link) and the three security alarms (password, sign-in address, bank details) — on the reasoning that a practice alarm teaches people to ignore the real one. Every other type can still be test-sent, so mail delivery can still be diagnosed. | 2026-10-02 | Open — confirm both |
 | OQ-166 | **Leave: three choices to confirm.** (a) **Routing by length** is one number per policy — "also to HR when longer than N days" — and only lengthens a manager-only chain; it never removes a step. Routing by *type* was already there (each policy names its chain). (b) **Minimum staffing** is one number per department — the fewest people who should be in — counted over that department only, not its sub-departments, with a half day counting as away. It warns the person asking and the approver and **never blocks** (the proposed answer to OQ-611). It knows nothing of shifts or skills: "3 of 5 in" may still be the wrong three. (c) **The note on a request** is uploaded by the person the leave is for and stored on their employee record as a certificate; it can be opened by them, the approvers named on that request and HR — and each opening by someone else is in the audit log. It is therefore also visible in their documents list to anyone who can read their documents (HR, and themselves). | 2026-10-02 | Open — confirm |
+| OQ-167 | **Payroll reminders: how often, and to whom.** (a) *No run yet*: to everyone who can open a run, once when the cut-off is three days away and once after it passes; then silence, and none at all after fourteen days or for a company with no salaries set. (b) *Still to approve*: to everyone who can approve, once after a calculated run has waited a day and once when the pay date is two days away — two messages per calculation, not one a day (the spec said "daily"; I capped it, as every other reminder in the system is capped). A recalculation starts the count again. (c) *Rates not reviewed*: monthly, to those who configure components, naming them; a banded deduction with no review date counts as stale; the seeded examples do not. All three can be reworded, and (a) and (c) can be turned off per person. Nothing is ever calculated, approved or paid by a job. | 2026-10-02 | Open — confirm the cadence |
 | OQ-118 | **Device-event retention.** Does "no automatic deletion" (OQ-1002 et al.) extend to machine logs? Without a sweep or transition-only logging, one terminal writes >1M rows a year. | 2026-09-28 | Open — before feature 04 ingestion |
 | OQ-006 | The two source documents the plan is built on (`HRM_SYSTEM_PLANNING_INSTRUCTIONS.md`, `HRM_SYSTEM_DEPLOYMENT.md`) are not present anywhere under `C:\Dev`. | 2026-09-15 | Open |
 | OQ-101 | Auth library: Auth.js (NextAuth) v5 vs hand-rolled sessions. Plan assumes hand-rolled. | 2026-09-15 | Open — needs decision before build |
@@ -293,6 +294,52 @@ gap.
 ---
 
 ## Session entries
+
+### 2026-10-02 — Session 49: Feature 07's ready work — reminders, and moving a component
+
+**Done**
+
+- **Three reminder jobs** (07 api-design.md, "Scheduled jobs") in `src/lib/payroll/jobs.ts`, with
+  three notification types whose wording can be edited like any other:
+  - `payroll.run_due` — a period whose cut-off is within three days, or has passed, with no
+    regular run opened. Never for a tenant with no salaries set.
+  - `payroll.run_approval_reminder` — a calculated run still undecided: once after a day, once
+    when the pay date is two days off. Only a run that was actually handed to an approver (one
+    with blocking exceptions never was). Approving, sending back, recalculating or cancelling
+    stands the reminder down along with the original request.
+  - `payroll.rates_stale` — monthly, naming components whose rates nobody has marked reviewed in a
+    year (FR-C-09).
+  The idempotency key is the cap on each. **No job calculates, approves, finalises or pays** (D-04).
+- **Moving a component** — `moveComponent()`, `POST /api/payroll/components/:id/move`, and
+  Move up / Move down on each row of the component list. The whole list is renumbered 10, 20, 30…
+  in its new sequence, so nobody types an order number to change a position. A move that would put
+  a component before one it uses is refused, naming both ("Housing levy uses Housing (X_A), so
+  Housing has to be calculated first") and nothing changes. Buttons rather than dragging, as
+  elsewhere.
+
+**Caught by the existing tests** — two unit guards failed on the first full run: payroll
+notifications may declare no variable that looks like money, and `payDate` matched "pay". Renamed
+to `paidOn`. The guard is crude and it worked: nothing with a figure in it can be added by accident.
+
+**Verified** — four integration tests added (26 in `payroll.test.ts`); full suites **unit 355,
+integration 333**; `tsc` and lint clean. HTTP probe 9/9: the buttons are on every row, the first
+cannot go higher, a manager is refused, the list is renumbered, and the three new wordings open in
+the editor. The "cannot move above something it uses" rule was proved in the integration test; the
+seeded examples offered no such pair to try over HTTP. The database suite was not re-run (no
+schema change).
+
+**Not verified** — the reminders firing from the real scheduler on their day: the tests call the
+three functions with dates; the runner's wiring is the same `once()` pattern as the period job.
+
+**Not built** — everything else on 07's list waits on an answer: PDF and emailed payslips
+(OQ-136), structures by group (OQ-137), a mid-period pay split (OQ-138), cut-off settlement
+(OQ-139), the bank's file format (OQ-708).
+
+**Decisions taken, to confirm** — OQ-167.
+
+**Next** — `REMAINING_WORK.md` section 4: 08 (an installable app; a headcount of employees with
+no login) and 09 (draft answer history, side-by-side self and manager review, anonymous feedback
+aggregation, re-ordering in the form editor).
 
 ### 2026-10-02 — Session 48: Feature 06's ready work — the note, routing by length, thin cover
 

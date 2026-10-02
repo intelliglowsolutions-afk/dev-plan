@@ -119,8 +119,8 @@ Grouped by feature. None of this needs an answer first.
 - Fiscal-year views for HR
 
 **07 Payroll**
-- Reminder jobs
-- Drag re-ordering of components
+- ~~Reminder jobs~~ (run due, approval waiting, rates not reviewed), ~~re-ordering components~~
+  (Move up / Move down) — done 2026-10-02 (Session 49)
 
 **08 Portal**
 - Installable app (PWA)
