@@ -144,10 +144,11 @@ Grouped by feature. None of this needs an answer first.
 **11 Reports**
 - Drill-through from a figure to its rows
 - Background runs and paging for large results
-- PDF export
-- Line and funnel charts; a pipeline-conversion report
-- The backlog reports: device uptime, approval turnaround, review completion
-- Fiscal-year periods
+- ~~A funnel chart and a pipeline-conversion report~~, ~~approval turnaround~~, ~~review completion~~,
+  ~~fiscal-year periods~~, ~~print or save as PDF~~ — done 2026-10-02 (Session 51)
+- Line charts — with the first report that is a series over time
+- A branded, server-made PDF — waits on OQ-1106 and would need a package
+- Device uptime — **blocked** on ingestion (04): nothing records when a terminal was reachable
 - A saved-views page
 
 ---

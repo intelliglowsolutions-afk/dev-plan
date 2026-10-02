@@ -215,6 +215,7 @@ gap.
 | OQ-166 | **Leave: three choices to confirm.** (a) **Routing by length** is one number per policy — "also to HR when longer than N days" — and only lengthens a manager-only chain; it never removes a step. Routing by *type* was already there (each policy names its chain). (b) **Minimum staffing** is one number per department — the fewest people who should be in — counted over that department only, not its sub-departments, with a half day counting as away. It warns the person asking and the approver and **never blocks** (the proposed answer to OQ-611). It knows nothing of shifts or skills: "3 of 5 in" may still be the wrong three. (c) **The note on a request** is uploaded by the person the leave is for and stored on their employee record as a certificate; it can be opened by them, the approvers named on that request and HR — and each opening by someone else is in the audit log. It is therefore also visible in their documents list to anyone who can read their documents (HR, and themselves). | 2026-10-02 | Open — confirm |
 | OQ-167 | **Payroll reminders: how often, and to whom.** (a) *No run yet*: to everyone who can open a run, once when the cut-off is three days away and once after it passes; then silence, and none at all after fourteen days or for a company with no salaries set. (b) *Still to approve*: to everyone who can approve, once after a calculated run has waited a day and once when the pay date is two days away — two messages per calculation, not one a day (the spec said "daily"; I capped it, as every other reminder in the system is capped). A recalculation starts the count again. (c) *Rates not reviewed*: monthly, to those who configure components, naming them; a banded deduction with no review date counts as stale; the seeded examples do not. All three can be reworded, and (a) and (c) can be turned off per person. Nothing is ever calculated, approved or paid by a job. | 2026-10-02 | Open — confirm the cadence |
 | OQ-168 | **Portal and review choices to confirm.** (a) The installable portal keeps **nothing on the phone**: no service worker, no offline pages — a lost or shared phone holds no pay or personal data, at the cost of needing a connection. (b) The self-review is shown beside the manager's review **by default, with no setting**, to the manager (once submitted) and the employee (once shared) only; HR readers with the content grant do not get the combined view. (c) Draft answer history stays unbuilt (latest answer only). | Built Session 50; say if any should differ |
+| OQ-169 | **Reports: four choices to confirm.** (a) *How long leave requests wait* is open to anyone who can approve leave, for the people in their reach, and is timed to the **final** decision in **calendar** days. (b) *Review completion* is for those who can see cycles (HR), not managers. (c) In the pipeline report an application that skipped a stage counts as having passed it. (d) "PDF export" is the browser's print-to-PDF and is **not** recorded as an export, unlike CSV; a branded server-made PDF (OQ-1106) is still open. | Built Session 51; say if any should differ |
 | OQ-118 | **Device-event retention.** Does "no automatic deletion" (OQ-1002 et al.) extend to machine logs? Without a sweep or transition-only logging, one terminal writes >1M rows a year. | 2026-09-28 | Open — before feature 04 ingestion |
 | OQ-006 | The two source documents the plan is built on (`HRM_SYSTEM_PLANNING_INSTRUCTIONS.md`, `HRM_SYSTEM_DEPLOYMENT.md`) are not present anywhere under `C:\Dev`. | 2026-09-15 | Open |
 | OQ-101 | Auth library: Auth.js (NextAuth) v5 vs hand-rolled sessions. Plan assumes hand-rolled. | 2026-09-15 | Open — needs decision before build |
@@ -295,6 +296,46 @@ gap.
 ---
 
 ## Session entries
+
+### 2026-10-02 — Session 51: Feature 11's ready work — three more reports, a funnel, fiscal-year periods, print
+
+**Done**
+
+- **Three reports**, each declared by the feature that owns its figures (11 D-01):
+  - `leave.approval_turnaround` (06) — requests asked for in a period, by department: decided,
+    still waiting, taken back, passed up, and the median and longest days from asking to the final
+    answer. Leave HR recorded on someone's behalf is left out (nobody waited). Needs
+    `leave.approve`, so a manager gets it for their own reach.
+  - `performance.review_completion` (09) — per cycle: taking part, self-reviews in, manager reviews
+    written, shared, seen. The figures are `cycleProgress`'s own; no rating, answer or name (D-09).
+    Needs `performance.cycle.read`; a new **Performance** group in the catalogue.
+  - `recruitment.pipeline` (10) — how many applications reached each stage, ending with those
+    hired. An application counts for every stage up to the furthest it has been in, so the figures
+    never rise from one step to the next; a stage nobody reached still has a row.
+- **A funnel chart** [CH-7] — the second chart type. Steps in the source's order, each measured
+  against the first, every step printing its name, count and share, with a sentence naming the
+  largest drop. Not drawn for fewer than 2 or more than 8 steps, or around a hidden figure.
+- **Fiscal-year periods** — "This fiscal year so far" and "Last fiscal year", resolved from 03's
+  `company.fiscalYearStart` (the setting leave years already turn on). Offered only when the fiscal
+  year is not the calendar year. Work in runs, comparisons, saved views and schedules.
+- **Print or save as PDF** on every report with a result — the browser's own print, over the print
+  styles the viewer already had. No package, no server-side PDF.
+
+**Not built, and why**
+
+- *Device uptime* — nothing records when each terminal was reachable (only company-wide gaps are
+  written). It waits on ingestion (04), and is now listed as blocked rather than ready.
+- *Line charts* — no report is a series over time yet; a chart type with nothing to draw is not
+  worth shipping. It comes with the first by-month report.
+- *Drill-through* and *background runs with paging* — still ready, still to do.
+
+**Verified** — `tsc` and lint clean; unit 358 (+3); integration 339 (+4); HTTP probe 23/23,
+including the funnel on its page, the export, and a fiscal year moved to 1 July and back.
+
+**Decisions taken, to confirm** — OQ-169.
+
+**Next** — drill-through and background runs (11), the remaining 10 items (invite on hire, offers
+list, drag on the board), inline decisions for the other approvals (05).
 
 ### 2026-10-02 — Session 50: Ready work for features 08 and 09 — an installable portal, who has no login, and the self-review beside the manager's
 
