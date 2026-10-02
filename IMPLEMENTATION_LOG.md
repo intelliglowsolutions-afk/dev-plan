@@ -298,6 +298,35 @@ gap.
 
 ## Session entries
 
+### 2026-10-02 — Session 53: The daily job for dated employee changes (02), and leave years on HR's balances table (06)
+
+**Done**
+
+- **A daily job applies dated employee changes** (02, OQ-316). `runEmployeeJobs` in
+  `src/lib/employees/jobs.ts`, called from the job runner before leave and payroll: once per tenant
+  per tenant-date it runs `applyDueChanges` — scheduled job changes whose date has come, people on
+  notice whose last day has passed, rehires whose first day has arrived — and records the run in
+  `job_runs` (`employee.due_changes`), with any drift it refused to touch. Until now these waited
+  for somebody to open an employee screen. That first-read path is kept as a fallback for a server
+  with the runner switched off; both are idempotent.
+- **HR's balances table reads each leave type in its own leave year** (06 FR-B-07). **This was a
+  defect:** `balancesTable` always used the calendar year, so everyone on a fiscal-year policy
+  showed "—" on `/leave/balances` and was missing from the `leave.balances` report, though their
+  own balance card was right. Each type is now read in the year its policies run on (per person
+  where a type has both kinds of policy). The page names the year or years, and marks each column
+  with its own when there are two.
+- **A past leave year can be opened** — "This year / Last year / Two years ago" on the balances
+  page (`?back=`, API `yearsBack`), each type stepping back in its own year. The reader's reach
+  holds for past years.
+
+**Verified** — `tsc` and lint clean; unit 358; integration 343 (+2); HTTP probe 11/11, including
+the runner recording its first daily run after a restart.
+
+**Decisions taken, to confirm** — none new. The fiscal-year fix follows FR-B-07 as written.
+
+**Next** — drill-through and background runs (11); inline decisions for the other approval notices
+(05). After those, the ready list is empty and what remains needs answers or your browser pass.
+
 ### 2026-10-02 — Session 52: Feature 10's ready work — the invite as part of a hire, an offers list, drag on the board
 
 **Done**

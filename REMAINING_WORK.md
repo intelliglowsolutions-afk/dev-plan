@@ -92,7 +92,8 @@ Grouped by feature. None of this needs an answer first.
 - ~~History correction endpoint~~, ~~org chart pan, zoom and print-to-PDF~~, ~~drag to re-parent
   departments~~ — done 2026-10-02 (Session 45)
 - Org chart PNG export — needs an HTML-to-image package; **ask before adding one**
-- The nightly job that applies scheduled job changes (they are applied on first read each day today)
+- ~~The daily job that applies scheduled job changes~~ — done 2026-10-02 (Session 53); the
+  first-read path stays as a fallback
 
 **03 Settings**
 - ~~SVG logos~~, ~~twelve-month holiday grid~~ — done 2026-10-02 (Session 46)
@@ -116,7 +117,8 @@ Grouped by feature. None of this needs an answer first.
   policy), ~~minimum-staffing warning~~ — done 2026-10-02 (Session 48)
 - Compensatory time off; hours-based leave — each is a sub-feature of its own and waits on a
   decision (OQ-610, OQ-603)
-- Fiscal-year views for HR
+- ~~Fiscal-year views for HR~~ — done 2026-10-02 (Session 53): the balances table reads each
+  type in its own leave year (it used the calendar year for everyone), and can open past years
 
 **07 Payroll**
 - ~~Reminder jobs~~ (run due, approval waiting, rates not reviewed), ~~re-ordering components~~
