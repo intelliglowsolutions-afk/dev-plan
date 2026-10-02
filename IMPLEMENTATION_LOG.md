@@ -214,6 +214,7 @@ gap.
 | OQ-165 | **Snooze and the test-send policy were built on proposed answers** (OQ-511, OQ-512). Snooze: three fixed choices — in three hours, tomorrow at 09:00, next Monday at 09:00, in the company's timezone — with no custom time. A snoozed notice leaves the list and the badge, returns **unread**, and is not cleared by "Mark all read". **It does not hold back the email**, which has usually gone already, and it does not stop an approval escalating: snoozing a leave request does not pause its clock. Test-send: refused for five types — the invite and reset emails (a real-looking, dead sign-in link) and the three security alarms (password, sign-in address, bank details) — on the reasoning that a practice alarm teaches people to ignore the real one. Every other type can still be test-sent, so mail delivery can still be diagnosed. | 2026-10-02 | Open — confirm both |
 | OQ-166 | **Leave: three choices to confirm.** (a) **Routing by length** is one number per policy — "also to HR when longer than N days" — and only lengthens a manager-only chain; it never removes a step. Routing by *type* was already there (each policy names its chain). (b) **Minimum staffing** is one number per department — the fewest people who should be in — counted over that department only, not its sub-departments, with a half day counting as away. It warns the person asking and the approver and **never blocks** (the proposed answer to OQ-611). It knows nothing of shifts or skills: "3 of 5 in" may still be the wrong three. (c) **The note on a request** is uploaded by the person the leave is for and stored on their employee record as a certificate; it can be opened by them, the approvers named on that request and HR — and each opening by someone else is in the audit log. It is therefore also visible in their documents list to anyone who can read their documents (HR, and themselves). | 2026-10-02 | Open — confirm |
 | OQ-167 | **Payroll reminders: how often, and to whom.** (a) *No run yet*: to everyone who can open a run, once when the cut-off is three days away and once after it passes; then silence, and none at all after fourteen days or for a company with no salaries set. (b) *Still to approve*: to everyone who can approve, once after a calculated run has waited a day and once when the pay date is two days away — two messages per calculation, not one a day (the spec said "daily"; I capped it, as every other reminder in the system is capped). A recalculation starts the count again. (c) *Rates not reviewed*: monthly, to those who configure components, naming them; a banded deduction with no review date counts as stale; the seeded examples do not. All three can be reworded, and (a) and (c) can be turned off per person. Nothing is ever calculated, approved or paid by a job. | 2026-10-02 | Open — confirm the cadence |
+| OQ-168 | **Portal and review choices to confirm.** (a) The installable portal keeps **nothing on the phone**: no service worker, no offline pages — a lost or shared phone holds no pay or personal data, at the cost of needing a connection. (b) The self-review is shown beside the manager's review **by default, with no setting**, to the manager (once submitted) and the employee (once shared) only; HR readers with the content grant do not get the combined view. (c) Draft answer history stays unbuilt (latest answer only). | Built Session 50; say if any should differ |
 | OQ-118 | **Device-event retention.** Does "no automatic deletion" (OQ-1002 et al.) extend to machine logs? Without a sweep or transition-only logging, one terminal writes >1M rows a year. | 2026-09-28 | Open — before feature 04 ingestion |
 | OQ-006 | The two source documents the plan is built on (`HRM_SYSTEM_PLANNING_INSTRUCTIONS.md`, `HRM_SYSTEM_DEPLOYMENT.md`) are not present anywhere under `C:\Dev`. | 2026-09-15 | Open |
 | OQ-101 | Auth library: Auth.js (NextAuth) v5 vs hand-rolled sessions. Plan assumes hand-rolled. | 2026-09-15 | Open — needs decision before build |
@@ -294,6 +295,45 @@ gap.
 ---
 
 ## Session entries
+
+### 2026-10-02 — Session 50: Ready work for features 08 and 09 — an installable portal, who has no login, and the self-review beside the manager's
+
+**Done**
+
+- **The portal can be added to a phone's home screen** (08). `src/app/manifest.ts` (standalone,
+  starts at `/portal`), icons drawn by `src/app/app-icon/[size]/route.tsx` at 180, 192 and 512 px
+  with a maskable variant, and the viewport / theme colour / Apple settings in the root layout. The
+  portal's More page says how to add it. **There is no service worker**: nothing is stored on the
+  phone and nothing works offline — pay and personal data are not left on a device (OQ-168a).
+- **Who the portal does not reach** (08 D-08). `portalReach(tx)` counts current employees with no
+  login, those among them with no work email, and those invited but yet to set a password.
+  `/admin/users` shows it as a line with a link; the employee list takes `account=none` and shows
+  it as a removable chip.
+- **The self-review beside the manager's review** (09, OQ-912). `getReview` returns `beside` — the
+  self-review's answers and a label saying whose they are — on the manager's review only, and only
+  to the two people concerned, each only where they may already read the other: the manager once
+  the self-review is submitted, the employee once the manager's review is shared. A reader with the
+  content grant does not get it (they open each review on its own, each opening logged). Unlocking
+  the self-review takes it off the manager's page again. Shown as a quiet labelled aside under each
+  question, both while the manager writes and on the read-only page, in both shells.
+- **Re-ordering in the review form editor** — found already built in Session 39 (Move up / Move
+  down on sections and questions). Nothing to do; struck from the list.
+
+**Not built, and why**
+
+- *Draft answer history* — 09 data-model.md already answers it: a draft is its author's alone and
+  only the latest answer is kept. Struck from the list as decided, not owed.
+- *Anonymous feedback aggregation* — there is nothing to aggregate until peer reviews exist
+  (OQ-904). Moved to the blocked list.
+
+**Verified** — `tsc` and lint clean; unit 355; integration 335 (two new: portal reach, side-by-side
+visibility); HTTP probes 12/12 (portal) and 16/16 (reviews, through both shells). The app icon was
+looked at in the browser. Signed-in screens still await the user's browser pass.
+
+**Decisions taken, to confirm** — OQ-168.
+
+**Next** — the ready list for features 03, 05 and 11, or the blocked items once questions are
+answered. See `REMAINING_WORK.md`.
 
 ### 2026-10-02 — Session 49: Feature 07's ready work — reminders, and moving a component
 

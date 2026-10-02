@@ -123,14 +123,14 @@ Grouped by feature. None of this needs an answer first.
   (Move up / Move down) — done 2026-10-02 (Session 49)
 
 **08 Portal**
-- Installable app (PWA)
-- A headcount for HR of employees with no login
+- ~~Installable app~~ (home-screen install, nothing kept offline), ~~a count for HR of employees
+  with no login~~ — done 2026-10-02 (Session 50)
 
 **09 Performance**
-- Anonymous feedback aggregation
-- Draft answer history
-- Side-by-side self and manager review
-- Drag re-ordering in the form editor
+- ~~Side-by-side self and manager review~~ — done 2026-10-02 (Session 50)
+- ~~Re-ordering in the form editor~~ — was already there (Move up / Move down, Session 39)
+- ~~Draft answer history~~ — decided against in the data model; not owed
+- Anonymous feedback aggregation — **blocked** on peer reviews (OQ-904)
 
 **10 Recruitment and onboarding**
 - ~~Editors for pipeline stages and scorecard forms~~ — done 2026-10-01 (Session 42)
