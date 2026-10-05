@@ -300,6 +300,32 @@ gap.
 
 ## Session entries
 
+### 2026-10-05 — Session 58: Dependency security updates — 15 advisories down to 5, none in what the app runs
+
+**Done** (at the user's request)
+
+- **Next.js 16.3.4 → 16.3.8** (and `eslint-config-next` with it). **This one mattered:** the
+  critical advisory GHSA-vcvr-r3jv-pc5j is remote code execution in `next/og`'s `ImageResponse` —
+  which the app-icon route added in Session 50 uses.
+- **Vitest 2.1.9 → 4.1.11** (critical advisory in vitest; brings vite 8 and a patched esbuild,
+  clearing the dev-server advisories). The configs needed no change.
+- **`deepmerge-ts` overridden to ^8.0.2** in `package.json` — the vulnerable copy came in through
+  Prisma's CLI config loader (`@prisma/config`); npm's own suggestion was to *downgrade* Prisma.
+  `prisma validate` and `prisma generate` work with it.
+- `npm audit fix` for the rest that had a non-breaking fix (`brace-expansion`).
+
+**Left, with the reason** — 5 high-severity entries that are one chain: `braces` ≤ 3.0.3
+(GHSA-vfj7-8cjw-p6xm, stack exhaustion on deeply nested patterns) → `micromatch` → `fast-glob` →
+`@next/eslint-plugin-next` → `eslint-config-next`. **No fixed `braces` has been released** (3.0.3,
+May 2024, is the latest), so there is nothing to update to. It is used only by the lint tool, on
+glob patterns written in our own config — never on input from a user. npm's suggested fix is to
+downgrade `eslint-config-next` to 14, which would not lint a Next 16 app. Recheck when `braces` or
+Next's ESLint plugin releases a fix.
+
+**Verified** — on the new versions: `tsc` and lint clean; unit 360/360; integration all 21 files
+pass; the app restarted on Next 16.3.8; HTTP probes re-run 12/12 (portal, including the app icons
+drawn by `ImageResponse`), 14/14 (saved views, formats), 18/18 (drill-through, background runs).
+
 ### 2026-10-05 — Session 57: Org chart saved as a PNG — the first package added at the user's request
 
 **Done**

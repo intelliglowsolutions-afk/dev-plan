@@ -170,8 +170,8 @@ None of this has been started. The app runs only in a local development containe
 - HTTPS and the public hostname (the job page and terminals need one)
 - Rate limiting that survives more than one app process (today it is in memory)
 - Monitoring and error logging
-- Review `npm audit` (high-severity advisories in `brace-expansion` / `braces`, in build tooling,
-  present before Session 57) and update before production
+- ~~Review `npm audit`~~ — done 2026-10-05 (Session 58): Next, Vitest and Prisma's tooling updated.
+  Left: one `braces` chain inside the lint tool, with no fix released — recheck before going live
 - Loading real data: employees (CSV import exists), opening leave balances, current salaries
 - A trial pay run alongside the existing process before relying on it
 
