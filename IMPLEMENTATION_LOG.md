@@ -148,6 +148,7 @@ gap.
 | 2026-10-05 | Only office staff have work email; everyone else is reached in the app and portal (OQ-502). | User |
 | 2026-10-05 | Email goes through a provider, not the company mail server (OQ-503); which provider is still to choose. | User |
 | 2026-10-05 | Formal performance reviews, with no ratings (OQ-901, OQ-902). | User |
+| 2026-10-05 | A day's pay is the base salary ÷ 30; allowances are not included for now (OQ-173). | User |
 
 ---
 
@@ -227,7 +228,7 @@ gap.
 | OQ-170 | **Hiring: three choices to confirm.** (a) An invite sent as part of a hire goes to the **work email only** — never the address they applied from — and gives the **Employee** role only; anything more is granted afterwards in Users. (b) If the address already has a login the **whole hire is refused** rather than hiring without the invite. (c) The offers list is for those who may see the pay offered (HR); hiring managers do not get it. | Built Session 52; say if any should differ |
 | OQ-171 | **Notifications: which approvals can be decided in the list.** Corrections, leave, requests to hire and employee change requests can. **Pay-run approval and arrears review cannot** — they open their own screen, so pay is never approved without the figures in view. | Built Session 54; say if pay approvals should be inline too |
 | OQ-172 | **Reports: three choices to confirm.** (a) The records behind a row are **never** offered on the pay report, and the leave-wait list never shows the kind of leave. (b) A background run's result lives in the app's memory for ten minutes and is lost on restart (run it again); with more than one app instance this needs a shared store — tied to OQ-315. (c) Opening the records behind a row is not logged as an export: they are records the reader may already list. | Built Session 55; say if any should differ |
-| OQ-173 | **The daily rate: base salary only?** "Monthly pay ÷ 30" was built as the **base salary** ÷ 30 — allowances (house rent, transport…) are not included, because which of them count depends on OQ-701's real components. Say if the leave value should include fixed allowances. | Built Session 60; confirm with OQ-701 |
+| OQ-173 | **The daily rate: base salary only?** "Monthly pay ÷ 30" was built as the **base salary** ÷ 30 — allowances (house rent, transport…) are not included, because which of them count depends on OQ-701's real components. Say if the leave value should include fixed allowances. | **Answered 2026-10-05: base salary only is enough for now.** Closed |
 | OQ-118 | **Device-event retention.** Does "no automatic deletion" (OQ-1002 et al.) extend to machine logs? Without a sweep or transition-only logging, one terminal writes >1M rows a year. | 2026-09-28 | Open — before feature 04 ingestion |
 | OQ-006 | The two source documents the plan is built on (`HRM_SYSTEM_PLANNING_INSTRUCTIONS.md`, `HRM_SYSTEM_DEPLOYMENT.md`) are not present anywhere under `C:\Dev`. | 2026-09-15 | Open |
 | OQ-101 | Auth library: Auth.js (NextAuth) v5 vs hand-rolled sessions. Plan assumes hand-rolled. | 2026-09-15 | Open — needs decision before build |
