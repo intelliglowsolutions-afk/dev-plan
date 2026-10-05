@@ -165,7 +165,8 @@ Grouped by feature. None of this needs an answer first.
 None of this has been started. The app runs only in a local development container.
 
 - Production build and image; choice of host
-- Production database: roles, migrations, first tenant and first super admin
+- Production database: roles, migrations, first operator (`scripts/create-operator.ts`); companies are then
+  added from the operator console (`/operator`, built Session 65)
 - Secrets and environment configuration
 - Real SMTP, with a reply-to that reaches a person
 - The scheduled job runner in production (reminders, escalations, grants, digests)

@@ -230,6 +230,7 @@ gap.
 | OQ-172 | **Reports: three choices to confirm.** (a) The records behind a row are **never** offered on the pay report, and the leave-wait list never shows the kind of leave. (b) A background run's result lives in the app's memory for ten minutes and is lost on restart (run it again); with more than one app instance this needs a shared store — tied to OQ-315. (c) Opening the records behind a row is not logged as an export: they are records the reader may already list. | Built Session 55; say if any should differ |
 | OQ-173 | **The daily rate: base salary only?** "Monthly pay ÷ 30" was built as the **base salary** ÷ 30 — allowances (house rent, transport…) are not included, because which of them count depends on OQ-701's real components. Say if the leave value should include fixed allowances. | **Answered 2026-10-05: base salary only is enough for now.** Closed |
 | OQ-174 | **Ingestion: choices to confirm.** (a) Collector credential is an API key (OQ-320), SHA-256 stored, shown once. (b) Punches older than **120 days** arrive held, not counted. (c) A terminal is bound to the first collector and the first address it is seen from; a change holds its punches until someone lets them through (attendance.write). (d) The collector keeps unsent records on disk with no time limit and shows its backlog on the terminals page; a collector silent for 5 minutes shows as "Not reporting" (an email alert for that is not built yet). (e) Direct /iclock push stays off in a hosted install. | Built Session 63 |
+| OQ-175 | **Operator console: choices to confirm.** (a) Operators are separate accounts, never company users, and see counts only — no support access into a company yet (OQ-T-04's time-boxed grant is not built). (b) Suspending a company signs everyone out at once and stops its terminals' collectors and job pages; nothing is deleted. (c) A new company's first admin is a super admin, invited by email (or a link handed over while email is off). (d) Example settings are offered, ticked by default. (e) No way to delete a company (OQ-T-05 offboarding). | Built Session 65 |
 | OQ-118 | **Device-event retention.** Does "no automatic deletion" (OQ-1002 et al.) extend to machine logs? Without a sweep or transition-only logging, one terminal writes >1M rows a year. | 2026-09-28 | Open — before feature 04 ingestion |
 | OQ-006 | The two source documents the plan is built on (`HRM_SYSTEM_PLANNING_INSTRUCTIONS.md`, `HRM_SYSTEM_DEPLOYMENT.md`) are not present anywhere under `C:\Dev`. | 2026-09-15 | **Closed 2026-10-05: both documents are in `C:\Dev\zkt`** (Session 62) |
 | OQ-101 | Auth library: Auth.js (NextAuth) v5 vs hand-rolled sessions. Plan assumes hand-rolled. | 2026-09-15 | Open — needs decision before build |
@@ -310,6 +311,60 @@ gap.
 ---
 
 ## Session entries
+
+### 2026-10-05 — Session 65: The platform operator console — adding, suspending and reactivating companies
+
+MULTI-TENANCY.md D-T-04 and "Provisioning a new tenant", built. Until now a company existed only if
+put straight into the database.
+
+**Done**
+
+- **Operator accounts are not company accounts.** Own tables (`platform_operators`,
+  `platform_sessions`, `platform_audit_log`), own sign-in at `/operator/login`, own cookie
+  (`hrm_operator`: HttpOnly, SameSite=Strict, path /operator, Secure in production). **Only the sign-in
+  connection (hrm_auth) can reach those tables; the app's connection (hrm_app) has no access at all.**
+  Same refusal for wrong password / unknown email / disabled / locked; 5 failures lock for 15 minutes;
+  20 attempts a minute per address; sessions 8 hours, 30 minutes idle; a first password must be
+  replaced. Optional `OPERATOR_ALLOWED_IPS` fences the console to given addresses (404 elsewhere).
+- **Companies list** (`/operator`): name, short name, zone, currency, state, employees, sign-ins, last
+  sign-in, whether the first admin has set a password. **Counts only** — the one SECURITY DEFINER
+  function behind it returns no person. No employee's name reaches the console (checked over HTTP).
+- **Add a company** (`/operator/companies/new`): name, short name (suggested), time zone, currency,
+  the first admin's email, and "Start with example settings". Two steps: the company row, then — in
+  its own context — roles, profile, calendar, Mon–Fri week, the optional examples, and the first super
+  admin as an INVITED account with an invitation (emailed, or the link shown once to hand over when
+  email is off). Marked set up only at the end; a failure leaves "Setup incomplete" with **Finish
+  setup**, which re-runs the idempotent steps. The provisioning steps moved from `prisma/seed.ts` into
+  `src/lib/platform/provision.ts`, which both now use.
+- **Company page**: counts, **Suspend** (reason required, confirmed), **Reactivate**, **Send a new
+  invitation** to an admin who has not set a password.
+- **Suspension is now enforced everywhere** (TenantStatus existed but nothing checked it): sign-in
+  refused with the ordinary message; **every live session ends at once** (session check reads the
+  company's state, and the session rows are deleted); forgot-password and reset links do nothing;
+  collectors, direct terminal push and public job pages stop answering (their lookups require an
+  active company); scheduled jobs already ran for active companies only. Nothing is deleted.
+- **Platform audit log** (`/operator/audit`), append-only, separate from every company's log.
+- `scripts/create-operator.ts` creates an operator from OPERATOR_EMAIL / OPERATOR_PASSWORD (never a
+  default; must change at first sign-in); `dev-reset.ps1` runs it. The app's connection can no longer
+  insert or delete companies.
+- Migrations `20261011000000_platform_operator`, `…01_platform_provisioning`, `…02_platform_fixes`.
+
+**Found and fixed on the way** — rewriting `resolve_public_posting` to check the company was active,
+the join made `slug` mean the company's slug, not the parameter: every public job page stopped
+resolving. Caught by the recruitment tests; now positional. And the RLS-coverage check rightly
+objected to a `tenant_id` column on the operator's audit log — renamed `about_tenant_id`.
+
+**Verified** — unit 370; integration 369 (+8 platform: sign-in, lockout, idle and absolute expiry,
+password change ends other sessions, the app connection denied, provisioning with and without
+examples, duplicate short name and email, re-invite, suspension locking out sign-in, sessions and
+collectors, reactivation); database suite; `tsc`; lint; HTTP 18/18 (pages, redirects, a company
+admin kept out, the operator's cookie opening no company page, a live session ended by suspension).
+
+**On the dev database** — the operator `operator@platform.test` was created; its password was
+generated into `.env` as `OPERATOR_PASSWORD` (never printed); must be changed at first sign-in. No
+company data was reset.
+
+**Decisions taken, to confirm** — OQ-175.
 
 ### 2026-10-05 — Session 64: An email when a site collector stops reporting
 
