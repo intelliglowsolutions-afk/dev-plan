@@ -193,8 +193,7 @@ None of this has been started. The app runs only in a local development containe
 - New tables without a foreign key into the existing set must be added by hand to the truncate list
   in `prisma/fixtures/canonical.sql`, or test data survives fixture reloads.
 - Git is now installed on the host; the log's toolchain note still describes running it in a container.
-- The two source documents the plan cites (`HRM_SYSTEM_PLANNING_INSTRUCTIONS.md`,
-  `HRM_SYSTEM_DEPLOYMENT.md`) are not under `C:\Dev` (OQ-006).
+- ~~The two source documents~~ — found in `C:\Dev\zkt` (Session 62)
 
 ---
 

@@ -230,7 +230,7 @@ gap.
 | OQ-172 | **Reports: three choices to confirm.** (a) The records behind a row are **never** offered on the pay report, and the leave-wait list never shows the kind of leave. (b) A background run's result lives in the app's memory for ten minutes and is lost on restart (run it again); with more than one app instance this needs a shared store — tied to OQ-315. (c) Opening the records behind a row is not logged as an export: they are records the reader may already list. | Built Session 55; say if any should differ |
 | OQ-173 | **The daily rate: base salary only?** "Monthly pay ÷ 30" was built as the **base salary** ÷ 30 — allowances (house rent, transport…) are not included, because which of them count depends on OQ-701's real components. Say if the leave value should include fixed allowances. | **Answered 2026-10-05: base salary only is enough for now.** Closed |
 | OQ-118 | **Device-event retention.** Does "no automatic deletion" (OQ-1002 et al.) extend to machine logs? Without a sweep or transition-only logging, one terminal writes >1M rows a year. | 2026-09-28 | Open — before feature 04 ingestion |
-| OQ-006 | The two source documents the plan is built on (`HRM_SYSTEM_PLANNING_INSTRUCTIONS.md`, `HRM_SYSTEM_DEPLOYMENT.md`) are not present anywhere under `C:\Dev`. | 2026-09-15 | Open |
+| OQ-006 | The two source documents the plan is built on (`HRM_SYSTEM_PLANNING_INSTRUCTIONS.md`, `HRM_SYSTEM_DEPLOYMENT.md`) are not present anywhere under `C:\Dev`. | 2026-09-15 | **Closed 2026-10-05: both documents are in `C:\Dev\zkt`** (Session 62) |
 | OQ-101 | Auth library: Auth.js (NextAuth) v5 vs hand-rolled sessions. Plan assumes hand-rolled. | 2026-09-15 | Open — needs decision before build |
 | OQ-102 | MFA for admin accounts in v1? Plan assumes no. | 2026-09-15 | Open |
 | OQ-103 | Password policy: length, complexity, expiry, reuse history. Plan assumes 12 chars, no expiry, last 3 blocked. | 2026-09-15 | Open |
@@ -309,6 +309,32 @@ gap.
 ---
 
 ## Session entries
+
+### 2026-10-05 — Session 62: The `C:\Dev\zkt` folder — the two source documents found, and the terminal's facts
+
+**Found** in `C:\Dev\zkt` (pointed out by the user): `HRM_SYSTEM_DEPLOYMENT.md` and
+`HRM_SYSTEM_PLANNING_INSTRUCTIONS.md` — the two documents the plan was built from and that OQ-006 had
+as missing. Both read; the plan and the build follow them (stack, `/api/device/iclock` push mode,
+`dev-plan/` layout). **OQ-006 closed.** Also the SenseFace 2A datasheet, quick-start guide and user
+manual (137 pages), and the ZKFinger SDK.
+
+**The terminal, from the datasheet and manual** (recorded for device ingestion):
+- SenseFace 2A: face, fingerprint (ZK optical), 125 kHz card and PIN; 3,000 users, 150,000 records;
+  Linux; Ethernet (Wi-Fi optional).
+- It speaks **ADMS push** ("Cloud Server Settings": server address *or a domain name*, port, optional
+  proxy) and supports HTTPS. Its firmware ships in **AC push** (access control) and **can be switched
+  to TA push** — the time-and-attendance protocol (the one ZKBio Time uses, and the one
+  `/api/device/iclock` is designed for). **The device must be switched to TA push** when it is set up.
+- Because it accepts a domain name and HTTPS, it can push straight to the hosted address over the
+  internet. Whether a per-site collector is still needed (OQ-319's answer assumed one) comes down to
+  how the device is identified: the protocol identifies a terminal only by its serial number. To
+  decide when ingestion is built: direct push with serial allow-list + the site's fixed public IP, or
+  a collector that adds a real credential.
+- **The ZKFinger SDK is not needed.** It is for a USB fingerprint reader on a PC; the SenseFace
+  enrols faces and fingerprints on the terminal itself and pushes records over the network.
+
+**Still to learn from the device itself**: firmware version (Menu → System Info → Device Info), and
+whether the office network lets it reach the internet on HTTPS.
 
 ### 2026-10-05 — Session 61: The sign-in failures — found, fixed at the root, and a test database of its own
 
