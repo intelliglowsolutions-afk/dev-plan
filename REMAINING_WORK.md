@@ -97,10 +97,9 @@ Grouped by feature. None of this needs an answer first.
 
 **03 Settings**
 - ~~SVG logos~~, ~~twelve-month holiday grid~~ — done 2026-10-02 (Session 46)
-- Date and time format: applied to every full date and date-time on screens (Session 46). **Still
-  in their own form:** dates written in words ("Tue 3 Mar", month titles), exported files, emails,
-  and clock-only times in a few Client Components (the notification bell, payroll and report
-  time stamps)
+- ~~Date and time format in the remaining places~~ — done 2026-10-05 (Session 56): stamps, clocks,
+  notices and export headers follow the setting and company time. Dates in words and the data
+  columns of exports stay as they are, on purpose
 
 **04 Attendance**
 - Nothing ready beyond ingestion (section 3)
@@ -152,7 +151,7 @@ Grouped by feature. None of this needs an answer first.
 - Line charts — with the first report that is a series over time
 - A branded, server-made PDF — waits on OQ-1106 and would need a package
 - Device uptime — **blocked** on ingestion (04): nothing records when a terminal was reachable
-- A saved-views page
+- ~~A saved-views page~~ — done 2026-10-05 (Session 56), with stale views flagged
 
 ---
 

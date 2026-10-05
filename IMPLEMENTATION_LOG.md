@@ -300,6 +300,42 @@ gap.
 
 ## Session entries
 
+### 2026-10-05 — Session 56: A saved-views page (11), and dates and times following the company's settings in the places left over (03)
+
+**Done**
+
+- **Saved views page** at `/reports/views`, linked from Reports with a count. Every view the reader
+  can use — theirs, and those shared with them, with who shared it — with its report and its
+  filters in words. A view whose filters **no longer work** with the report as it is now (a
+  filter the report dropped, a department that has gone) is flagged, with what to do. The owner can
+  rename, share or stop sharing, and remove, in place (`updateView`, `PATCH /api/reports/views/:id`).
+- **Dates and times follow the company's format and timezone** in the places Session 46 left:
+  - the format store now carries the company's **timezone** too, so a page writes instants in
+    company time without being told (`writeStamp`). Payroll time stamps and the report stamps were
+    written **in UTC** before — for a company in Karachi, five hours out;
+  - report "as of" stamps, the dashboard tiles' clocks, scheduled-report times, the pipeline
+    board's next interview (a Client Component, via `useFormats`);
+  - the CSV export's header line ("Run … by …"): company format, company time, the zone named;
+  - dates with a year in messages and notices — period locks, pay-run exceptions, the bank-details
+    notice, the carry-over expiry notice, password and sign-in-address change notices, interview
+    times in notices — now use the company's settings, read explicitly where there is no page;
+  - profile dates in the portal ("21 Apr 1990" in the default format; was "21 April 1990").
+
+**Kept as they are, on purpose**
+
+- **Dates in words** — "Tue 3 Mar", "October 2026", the notification bell's "3 Oct". They carry no
+  year or are titles; every format setting reads them the same, and a numeric "03/10" would be
+  ambiguous where the words are not.
+- **Data columns in exported files** keep ISO dates and 24-hour times, so a spreadsheet can sort
+  and calculate with them. Only the human-readable header follows the settings.
+- Text already stored (an attendance exception's message, written when it was computed) is not
+  rewritten.
+
+**Verified** — `tsc` and lint clean; unit 360; integration 348 (+1), every file passing; HTTP probe 14/14, including the company switched to a 12-hour clock and DD/MM/YYYY and back. One test (the digest, A12) failed once because the running app had held its own notices for a digest after the fixture loaded; it now clears those first, inside its rolled-back transaction.
+
+**Next** — the ready list holds only the org chart PNG export, which needs a package — ask first.
+Everything else needs the browser pass or answers.
+
 ### 2026-10-02 — Session 55: Feature 11 — the records behind a row, paging, and runs that go to the background. The ready list is empty
 
 **Done**
