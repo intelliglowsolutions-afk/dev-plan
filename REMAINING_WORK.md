@@ -85,7 +85,7 @@ Grouped by feature. None of this needs an answer first.
   ~~example review forms without ratings~~ — done 2026-10-05 (Session 60)
 - ~~Device ingestion, hosted design~~ — done 2026-10-05 (Session 63): collector, forward endpoint, quarantine,
   held-punch screen, direct mode (off). **With the real terminal:** switch it to TA push, point it at a
-  collector (collector/README.md). Still to add: an alert when a collector goes silent
+  collector (collector/README.md). ~~An alert when a collector goes silent~~ — done (Session 64)
 
 **01 Auth and roles**
 - ~~`/forgot-password` screen~~ — done 2026-10-01 (Session 41)

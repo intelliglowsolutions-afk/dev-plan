@@ -241,4 +241,4 @@ model Collector {
 | OQ-320 | Collector credential: API key, or mTLS client certificate? | **Built: API key** (OQ-174); mTLS if a security review asks |
 | OQ-321 | Does the device's "Server Address" accept a path, not just a scheme and host? If it does, a per-tenant unguessable path becomes available as an extra layer | Assume not — the manual shows `http://www.XYZ.com` |
 | OQ-322 | Who installs and updates the collector at each site — the customer's IT, or a supported appliance? | **Built for customer IT**: one image, one `docker run` (collector/README.md) |
-| OQ-323 | How long should the collector buffer before alerting that it cannot reach the platform? | **Built:** buffers on disk with no limit; shown "Not reporting" after 5 minutes. The email alert is still to add |
+| OQ-323 | How long should the collector buffer before alerting that it cannot reach the platform? | **Built:** buffers on disk with no limit; shown "Not reporting" and emailed once after `device.collectorSilentMinutes` (15) — Session 64 |

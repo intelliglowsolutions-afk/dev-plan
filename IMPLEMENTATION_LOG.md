@@ -311,6 +311,28 @@ gap.
 
 ## Session entries
 
+### 2026-10-05 — Session 64: An email when a site collector stops reporting
+
+**Done**
+
+- New notification type **`device.collector_silent`** ("A site collector stopped reporting"), to
+  everyone with `device.read`, email on by default, not held for a digest. It names the site, when it
+  was last heard from, how many terminals it serves and how many punches were waiting — and says
+  plainly that nothing is lost, and to check the site computer is on and online.
+- The check runs with the other system-health alerts (every 15 minutes, `scanForAlerts`). It is keyed
+  by the collector's last report: a long silence is **one** email, and another comes only after it has
+  reported and gone quiet again. A collector that has **never** reported (not set up yet) and a
+  revoked one are left out.
+- New setting **`device.collectorSilentMinutes`** (15, from 5 to 1440; Settings → Advanced, with the
+  other terminal thresholds). The terminals page's "Not reporting" now uses it too, instead of a
+  fixed 5 minutes — so the page and the email agree.
+
+**Verified** — unit 370; integration 361 (+1: one email per silence, a second after recovery and a
+new silence, none early, none for revoked or never-started collectors, states on the page);
+`tsc` and lint clean; the setting and the email type show in the app.
+
+**OQ-174 (d)** — the email alert is now built; the threshold is the setting above.
+
 ### 2026-10-05 — Session 63: Device ingestion — terminal → site collector → platform, built and run end to end
 
 The last large build piece, unblocked by OQ-319 (hosted) and the SenseFace 2A manual. Built to
