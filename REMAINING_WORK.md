@@ -63,7 +63,6 @@ For each: keyboard-only use, visible focus, dark mode if used, and nothing scrol
 | **Device ingestion** — the `/iclock` endpoint, the collector, quarantine of bad events, unmatched-PIN maintenance, the unknown-device panel, offline-terminal alerts | OQ-319 |
 | Seeding real pay components and validating the formula language against them | OQ-701 |
 | Seeding real leave policies | OQ-601b |
-| `leave.liability` report, and the daily-rate function in payroll it needs | OQ-151 |
 | Payslips as PDF and by email | OQ-136 |
 | Salary structures by employee group | OQ-137 |
 | Mid-period pay split; cut-off settlement | OQ-138, OQ-139 |
@@ -72,7 +71,6 @@ For each: keyboard-only use, visible focus, dark mode if used, and nothing scrol
 | Document upload from the portal | OQ-807 |
 | Peer and skip-level reviews | OQ-903 / 904 |
 | Per-review access grants for a new manager | OQ-146 |
-| Early release of interview feedback | OQ-157 |
 | "Start onboarding" without a hire | OQ-154 |
 | Delivery and bounce webhooks | OQ-503 |
 | Kiosk mode; a second language | OQ-802; OQ-805 |
@@ -84,10 +82,8 @@ For each: keyboard-only use, visible focus, dark mode if used, and nothing scrol
 Grouped by feature. None of this needs an answer first.
 
 **Unlocked by the answers of 2026-10-05**
-- Public application form off by default (OQ-154)
-- HR may release interview feedback early, with a recorded reason (OQ-157)
-- Daily rate (monthly ÷ 30) in payroll, and the `leave.liability` report (OQ-151)
-- Example review forms without ratings (OQ-902)
+- ~~Public form off by default~~, ~~early feedback release~~, ~~daily rate and the leave value report~~,
+  ~~example review forms without ratings~~ — done 2026-10-05 (Session 60)
 - Device ingestion, hosted design: per-device credentials, per-site collector (OQ-319)
 
 **01 Auth and roles**

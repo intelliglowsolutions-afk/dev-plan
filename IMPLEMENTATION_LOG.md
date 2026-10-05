@@ -227,6 +227,7 @@ gap.
 | OQ-170 | **Hiring: three choices to confirm.** (a) An invite sent as part of a hire goes to the **work email only** — never the address they applied from — and gives the **Employee** role only; anything more is granted afterwards in Users. (b) If the address already has a login the **whole hire is refused** rather than hiring without the invite. (c) The offers list is for those who may see the pay offered (HR); hiring managers do not get it. | Built Session 52; say if any should differ |
 | OQ-171 | **Notifications: which approvals can be decided in the list.** Corrections, leave, requests to hire and employee change requests can. **Pay-run approval and arrears review cannot** — they open their own screen, so pay is never approved without the figures in view. | Built Session 54; say if pay approvals should be inline too |
 | OQ-172 | **Reports: three choices to confirm.** (a) The records behind a row are **never** offered on the pay report, and the leave-wait list never shows the kind of leave. (b) A background run's result lives in the app's memory for ten minutes and is lost on restart (run it again); with more than one app instance this needs a shared store — tied to OQ-315. (c) Opening the records behind a row is not logged as an export: they are records the reader may already list. | Built Session 55; say if any should differ |
+| OQ-173 | **The daily rate: base salary only?** "Monthly pay ÷ 30" was built as the **base salary** ÷ 30 — allowances (house rent, transport…) are not included, because which of them count depends on OQ-701's real components. Say if the leave value should include fixed allowances. | Built Session 60; confirm with OQ-701 |
 | OQ-118 | **Device-event retention.** Does "no automatic deletion" (OQ-1002 et al.) extend to machine logs? Without a sweep or transition-only logging, one terminal writes >1M rows a year. | 2026-09-28 | Open — before feature 04 ingestion |
 | OQ-006 | The two source documents the plan is built on (`HRM_SYSTEM_PLANNING_INSTRUCTIONS.md`, `HRM_SYSTEM_DEPLOYMENT.md`) are not present anywhere under `C:\Dev`. | 2026-09-15 | Open |
 | OQ-101 | Auth library: Auth.js (NextAuth) v5 vs hand-rolled sessions. Plan assumes hand-rolled. | 2026-09-15 | Open — needs decision before build |
@@ -307,6 +308,39 @@ gap.
 ---
 
 ## Session entries
+
+### 2026-10-05 — Session 60: Building what the answers unlocked — public form off, early feedback release, leave value, reviews without ratings
+
+**Done**
+
+- **No public application form** (OQ-154). `recruitment.publicFormEnabled` now defaults to **off**:
+  a published job page shows the role and no form, and the endpoint takes nothing. A company can
+  still turn it on in Settings. Nothing stored changed for a company that had set it explicitly.
+- **HR can release interview feedback early** (OQ-157). Migration `20261009000000_answers_oct5`
+  adds who released it, when and why to `interviews`. `releaseFeedback` and
+  `POST /api/recruitment/interviews/:id/release-feedback` — HR only (all-roles candidate write), a
+  reason of at least ten characters, never when nothing or everything is in, never by an interviewer
+  who has not written theirs. After a release, HR and those who have submitted see the **submitted**
+  cards; **anyone still writing still sees nothing**, so an early release does not colour their view.
+  Drafts are never shown. The interview page shows "Release the feedback that is in…" with the
+  reason asked first, then "Released early by … : reason". Audited.
+- **A day's pay, and the leave value report** (OQ-151). `dailyRates` in `src/lib/payroll/daily-rate.ts`
+  — base salary in force today ÷ 30, exact decimals, one query for everyone, **null (never zero)** for
+  someone with no salary record. New report `leave.liability`, "What leave left is worth", by
+  department: days left × daily rate, with a column counting people with no salary (in days, not in
+  value). Pay figures, so it needs `payroll.read` and company-wide reach, and is suppressed like the
+  payroll report.
+- **Reviews without ratings** (OQ-902). The example review form's "Overall" question is now written,
+  not rated, and no example rating scale is created. The migration converted the example form in
+  existing companies where it was still an untouched example, and removed the unused example scale;
+  a company's own forms and scales were not touched, and reviews already started keep their form.
+
+**Verified** — `tsc` and lint clean; unit 361 (+1); integration 351 (+3), all 21 files; HTTP probe
+14/15 — the one miss was the probe's own request tripping the form's bot check (thanked, not stored);
+repeated as a person would send it, it was refused with "no longer open for applications" and nothing
+was stored.
+
+**Decisions taken, to confirm** — OQ-173.
 
 ### 2026-10-05 — Session 59: Answers to eight open questions
 
