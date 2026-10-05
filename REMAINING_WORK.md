@@ -15,18 +15,18 @@ These change what already exists. Until they are answered, the parts named run o
 
 | # | Question | What is waiting on it |
 |---|---|---|
-| OQ-319 | How the SenseFace terminals connect and authenticate | All of device ingestion (section 3). Attendance has no real punches until this is settled |
+| ~~OQ-319~~ | ~~Hosting~~ — answered: one hosted install, many companies | All of device ingestion (section 3). Attendance has no real punches until this is settled |
 | OQ-701 | The real pay components and how each is calculated | Payroll is seeded with labelled examples only |
 | OQ-601b | The real leave types and entitlements | Leave policies are examples only |
-| OQ-150 | The suppression threshold for reports (default 5) | At 5, every pay figure is hidden in a company this small |
-| OQ-151 | The rule for a day's pay (÷ working days, ÷ 30, ÷ 26?) | The `leave.liability` report |
-| OQ-157 | Who may release interview feedback when one interviewer never submits | Today one silent interviewer hides everyone's feedback, from HR too |
-| OQ-154 | Is the recruitment half wanted (OQ-1001), and the public form (OQ-1003)? | If "onboarding only", a "start onboarding for this employee" button is needed |
+| ~~OQ-150~~ | ~~Suppression threshold~~ — answered: keep 5 | At 5, every pay figure is hidden in a company this small |
+| ~~OQ-151~~ | ~~A day's pay~~ — answered: ÷ 30 | The `leave.liability` report |
+| ~~OQ-157~~ | ~~Feedback release~~ — answered: HR, with a reason | Today one silent interviewer hides everyone's feedback, from HR too |
+| ~~OQ-154~~ | ~~Hiring and public form~~ — answered: hiring yes, form no | If "onboarding only", a "start onboarding for this employee" button is needed |
 | OQ-1002 | Retention period for unsuccessful candidates — needs a qualified legal answer | A placeholder of 6 months is configured |
-| OQ-901 / 902 | Does the company run formal reviews, and with ratings? | Performance was built as the full configurable mechanism |
+| ~~OQ-901 / 902~~ | ~~Reviews~~ — answered: formal reviews, no ratings | Performance was built as the full configurable mechanism |
 | OQ-802 / 805 | Own phones or a shared kiosk; a second language | The portal assumes own phones, English only |
-| OQ-502 | Do all employees have email addresses? | Notifications are email and in-app only |
-| OQ-503 / 504 | Which SMTP service, and the "from" address | Real email delivery (section 5) |
+| ~~OQ-502~~ | ~~Email addresses~~ — answered: office staff only | Notifications are email and in-app only |
+| OQ-503 / 504 | An email provider (answered) — **which one**, and the "from" address | Real email delivery (section 5) |
 | OQ-708 | The bank's file format | The bank export uses a generic layout |
 
 **To confirm rather than decide** — defaults I chose and logged: OQ-141…149 (portal and performance),
@@ -82,6 +82,13 @@ For each: keyboard-only use, visible focus, dark mode if used, and nothing scrol
 ## 4. Ready build work
 
 Grouped by feature. None of this needs an answer first.
+
+**Unlocked by the answers of 2026-10-05**
+- Public application form off by default (OQ-154)
+- HR may release interview feedback early, with a recorded reason (OQ-157)
+- Daily rate (monthly ÷ 30) in payroll, and the `leave.liability` report (OQ-151)
+- Example review forms without ratings (OQ-902)
+- Device ingestion, hosted design: per-device credentials, per-site collector (OQ-319)
 
 **01 Auth and roles**
 - ~~`/forgot-password` screen~~ — done 2026-10-01 (Session 41)
