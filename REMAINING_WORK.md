@@ -60,7 +60,6 @@ For each: keyboard-only use, visible focus, dark mode if used, and nothing scrol
 
 | Work | Blocked on |
 |---|---|
-| **Device ingestion** — the `/iclock` endpoint, the collector, quarantine of bad events, unmatched-PIN maintenance, the unknown-device panel, offline-terminal alerts | OQ-319 |
 | Seeding real pay components and validating the formula language against them | OQ-701 |
 | Seeding real leave policies | OQ-601b |
 | Payslips as PDF and by email | OQ-136 |
@@ -84,7 +83,9 @@ Grouped by feature. None of this needs an answer first.
 **Unlocked by the answers of 2026-10-05**
 - ~~Public form off by default~~, ~~early feedback release~~, ~~daily rate and the leave value report~~,
   ~~example review forms without ratings~~ — done 2026-10-05 (Session 60)
-- Device ingestion, hosted design: per-device credentials, per-site collector (OQ-319)
+- ~~Device ingestion, hosted design~~ — done 2026-10-05 (Session 63): collector, forward endpoint, quarantine,
+  held-punch screen, direct mode (off). **With the real terminal:** switch it to TA push, point it at a
+  collector (collector/README.md). Still to add: an alert when a collector goes silent
 
 **01 Auth and roles**
 - ~~`/forgot-password` screen~~ — done 2026-10-01 (Session 41)

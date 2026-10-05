@@ -229,6 +229,7 @@ gap.
 | OQ-171 | **Notifications: which approvals can be decided in the list.** Corrections, leave, requests to hire and employee change requests can. **Pay-run approval and arrears review cannot** — they open their own screen, so pay is never approved without the figures in view. | Built Session 54; say if pay approvals should be inline too |
 | OQ-172 | **Reports: three choices to confirm.** (a) The records behind a row are **never** offered on the pay report, and the leave-wait list never shows the kind of leave. (b) A background run's result lives in the app's memory for ten minutes and is lost on restart (run it again); with more than one app instance this needs a shared store — tied to OQ-315. (c) Opening the records behind a row is not logged as an export: they are records the reader may already list. | Built Session 55; say if any should differ |
 | OQ-173 | **The daily rate: base salary only?** "Monthly pay ÷ 30" was built as the **base salary** ÷ 30 — allowances (house rent, transport…) are not included, because which of them count depends on OQ-701's real components. Say if the leave value should include fixed allowances. | **Answered 2026-10-05: base salary only is enough for now.** Closed |
+| OQ-174 | **Ingestion: choices to confirm.** (a) Collector credential is an API key (OQ-320), SHA-256 stored, shown once. (b) Punches older than **120 days** arrive held, not counted. (c) A terminal is bound to the first collector and the first address it is seen from; a change holds its punches until someone lets them through (attendance.write). (d) The collector keeps unsent records on disk with no time limit and shows its backlog on the terminals page; a collector silent for 5 minutes shows as "Not reporting" (an email alert for that is not built yet). (e) Direct /iclock push stays off in a hosted install. | Built Session 63 |
 | OQ-118 | **Device-event retention.** Does "no automatic deletion" (OQ-1002 et al.) extend to machine logs? Without a sweep or transition-only logging, one terminal writes >1M rows a year. | 2026-09-28 | Open — before feature 04 ingestion |
 | OQ-006 | The two source documents the plan is built on (`HRM_SYSTEM_PLANNING_INSTRUCTIONS.md`, `HRM_SYSTEM_DEPLOYMENT.md`) are not present anywhere under `C:\Dev`. | 2026-09-15 | **Closed 2026-10-05: both documents are in `C:\Dev\zkt`** (Session 62) |
 | OQ-101 | Auth library: Auth.js (NextAuth) v5 vs hand-rolled sessions. Plan assumes hand-rolled. | 2026-09-15 | Open — needs decision before build |
@@ -309,6 +310,70 @@ gap.
 ---
 
 ## Session entries
+
+### 2026-10-05 — Session 63: Device ingestion — terminal → site collector → platform, built and run end to end
+
+The last large build piece, unblocked by OQ-319 (hosted) and the SenseFace 2A manual. Built to
+DEVICE-INGESTION-SECURITY.md: Layer 1 (a per-site collector with its own credential) plus Layer 3
+(address pinning, quarantine, limits, no tenancy leaks). No domain or hosting was needed for any of it.
+
+**Platform**
+
+- Migration `20261010000000_device_ingestion`: `collectors` (row-level security on), `devices.collector_id`
+  and `firmware_version`, punch `quarantine_reason` / `released_at` / `released_by_id`, event types
+  `COLLECTOR_CHANGED` and `UNKNOWN_DATA`, and two SECURITY DEFINER lookups — collector id → company and
+  credential hash; serial → company (direct mode only).
+- `src/lib/devices/iclock.ts` — **the one module that knows the terminal's protocol** (TA push): request
+  kinds, the handshake options (company time zone in hours, real-time push), the ATTLOG parser (a bad
+  line is reported, never fatal), `OK: n`, firmware from the poll's INFO, and a note for a terminal still
+  in access-control push. Shared, as the same file, with the collector.
+- `src/lib/attendance/ingest.ts` — punches in: device-local time → UTC in the company's zone, PIN →
+  employee by number, one insert with ON CONFLICT DO NOTHING (resends add nothing), unmatched PINs
+  counted, days marked dirty — never computed here. Flags: FUTURE; **QUARANTINED** (stored, never
+  counted) for a new address, a different collector, or a time over 120 days old.
+- `src/lib/devices/collectors.ts` — credentials (`hrmc_<id>_<256-bit secret>`, shown once, SHA-256
+  stored, rotate, revoke), authentication with no company context, and taking a forward: the
+  credential picks the company; a serial only picks a terminal within it. An unregistered serial —
+  **including one registered to another company** — gets the same "unknown terminal", is logged, and
+  is never written anywhere. A terminal is bound to the first collector that forwards it.
+- `POST /api/ingest/v1/forward` — the collectors' front door: bearer credential, each push in its own
+  transaction (one bad push never costs the others), per-collector and failed-credential rate limits,
+  and the company's clock in the reply.
+- `/iclock/*` direct push — **off** (404) unless `DEVICE_DIRECT_PUSH=on`, for a single-office install.
+  When on: serial → company, address pinning, and identical replies for unknown / disabled / known.
+- Held punches: `heldPunches`, `releaseHeld` (attendance.write; marks their days dirty; audited),
+  `/admin/devices/held`. The terminals page gains **Site collectors** (add — credential shown once with
+  copy — new credential, revoke, reporting state, backlog, version) and shows each terminal's firmware
+  and collector; a banner when punches are held.
+
+**The collector** (`collector/`, its own README): no dependencies, Node 22 runs it directly; Docker
+image from `collector/Dockerfile`. It answers terminals from the shared protocol module, **writes each
+push to disk and flushes it before saying OK**, forwards oldest-first, deletes only what the platform
+confirmed, moves refused pushes to `refused/`, reports every minute, backs off when the platform is
+unreachable, insists on https except for a local test, and never prints its credential.
+`collector/simulate-terminal.ts` behaves like a SenseFace for testing.
+
+**Verified**
+
+- Unit 370 (+9 protocol); integration 360 (+9 ingestion: credentials, cross-company, dedupe, matching,
+  quarantine ×3, release, unknown and other-company serials, AC-push note, firmware, DST); database
+  suite (RLS coverage now includes `collectors`); `tsc` for the app and for the collector; lint.
+- **End to end** with the collector's own image and a simulated terminal against the running app:
+  handshake, three punches stored and matched (one unmatched ID queued), terminal linked, address
+  pinned, firmware recorded, collector reporting on the terminals page; an unregistered terminal
+  refused and set aside; **the app paused — the terminal still acknowledged, the punch drained on its
+  own when the app came back**; the collector refused after revocation and saying why; and, with
+  forced addresses, a terminal heard from a new address held, logged, flagged on the page, and released.
+  Not shown end to end: the collector's "cannot reach" log line (the pause ended before its 30 s
+  timeout) — the drain itself was.
+- Test terminals, collectors and punches removed from the app's database afterwards; the two people
+  they touched re-queued so their day is recomputed.
+
+**Still to do with the real terminal** — switch it to TA push; point it at a collector; read its
+firmware from the terminals page. The ⚠ items in 04 api-design.md (exact ack, field order) are now
+implemented to the published protocol and will be confirmed by the first real push.
+
+**Decisions taken, to confirm** — OQ-174.
 
 ### 2026-10-05 — Session 62: The `C:\Dev\zkt` folder — the two source documents found, and the terminal's facts
 

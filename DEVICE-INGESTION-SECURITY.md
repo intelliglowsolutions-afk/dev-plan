@@ -1,6 +1,6 @@
 # Device Ingestion Security — resolving OQ-318
 
-**Status:** written 2026-09-18. Resolves OQ-318 and replaces the withdrawn 03 D-08.
+**Status:** written 2026-09-18. Resolves OQ-318 and replaces the withdrawn 03 D-08. **Built 2026-10-05** (Session 63): Layer 1 and Layer 3, as below; OQ-319 answered hosted.
 **Spans:** features 03 (device identity) and 04 (ingestion), plus `MULTI-TENANCY.md` D-T-05.
 
 ---
@@ -237,8 +237,8 @@ model Collector {
 
 | ID | Question | Proposed |
 |---|---|---|
-| **OQ-319** | Hosted multi-tenant platform, or one installation per company? | Hosted, implied by OQ-301 — but confirm before building ingestion |
-| OQ-320 | Collector credential: API key, or mTLS client certificate? | API key first; mTLS if a customer's security review asks for it |
+| ~~OQ-319~~ | Hosted multi-tenant platform, or one installation per company? | **Answered 2026-10-05: hosted** |
+| OQ-320 | Collector credential: API key, or mTLS client certificate? | **Built: API key** (OQ-174); mTLS if a security review asks |
 | OQ-321 | Does the device's "Server Address" accept a path, not just a scheme and host? If it does, a per-tenant unguessable path becomes available as an extra layer | Assume not — the manual shows `http://www.XYZ.com` |
-| OQ-322 | Who installs and updates the collector at each site — the customer's IT, or a supported appliance? | Customer IT, with a one-command Docker install |
-| OQ-323 | How long should the collector buffer before alerting that it cannot reach the platform? | 15 minutes to alert; buffer for at least 7 days |
+| OQ-322 | Who installs and updates the collector at each site — the customer's IT, or a supported appliance? | **Built for customer IT**: one image, one `docker run` (collector/README.md) |
+| OQ-323 | How long should the collector buffer before alerting that it cannot reach the platform? | **Built:** buffers on disk with no limit; shown "Not reporting" after 5 minutes. The email alert is still to add |
