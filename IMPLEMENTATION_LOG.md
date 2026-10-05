@@ -87,6 +87,7 @@ Source documents:
 | **Feature 10 Recruitment & Onboarding** — requests to hire with approval, postings, the public job page and application form, the pipeline with stalled-candidate marking, rejection (reason + never-sent internal note) and withdrawal, interviews with independent scorecards, offers behind their own permission, the hire through 02 in one transaction with a write-nothing preview, onboarding checklists relative to the start date, retention dry run and deletion by confirmed count, a sixth report | ✅ 2026-10-01 (browser visual check owed — **the public page and the scorecard form above all**; built whole although OQ-1001 and OQ-1003 are unanswered — OQ-154) |
 | Feature 10 remainders — (stage and scorecard editors built in Session 42) drag on the board, reference/background checks, e-signature, a candidate status page, interviewers without accounts, the automatic login invite, CV copied to the employee's documents on hire, reversing a hire, a pipeline-conversion report | ⬜ Deferred, listed in Session 40 |
 | **All eleven features are built.** What remains is in the "remainders" rows above, the open questions below, and everything that needs a browser or your credentials | — |
+| **Production readiness** — image (non-root, health check, no sources), `docker-compose.prod.yml` with Caddy HTTPS, database setup and upgrade script, daily backups with a tested restore, `/api/health`, settings checked at start, security headers, `DEPLOY.md` | ✅ 2026-10-05, Session 66 — rehearsed locally end to end; waits on a server and a domain |
 
 **Toolchain on this machine:** no Node, npm, or git — but **Docker works**, so the toolchain runs
 in containers (`docker run --rm -v C:\Dev\hrm-system:/app node:20-alpine …`), and git runs as
@@ -311,6 +312,60 @@ gap.
 ---
 
 ## Session entries
+
+### 2026-10-05 — Session 66: Production readiness — images, HTTPS, database setup, backups and restore
+
+Everything for going live that does not need the server or the domain. `hrm-system/DEPLOY.md` is the
+guide; every step in it was run on a local copy (a separate Docker project, removed afterwards).
+
+**Done**
+
+- **Production image**: the app runs as a non-root user, with a container health check. The server
+  output had been copying the **whole project** into the image — sources, tests, scripts, and in a
+  local build `.env` (the image itself never had `.env`; `.dockerignore`). Cause: the documents
+  storage path, which the build could not resolve, so it traced everything. Marked as a runtime path;
+  the image now holds the server, its dependencies and the database engine only (190 MB).
+- **`docker-compose.prod.yml`**: Caddy (HTTPS with automatic certificates, http redirected), the app
+  (not published), Postgres (not published at all), a daily **backup** service, and a **tools**
+  image run on demand for database setup. `.env.production.example` lists every setting and how to
+  generate each secret.
+- **`deploy/db-setup.sh`** — first install and every upgrade, safe to re-run: the two app roles with
+  generated passwords, migrations, privileges, the append-only rules re-applied, a check that the
+  app's role cannot bypass data separation, the permission catalogue, the first operator.
+- **Backups** (`deploy/backup.sh`): database and documents together, with checksums, verified
+  readable before being kept; 14 days. **Restore** (`deploy/restore.sh`): checks the checksums,
+  asks, stops the app, replaces both, brings the database up to the installed version, restarts.
+- **`/api/health`**: database reachable, the job runner still finishing its passes, version. Public,
+  nothing sensitive. `ok` / `degraded` (jobs stuck) / 503 (database down).
+- **The server refuses to start** in production with a missing or short `AUTH_SECRET`, a non-https
+  `AUTH_URL`, a development database password, or the owner role as the app's connection — listing
+  every problem in the log.
+- **Security headers** on every response: nosniff, frames only from the site itself (the email
+  preview uses one), referrer policy, permissions policy, HSTS in production; no `X-Powered-By`.
+
+**Found and fixed on the way**
+
+- **The company audit log was not append-only**: the app's role could update and delete entries.
+  Nothing did, but a flaw could have rewritten the record. Migration
+  `20261012000000_audit_log_append_only`; new database test `07-append-only.sql` checks every
+  append-only table and the operator's tables, whatever the order of setup.
+- **An upgrade would have re-added example settings** to a company that declined them (the seed ran
+  them for every company each time). It now sets up only companies not yet set up; the fixture's two
+  companies are left un-set-up so the seed sets them up, as the tests rely on.
+- **An empty `SESSION_IDLE_MINUTES`** (as Compose passes an unset value) read as 0 — every session
+  would have expired at once. Empty or invalid now means the default.
+- The production build needed placeholder database addresses to load its routes (it never connects).
+
+**Verified** — on the local production stack: install from an empty database; `/api/health` ok over
+HTTPS; headers; sign-in cookies `__Host-`/`__Secure-` and Secure; http redirected; the app refusing
+bad settings (exit 1, four reasons); a backup, then changes, then a restore — the database and the
+document back exactly as backed up and the later changes gone, privileges intact; an upgrade applying
+one new migration. Unit 376 (+6 settings check); integration 369; database suite (+1); `tsc`; lint.
+
+**On the dev database** — the new migration applied (adds a rule only). No data reset.
+
+**Not testable here** — the Let's Encrypt certificate (needs the domain) and email delivery (needs the
+provider).
 
 ### 2026-10-05 — Session 65: The platform operator console — adding, suspending and reactivating companies
 

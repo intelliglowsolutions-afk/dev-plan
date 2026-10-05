@@ -162,19 +162,23 @@ Grouped by feature. None of this needs an answer first.
 
 ## 5. Going live
 
-None of this has been started. The app runs only in a local development container.
+Everything that can be done without the server is done (Session 66) — `hrm-system/DEPLOY.md` is the
+step-by-step guide, and the whole of it was rehearsed on a local copy. Left:
 
-- Production build and image; choice of host
-- Production database: roles, migrations, first operator (`scripts/create-operator.ts`); companies are then
-  added from the operator console (`/operator`, built Session 65)
-- Secrets and environment configuration
-- Real SMTP, with a reply-to that reaches a person
-- The scheduled job runner in production (reminders, escalations, grants, digests)
-- Document and CV storage on a volume that is backed up
-- Database backups, and a tested restore
-- HTTPS and the public hostname (the job page and terminals need one)
-- Rate limiting that survives more than one app process (today it is in memory)
-- Monitoring and error logging
+- **You:** a Linux server and a domain pointing at it; then DEPLOY.md sections 2–5 (about an hour)
+- **You:** the email provider — then each company's Settings → Notifications, including the
+  link address, with a reply-to that reaches a person
+- **You:** a place off the server for backup copies (DEPLOY.md section 6) — the server keeps 14 days
+  on its own disk, which a lost disk takes with it
+- An uptime monitor on `/api/health` (DEPLOY.md section 9)
+- Not yet tested, because they need the real server: the Let's Encrypt certificate, and email delivery
+- ~~Production build and image~~, ~~roles, migrations, first operator~~, ~~secrets and settings
+  checked at start~~, ~~the job runner in production~~, ~~documents on a backed-up volume~~,
+  ~~backups and a tested restore~~, ~~HTTPS~~, ~~health check~~ — done Session 66
+- Rate limiting is in memory: right for the one app process this setup runs; would need the
+  database or Redis before running two
+- Error reporting beyond the container logs (e.g. Sentry) — not set up; the logs and the health
+  check are what there is
 - ~~Review `npm audit`~~ — done 2026-10-05 (Session 58): Next, Vitest and Prisma's tooling updated.
   Left: one `braces` chain inside the lint tool, with no fix released — recheck before going live
 - Loading real data: employees (CSV import exists), opening leave balances, current salaries
