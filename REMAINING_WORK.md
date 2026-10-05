@@ -91,7 +91,8 @@ Grouped by feature. None of this needs an answer first.
 **02 Employees**
 - ~~History correction endpoint~~, ~~org chart pan, zoom and print-to-PDF~~, ~~drag to re-parent
   departments~~ — done 2026-10-02 (Session 45)
-- Org chart PNG export — needs an HTML-to-image package; **ask before adding one**
+- ~~Org chart PNG export~~ — done 2026-10-05 (Session 57) with `html-to-image`, added with your
+  approval. The image itself is checked in your browser pass
 - ~~The daily job that applies scheduled job changes~~ — done 2026-10-02 (Session 53); the
   first-read path stays as a fallback
 
@@ -169,6 +170,8 @@ None of this has been started. The app runs only in a local development containe
 - HTTPS and the public hostname (the job page and terminals need one)
 - Rate limiting that survives more than one app process (today it is in memory)
 - Monitoring and error logging
+- Review `npm audit` (high-severity advisories in `brace-expansion` / `braces`, in build tooling,
+  present before Session 57) and update before production
 - Loading real data: employees (CSV import exists), opening leave balances, current salaries
 - A trial pay run alongside the existing process before relying on it
 

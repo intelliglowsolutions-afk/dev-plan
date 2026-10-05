@@ -300,6 +300,31 @@ gap.
 
 ## Session entries
 
+### 2026-10-05 — Session 57: Org chart saved as a PNG — the first package added at the user's request
+
+**Done**
+
+- **Package added, with the user's approval:** `html-to-image` 1.11.13 (MIT, no dependencies of its
+  own), installed in the app container and the host checkout; `package.json` and the lock file
+  updated. It is loaded only when someone asks for an image (a dynamic import), so no page carries it
+  otherwise.
+- **"Save as image (PNG)"** on the org chart, beside "Print or save as PDF". It draws the whole tree
+  — not just the part scrolled into view, and at 100% whatever the zoom — at twice the screen's
+  resolution (once, for a chart too big for a browser canvas), on the page's own background, and
+  saves `org-chart-YYYY-MM-DD.png`. It happens in the browser; nothing is sent anywhere. The result
+  is announced; a failure says to print or save as PDF instead.
+
+**Verified** — `tsc` and lint clean; the page renders the button and its code references the
+library. **The image itself is not verified**: drawing it needs a signed-in browser, which is the
+user's browser pass — click "Save as image (PNG)" on the org chart and open the file.
+
+**Noticed** — `npm audit` reports high-severity advisories in `brace-expansion` and `braces`. They
+were there before this change (html-to-image has no dependencies) and sit in build tooling. Added
+to going-live work in `REMAINING_WORK.md`: review and update before production.
+
+**Next** — section 4 of `REMAINING_WORK.md` is finished. What remains needs the browser pass or
+answers to open questions.
+
 ### 2026-10-05 — Session 56: A saved-views page (11), and dates and times following the company's settings in the places left over (03)
 
 **Done**
