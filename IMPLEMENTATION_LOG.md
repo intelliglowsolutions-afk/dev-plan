@@ -310,6 +310,48 @@ gap.
 
 ## Session entries
 
+### 2026-10-05 — Session 61: The sign-in failures — found, fixed at the root, and a test database of its own
+
+**What the user saw** — "wrong email or password" on every account, with the passwords from setup.
+
+**What was wrong** — three things, the first two together explaining "every account":
+
+1. **The test suites shared the app's database.** Each integration or database test run reloads the
+   fixture, which empties every table — users included — into `hrm_db`, the database the app signs
+   people in against. During and after every run (dozens this week) no account existed until a
+   re-seed. Sessions went with them.
+2. **The fixture's accounts never had real passwords.** `hr@`, `ravi@`, `imran@` in both companies are
+   inserted with a placeholder hash that nothing can match. A scratch script of mine (not in the
+   repository) gave two of them a real one after each run; the other four could never sign in.
+3. **A server failure at sign-in was shown as "wrong email or password".** `signInAction` mapped every
+   Auth.js error to that message, so a database error during sign-in looked exactly like a mistyped
+   password, and was not logged.
+
+**Fixed**
+
+- **Tests have their own database, `hrm_test`** (`scripts/test-db.ps1`, run by both test runners):
+  created if missing, migrated, granted the app and auth roles — with the migrations' append-only
+  revokes re-applied, so its privileges match `hrm_db` exactly (compared table by table: 0
+  differences). `hrm_db` kept its 7 accounts through a full integration run.
+- **`scripts/dev-reset.ps1`** (with `scripts/hash-password.ts`) replaces the scratch script and is in
+  the repository: reloads the fixture into `hrm_db`, seeds the admin, and gives **every** fixture
+  account the `.env` test password, clearing lockouts. It lists the accounts and never prints a
+  password. `-SkipAdminPasswordChange` for development.
+- **Sign-in tells a refusal from a failure**: only a credentials refusal is "wrong email or
+  password" (or "locked" / "too many attempts"); anything else is logged and shown as the
+  "something went wrong" message.
+- **README** rewritten from the create-next-app default: running locally, signing in (which `.env`
+  key goes with which account), and that tests no longer touch the app's data.
+
+**Verified** — all 7 accounts sign in with the `.env` passwords and a wrong password is still
+refused; unit 361, integration 351, database suite all passing — on `hrm_test`; `tsc` and lint
+clean.
+
+**Working rule from here** — the app's database is the user's. I no longer reload it after probes;
+`dev-reset.ps1` only when needed, and said when used.
+
+**Next** — going-live setup.
+
 ### 2026-10-05 — Session 60: Building what the answers unlocked — public form off, early feedback release, leave value, reviews without ratings
 
 **Done**

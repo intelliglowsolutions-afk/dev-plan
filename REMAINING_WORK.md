@@ -182,6 +182,8 @@ None of this has been started. The app runs only in a local development containe
 
 ## 6. Housekeeping
 
+- ~~Tests shared the app's database~~ — fixed 2026-10-05 (Session 61): tests use `hrm_test`;
+  `scripts/dev-reset.ps1` resets the dev database with working sign-ins
 - Remove `dev-stale-f10`, `dev-stale-f10b`, `dev-stale-f10c` and `dev-stale-f11` from the app
   container's `.next` volume (old dev caches moved aside; nothing uses them).
 - ~~The dev-cache fault~~ — addressed in Session 43: `npm run dev` now empties the dev server's
