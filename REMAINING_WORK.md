@@ -160,6 +160,12 @@ Grouped by feature. None of this needs an answer first.
 
 ---
 
+**Platform operator** (Session 67)
+- ~~Company export and deletion (OQ-T-05)~~, ~~support access (OQ-T-04)~~ — done Session 67. The console
+  now covers a company's whole life: add, suspend, look in with its permission, export (by the company), delete
+
+---
+
 ## 5. Going live
 
 Everything that can be done without the server is done (Session 66) — `hrm-system/DEPLOY.md` is the
@@ -190,15 +196,18 @@ step-by-step guide, and the whole of it was rehearsed on a local copy. Left:
 
 - ~~Tests shared the app's database~~ — fixed 2026-10-05 (Session 61): tests use `hrm_test`;
   `scripts/dev-reset.ps1` resets the dev database with working sign-ins
-- Remove `dev-stale-f10`, `dev-stale-f10b`, `dev-stale-f10c` and `dev-stale-f11` from the app
-  container's `.next` volume (old dev caches moved aside; nothing uses them).
+- **You** (blocked for me, Session 67): remove the four old dev caches, about 2.4 GB —
+  `docker exec hrm-system-app-1 rm -rf /app/.next/dev-stale-f10 /app/.next/dev-stale-f10b /app/.next/dev-stale-f10c /app/.next/dev-stale-f11`
+- **You** (blocked for me, Session 67): `npm audit` shows a new high advisory in `source-map-js`
+  (build-time only) with a non-breaking fix — `docker exec hrm-system-app-1 npm audit fix`, then run the
+  tests. The `braces` chain in the lint tool still has no fix released
 - ~~The dev-cache fault~~ — addressed in Session 43: `npm run dev` now empties the dev server's
   compile cache at every start. Watch that it holds.
 - Docker Desktop's VM has 3.7 GB; the dev server reaches about 2 GB after a full probe. Giving
   Docker more memory would make the hangs less likely.
 - New tables without a foreign key into the existing set must be added by hand to the truncate list
   in `prisma/fixtures/canonical.sql`, or test data survives fixture reloads.
-- Git is now installed on the host; the log's toolchain note still describes running it in a container.
+- ~~The log's toolchain note~~ — corrected Session 67
 - ~~The two source documents~~ — found in `C:\Dev\zkt` (Session 62)
 
 ---
