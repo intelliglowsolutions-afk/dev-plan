@@ -16,8 +16,8 @@ These change what already exists. Until they are answered, the parts named run o
 | # | Question | What is waiting on it |
 |---|---|---|
 | ~~OQ-319~~ | ~~Hosting~~ — answered: one hosted install, many companies | All of device ingestion (section 3). Attendance has no real punches until this is settled |
-| OQ-701 | The real pay components and how each is calculated | Payroll is seeded with labelled examples only |
-| OQ-601b | The real leave types and entitlements | Leave policies are examples only |
+| ~~OQ-701~~ | ~~The real pay components~~ — answered and built Session 68 | **Check** the tax slabs (Payroll → Components → Bracket tables) and mark them reviewed; check the EOBI base |
+| ~~OQ-601b~~ | ~~The real leave types and entitlements~~ — answered and built Session 68 | — |
 | ~~OQ-150~~ | ~~Suppression threshold~~ — answered: keep 5 | At 5, every pay figure is hidden in a company this small |
 | ~~OQ-151~~ | ~~A day's pay~~ — answered: ÷ 30 | The `leave.liability` report |
 | ~~OQ-157~~ | ~~Feedback release~~ — answered: HR, with a reason | Today one silent interviewer hides everyone's feedback, from HR too |
@@ -60,8 +60,8 @@ For each: keyboard-only use, visible focus, dark mode if used, and nothing scrol
 
 | Work | Blocked on |
 |---|---|
-| Seeding real pay components and validating the formula language against them | OQ-701 |
-| Seeding real leave policies | OQ-601b |
+| ~~Seeding real pay components~~ — done Session 68 (“Pakistan standard (2026-27)”) | ~~OQ-701~~ |
+| ~~Seeding real leave policies~~ — done Session 68 | ~~OQ-601b~~ |
 | Payslips as PDF and by email | OQ-136 |
 | Salary structures by employee group | OQ-137 |
 | Mid-period pay split; cut-off settlement | OQ-138, OQ-139 |
@@ -215,7 +215,7 @@ step-by-step guide, and the whole of it was rehearsed on a local copy. Left:
 ## Suggested order
 
 1. Push through section 2 (browser pass) — it will produce its own fix list.
-2. Answer OQ-319, OQ-701 and OQ-601b; they unblock the three largest pieces.
+2. ~~Answer OQ-701 and OQ-601b~~ (done Session 68). Check the tax slabs and EOBI base; answer OQ-177; OQ-319 remains.
 3. Build device ingestion, then seed real pay and leave configuration.
 4. `/forgot-password` and the hiring editors — small, and people will hit them early.
 5. Section 5, ending with a trial pay run.

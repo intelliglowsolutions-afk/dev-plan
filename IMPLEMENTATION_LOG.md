@@ -87,6 +87,7 @@ Source documents:
 | **Feature 10 Recruitment & Onboarding** — requests to hire with approval, postings, the public job page and application form, the pipeline with stalled-candidate marking, rejection (reason + never-sent internal note) and withdrawal, interviews with independent scorecards, offers behind their own permission, the hire through 02 in one transaction with a write-nothing preview, onboarding checklists relative to the start date, retention dry run and deletion by confirmed count, a sixth report | ✅ 2026-10-01 (browser visual check owed — **the public page and the scorecard form above all**; built whole although OQ-1001 and OQ-1003 are unanswered — OQ-154) |
 | Feature 10 remainders — (stage and scorecard editors built in Session 42) drag on the board, reference/background checks, e-signature, a candidate status page, interviewers without accounts, the automatic login invite, CV copied to the employee's documents on hire, reversing a hire, a pipeline-conversion report | ⬜ Deferred, listed in Session 40 |
 | **All eleven features are built.** What remains is in the "remainders" rows above, the open questions below, and everything that needs a browser or your credentials | — |
+| **Real pay components and leave entitlements** — the “Pakistan standard (2026-27)” setup, company contributions, loans and advances, unreviewed-table warnings (OQ-701, OQ-601b) | ✅ 2026-10-06, Session 68 — check the tax slabs and EOBI base |
 | **Offboarding and support access** — company data export, deletion on request, time-boxed read-only support access (OQ-T-04, OQ-T-05) | ✅ 2026-10-06, Session 67 |
 | **Production readiness** — image (non-root, health check, no sources), `docker-compose.prod.yml` with Caddy HTTPS, database setup and upgrade script, daily backups with a tested restore, `/api/health`, settings checked at start, security headers, `DEPLOY.md` | ✅ 2026-10-05, Session 66 — rehearsed locally end to end; waits on a server and a domain |
 
@@ -166,8 +167,8 @@ gap.
 | OQ-318 | With no comm key available on the device (OQ-307), how is the push endpoint protected? | 2026-09-18 | ✅ **Resolved 2026-09-18** — `DEVICE-INGESTION-SECURITY.md`: a per-site collector holds the credential (03 D-08b), with a network tunnel as an equal-strength alternative and IP pinning + quarantine in every deployment |
 | OQ-319 | **New, and blocks ingestion:** is this one hosted installation serving many tenants, or one installation per company? It decides whether the collector is necessary or the LAN is already the trust boundary. | 2026-09-18 | **Answered 2026-10-05: one hosted installation serving many companies.** So the LAN is not the trust boundary: each terminal needs its own credentials, and each site a small collector (DEVICE-INGESTION-SECURITY.md). Ingestion is unblocked on this point |
 | OQ-320…323 | Collector details: API key vs mTLS · does the device's Server Address accept a path · who installs and updates the collector · buffer and alert thresholds. | 2026-09-18 | Open |
-| OQ-701 | **Still needed.** The actual pay components and how each is calculated. No default is possible. | 2026-09-15 | Open — the mechanism is built (2026-10-01) and runs on five labelled EXAMPLE components; real payroll cannot start until these are replaced |
-| OQ-601b | **Still needed.** Entitlement days for Annual / Casual / Medical, and whether they vary by grade or employment type. Types confirmed 2026-09-18. | 2026-09-18 | Open — blocks feature 06 seeding |
+| OQ-701 | ~~Still needed~~ — **answered 2026-10-06**: one gross salary; tax (FBR slabs), EOBI, PF 3% + 3%, loans; overtime by setting. Built as the “Pakistan standard (2026-27)” setup | 2026-09-15 | ✅ Built Session 68 — tax slabs and EOBI base still to be checked by you |
+| OQ-601b | ~~Still needed~~ — **answered 2026-10-06**: 14 annual (all at year start, up to 5 carried over), 10 casual, 8 sick; same for everyone | 2026-09-18 | ✅ Built Session 68 |
 | OQ-000 | SenseFace 2A manual not found on the dev machine. Deployment doc's §8 summary is used for now; the manual is needed for the exact push payload shapes in Attendance `api-design.md`. | 2026-09-11 | Open |
 | OQ-001 | Confirm feature list and build order (Step 1). | 2026-09-11 | ✅ Resolved 2026-09-11 |
 | OQ-002 | Remote repository not yet connected: no git remote is set and `gh` is not installed. Needs the target repo URL and credentials set up by the user. | 2026-09-14 | ✅ Resolved 2026-09-14 — `gh` installed, user authenticated, `origin` → `intelliglowsolutions-afk/hrm-system` (private), `main` pushed |
@@ -235,6 +236,7 @@ gap.
 | OQ-174 | **Ingestion: choices to confirm.** (a) Collector credential is an API key (OQ-320), SHA-256 stored, shown once. (b) Punches older than **120 days** arrive held, not counted. (c) A terminal is bound to the first collector and the first address it is seen from; a change holds its punches until someone lets them through (attendance.write). (d) The collector keeps unsent records on disk with no time limit and shows its backlog on the terminals page; a collector silent for 5 minutes shows as "Not reporting" (an email alert for that is not built yet). (e) Direct /iclock push stays off in a hosted install. | Built Session 63 |
 | OQ-175 | **Operator console: choices to confirm.** (a) Operators are separate accounts, never company users, and see counts only — no support access into a company yet (OQ-T-04's time-boxed grant is not built). (b) Suspending a company signs everyone out at once and stops its terminals' collectors and job pages; nothing is deleted. (c) A new company's first admin is a super admin, invited by email (or a link handed over while email is off). (d) Example settings are offered, ticked by default. (e) No way to delete a company (OQ-T-05 offboarding). | Built Session 65 |
 | OQ-176 | **Offboarding and support access: choices to confirm.** (a) The company exports its own data (super admin, password again); the operator cannot export it. (b) Deletion needs the company suspended first, its short name, a reason and the operator's password — no waiting period; backups keep it until they age out (14 days by default). (c) Support access is read-only only, at two levels; durations 1 h / 4 h / 1 day / 3 days; one grant at a time. (d) The support account's actions are audited under “Platform support (operator's email)”; reads that are not otherwise audited are not recorded individually — only each visit. | Built Session 67 |
+| OQ-177 | **Pay and leave setup: choices to confirm.** (a) Provident fund (both sides) is 3% of the Salary line only — not overtime or bonus. (b) EOBI is taken from everyone employed in the month, with no exemptions. (c) Tax is this month × 12 ÷ 12, so a raise or bonus mid-year is only roughly evened out (FBR's year-to-date method can be built later). (d) Neither the employee's PF nor EOBI reduces taxable pay. (e) Sick leave needs a document after 2 days, and is hidden by name on colleagues' calendars. (f) Carried-over annual leave lapses on 31 March (OQ-604). (g) Overtime uses the company's multiplier setting (default 1.5); a separate holiday rate is not set up. (h) Loans carry no interest. | Built Session 68 |
 | OQ-118 | **Device-event retention.** Does "no automatic deletion" (OQ-1002 et al.) extend to machine logs? Without a sweep or transition-only logging, one terminal writes >1M rows a year. | 2026-09-28 | Open — before feature 04 ingestion |
 | OQ-006 | The two source documents the plan is built on (`HRM_SYSTEM_PLANNING_INSTRUCTIONS.md`, `HRM_SYSTEM_DEPLOYMENT.md`) are not present anywhere under `C:\Dev`. | 2026-09-15 | **Closed 2026-10-05: both documents are in `C:\Dev\zkt`** (Session 62) |
 | OQ-101 | Auth library: Auth.js (NextAuth) v5 vs hand-rolled sessions. Plan assumes hand-rolled. | 2026-09-15 | Open — needs decision before build |
@@ -315,6 +317,55 @@ gap.
 ---
 
 ## Session entries
+
+### 2026-10-06 — Session 68: Real pay components and leave entitlements (OQ-701, OQ-601b)
+
+The two questions that blocked real payroll and leave, answered today, and built as a ready-made
+setup — "Pakistan standard (2026-27)" — that a company starts from.
+
+**Your answers** — one gross salary (no split); income tax on the FBR slabs, EOBI, provident fund and
+loans/advances deducted; overtime customisable; leave 14 annual / 10 casual / 8 sick, annual leave all
+at the start of the year, up to 5 days carried over; PF 3% of gross matched 3% by the company; tax as
+"this month × 12, then ÷ 12"; the tax slabs to be checked before use; EOBI on the Punjab minimum wage.
+
+**Done**
+
+- **The setup** (`src/lib/platform/templates.ts`): Salary (full month in full; a part month and unpaid
+  days at monthly ÷ 30 per calendar day, as OQ-151 chose), Overtime (÷ 30 ÷ hours a day × hours ×
+  the company's overtime multiplier, a setting), Bonus (by hand), Income tax (marginal table
+  FBR_SALARY_2027, eight slabs, 0% to 35%), EOBI 1% of Rs 40,000, Provident fund 3% of Salary, Loan
+  repayment, Other deduction (by hand); company side EOBI 5% and PF 3%. One salary structure. Leave
+  types and policies: Annual 14 (carry up to 5, lapsing 31 March per OQ-604), Casual 10, Sick 8
+  (confidential on calendars, a document after 2 days), all granted for the calendar year and
+  pro-rated for joiners. Labelled examples it replaces are switched off, never reused or deleted.
+- **Offered when adding a company** ("Start with: Pakistan standard / Example settings / Nothing",
+  the first preselected), and by `scripts/apply-template.ts` for an existing company. Applied to
+  **Acme** on the dev database (Globex untouched).
+- **Company contributions** — a third component type, shown on the payslip under "Paid by the
+  company — on top of your pay", never in gross, deductions or net; in exports and comparisons.
+- **Loans and advances** — on each person's pay page: amount, monthly instalment, start, reason; the
+  run deducts the instalment (the last one only what is left); finalising records repayments,
+  reopening reverses them; stop deductions with a reason. Append-only, balances never stored.
+- **Formulas** gained `EMPLOYED_CALENDAR_DAYS` and `LOAN_INSTALMENT`.
+- **Unchecked tax table** — every payslip using a table not reviewed (or not for a year) gets a
+  warning in the run, linking to the table; the monthly stale-rates reminder now covers it too.
+
+**Figures checked by hand in the tests** — Rs 150,000 full month with a Rs 12,000 loan instalment:
+tax 6,000, EOBI 400, PF 4,500, net 127,100; company EOBI 2,000 and PF 4,500 outside net. Rs 90,000
+joining on 11 August: 63,000, tax 130, PF 1,890, net 60,580. A loan's last instalment is only the
+balance; finalise records, reopen reverses.
+
+**Sources for the statutory figures** — tax slabs from published Finance Act 2026 summaries (the
+fixed amounts were checked to equal the tax on the slabs below); EOBI base from Punjab's last
+notified minimum wage (1 July 2025; no 2026-27 notification found). **Both need your check** — the
+tax table stays "not reviewed" until someone marks it.
+
+**Verified** — integration 377 (+2 end-to-end runs on the setup); unit 383; database suite (loan
+tables append-only); `tsc`; lint; pages render on the dev app.
+
+**Also** — `package-lock.json` picked up `source-map-js` 1.2.2 (your `npm audit fix`); tests ran on it.
+
+**Decisions taken, to confirm** — OQ-177.
 
 ### 2026-10-06 — Session 67: Offboarding and support access — company export, deletion on request, time-boxed support
 
