@@ -89,9 +89,10 @@ Source documents:
 | **All eleven features are built.** What remains is in the "remainders" rows above, the open questions below, and everything that needs a browser or your credentials | — |
 | **Production readiness** — image (non-root, health check, no sources), `docker-compose.prod.yml` with Caddy HTTPS, database setup and upgrade script, daily backups with a tested restore, `/api/health`, settings checked at start, security headers, `DEPLOY.md` | ✅ 2026-10-05, Session 66 — rehearsed locally end to end; waits on a server and a domain |
 
-**Toolchain on this machine:** no Node, npm, or git — but **Docker works**, so the toolchain runs
-in containers (`docker run --rm -v C:\Dev\hrm-system:/app node:20-alpine …`), and git runs as
-`alpine/git` against the bind-mounted repo. The app runs with
+**Toolchain on this machine:** no Node or npm on the host — **Docker works**, so the toolchain runs
+in containers (`docker run --rm -v C:\Dev\hrm-system:/app node:20-alpine …`). Git is installed on
+the host and used directly (it once ran as `alpine/git` in a container). Anaconda Python
+(`C:\Users\Intelliglow\anaconda3\python.exe`) is used for file edits that must keep UTF-8 intact. The app runs with
 `docker compose up -d --build app` (dev target, hot reload). **New files are not always picked up by
 the container's watcher on the Windows bind mount** — if Turbopack reports "Module not found" for a
 file that exists, `docker restart hrm-system-app-1`. **If routes that exist return Next's HTML 404
