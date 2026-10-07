@@ -444,7 +444,9 @@ until xl); 34 inputs whose own width lost to the shared `w-full` by Tailwind's o
 employee, on a phone (375px) in light and dark: home, my time, my leave, request leave, my pay,
 more — all as intended; the portal leave balances gained the usage bar the admin side has.
 Then, on request, icons beside the admin sidebar's group headings (`NavGroup.icon`, inline strokes
-in nav.tsx, aria-hidden) — previewed by eye; seen in place only once an admin signs in.
+in nav.tsx, aria-hidden) — then seen in place as admin, light and dark. And icon tiles on every
+row of the portal's More list (shared `IconTile` / `PORTAL_ICONS` in portal/ui.tsx, which the home
+rows now use too) — previewed by eye; the admin account cannot open the portal.
 
 **Next** — sign in to the browser pane and walk the screens (desktop and phone, light and dark);
 fix what looks wrong. Possible follow-ups: icons in the admin sidebar groups, the portal "More"
