@@ -435,8 +435,13 @@ the peak — light can't go much further without dropping below AA).
   larger greeting. The other portal screens are built from the shared portal blocks, refreshed
   earlier.
 
-**The page-by-page pass is complete.** Not yet seen by eye: every signed-in screen — the browser
-pane has not been signed in this session.
+**The page-by-page pass is complete.** Then checked by eye once signed in: dashboard, employees,
+a profile, attendance, org chart, leave calendar, payroll, hiring, reports, settings (light and
+dark, 1024px) and employees + the menu drawer at 375px. Fixed what looked wrong: "UTC UTC" on the
+dashboard tiles; filter toolbars and attendance tiles cramped at laptop width (two/four columns
+until xl); 34 inputs whose own width lost to the shared `w-full` by Tailwind's output order — now
+`w-…!` (the leave calendar's selects had run full width). The portal was not seen: the admin
+account has no employee record, so /portal sends it to the dashboard.
 
 **Next** — sign in to the browser pane and walk the screens (desktop and phone, light and dark);
 fix what looks wrong. Possible follow-ups: icons in the admin sidebar groups, the portal "More"
