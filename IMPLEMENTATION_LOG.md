@@ -425,7 +425,22 @@ the peak — light can't go much further without dropping below AA).
   saving filters; charts and results table in rounded cards, row hover, banded totals (chart
   drawing unchanged). Docker Desktop stopped mid-section; you restarted it, then it was checked.
 
-**Next** — continue in sidebar order: Administration, portal.
+- **Administration + app-wide sweep**: `refresh.py` run over every page (last back links →
+  breadcrumbs, boxed and paragraph empty states → dashed panels, notices rounded, old hover fill
+  replaced; operator console and parts of the portal included). By hand: Users (header with
+  count, toolbar card with search icon, info panel for "no login", initials), Settings (checklist
+  progress bar, cards that lift with an arrow), permission matrix groups rounded. tsc, eslint and
+  387 unit tests pass.
+- **Portal home**: icon tiles (bottom-nav strokes) on the at-a-glance rows, an all-clear card,
+  larger greeting. The other portal screens are built from the shared portal blocks, refreshed
+  earlier.
+
+**The page-by-page pass is complete.** Not yet seen by eye: every signed-in screen — the browser
+pane has not been signed in this session.
+
+**Next** — sign in to the browser pane and walk the screens (desktop and phone, light and dark);
+fix what looks wrong. Possible follow-ups: icons in the admin sidebar groups, the portal "More"
+list.
 Sign in to the browser pane so the signed-in screens can be checked by eye (shell,
 dashboard, a table page, portal on a phone); then page-level passes per module if wanted.
 
