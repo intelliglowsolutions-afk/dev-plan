@@ -449,7 +449,12 @@ row of the portal's More list (shared `IconTile` / `PORTAL_ICONS` in portal/ui.t
 rows now use too) — previewed by eye; the admin account cannot open the portal. Then seen in place as the
 employee. Then a walk through every page an employee can open, on a phone: fixed the portal's
 `Explain` (now a tinted panel, not an actionable-looking card), Feedback's fold-outs (+ mark),
-Directory (search icon, initials), My day's choices (option cards), Notifications' filters (pills).
+Directory (search icon, initials), My day's choices (option cards), Notifications' filters (pills). Then
+every admin page at 1024px: checkboxes in the app colour everywhere (base CSS rule); last six back
+links → breadcrumbs; twenty card fold-outs given the + mark; sidebar no longer lights a section root
+with its sub-page (most specific match wins); pay components, email log, positions, users, raw
+punches fixed for laptop width; dense form grids and form+panel layouts spread only from xl; offers
+filter as pills; role choice cards show their checked state.
 
 **Next** — sign in to the browser pane and walk the screens (desktop and phone, light and dark);
 fix what looks wrong. Possible follow-ups: icons in the admin sidebar groups, the portal "More"
