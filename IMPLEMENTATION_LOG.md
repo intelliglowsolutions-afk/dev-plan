@@ -419,7 +419,13 @@ the peak — light can't go much further without dropping below AA).
   strip and a filled bar per role; candidate details in a card; Onboarding header with count and
   a tasks bar; the PUBLIC job page with brand mark, fact chips, the halo and the form in a card.
 
-**Next** — continue in sidebar order: Reports, Administration, portal.
+- **Reports**: the scripted pass is now reusable (`refresh.py <dirs>`, handles template-string
+  and print:hidden back links); catalogue with header, area counts, icon tiles; a report with
+  pill chips for views and filters, provenance as a quiet panel, dashed "no data", disclosure for
+  saving filters; charts and results table in rounded cards, row hover, banded totals (chart
+  drawing unchanged). Docker Desktop stopped mid-section; you restarted it, then it was checked.
+
+**Next** — continue in sidebar order: Administration, portal.
 Sign in to the browser pane so the signed-in screens can be checked by eye (shell,
 dashboard, a table page, portal on a phone); then page-level passes per module if wanted.
 
