@@ -458,7 +458,11 @@ filter as pills; role choice cards show their checked state. Then `scripts/sampl
 the services, idempotent; run against hrm_db with your go-ahead) — an opening with 5 candidates, a
 calculated September run with payslips, an open review cycle with 2 goals, a terminal, a pending
 leave request — and with it: `.halo` now `overflow-x: clip` (the pipeline widened the whole page via
-escaped sr-only labels), the "UNREVIEWED_RATES" exception labelled, table minimums 40–42rem.
+escaped sr-only labels), the "UNREVIEWED_RATES" exception labelled, table minimums 40–42rem. Then
+Imran's portal checked with data (home, goals, a goal, self-review, leave request); at your request
+September 2026 was finalised and released (`FINALISE=1`, 6 warnings acknowledged with a note), and
+his payslip checked on a phone. The portal payslip's back link restored to the portal's "←" style.
+**hrm_db now holds a finalised September 2026 run** — its period is locked, as a real one would be.
 
 **Next** — sign in to the browser pane and walk the screens (desktop and phone, light and dark);
 fix what looks wrong. Possible follow-ups: icons in the admin sidebar groups, the portal "More"
