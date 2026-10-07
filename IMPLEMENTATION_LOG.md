@@ -443,6 +443,8 @@ until xl); 34 inputs whose own width lost to the shared `w-full` by Tailwind's o
 `w-…!` (the leave calendar's selects had run full width). Then the portal, signed in as an
 employee, on a phone (375px) in light and dark: home, my time, my leave, request leave, my pay,
 more — all as intended; the portal leave balances gained the usage bar the admin side has.
+Then, on request, icons beside the admin sidebar's group headings (`NavGroup.icon`, inline strokes
+in nav.tsx, aria-hidden) — previewed by eye; seen in place only once an admin signs in.
 
 **Next** — sign in to the browser pane and walk the screens (desktop and phone, light and dark);
 fix what looks wrong. Possible follow-ups: icons in the admin sidebar groups, the portal "More"
