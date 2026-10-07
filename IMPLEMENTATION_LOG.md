@@ -401,7 +401,13 @@ the peak — light can't go much further without dropping below AA).
   today circled; balances header with count and filters in a card; request form's cost panel
   sticky with balance before → after as two figures.
 
-**Next** — continue in sidebar order: Pay, Performance, Hiring, Reports, Administration, portal.
+- **Pay**: run `ProgressTrack` as numbered steps with ticks; payroll dashboard's current period
+  with a three-date strip and highlighted row; run page header/track card/totals strip/empty
+  states; the shared payslip (payroll + portal) with net pay in its own larger panel and ruled
+  section heads; My payslips, Salaries (missing pay as a warning band), Adjustments, a person's
+  pay — PageHeader and empty states; row hover on all pay tables.
+
+**Next** — continue in sidebar order: Performance, Hiring, Reports, Administration, portal.
 Sign in to the browser pane so the signed-in screens can be checked by eye (shell,
 dashboard, a table page, portal on a phone); then page-level passes per module if wanted.
 
