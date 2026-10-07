@@ -454,7 +454,11 @@ every admin page at 1024px: checkboxes in the app colour everywhere (base CSS ru
 links → breadcrumbs; twenty card fold-outs given the + mark; sidebar no longer lights a section root
 with its sub-page (most specific match wins); pay components, email log, positions, users, raw
 punches fixed for laptop width; dense form grids and form+panel layouts spread only from xl; offers
-filter as pills; role choice cards show their checked state.
+filter as pills; role choice cards show their checked state. Then `scripts/sample-data.ts` (add-only, through
+the services, idempotent; run against hrm_db with your go-ahead) — an opening with 5 candidates, a
+calculated September run with payslips, an open review cycle with 2 goals, a terminal, a pending
+leave request — and with it: `.halo` now `overflow-x: clip` (the pipeline widened the whole page via
+escaped sr-only labels), the "UNREVIEWED_RATES" exception labelled, table minimums 40–42rem.
 
 **Next** — sign in to the browser pane and walk the screens (desktop and phone, light and dark);
 fix what looks wrong. Possible follow-ups: icons in the admin sidebar groups, the portal "More"
