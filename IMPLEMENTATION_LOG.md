@@ -446,7 +446,10 @@ more — all as intended; the portal leave balances gained the usage bar the adm
 Then, on request, icons beside the admin sidebar's group headings (`NavGroup.icon`, inline strokes
 in nav.tsx, aria-hidden) — then seen in place as admin, light and dark. And icon tiles on every
 row of the portal's More list (shared `IconTile` / `PORTAL_ICONS` in portal/ui.tsx, which the home
-rows now use too) — previewed by eye; the admin account cannot open the portal.
+rows now use too) — previewed by eye; the admin account cannot open the portal. Then seen in place as the
+employee. Then a walk through every page an employee can open, on a phone: fixed the portal's
+`Explain` (now a tinted panel, not an actionable-looking card), Feedback's fold-outs (+ mark),
+Directory (search icon, initials), My day's choices (option cards), Notifications' filters (pills).
 
 **Next** — sign in to the browser pane and walk the screens (desktop and phone, light and dark);
 fix what looks wrong. Possible follow-ups: icons in the admin sidebar groups, the portal "More"
