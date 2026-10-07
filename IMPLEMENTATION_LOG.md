@@ -407,7 +407,12 @@ the peak — light can't go much further without dropping below AA).
   section heads; My payslips, Salaries (missing pay as a warning band), Adjustments, a person's
   pay — PageHeader and empty states; row hover on all pay tables.
 
-**Next** — continue in sidebar order: Performance, Hiring, Reports, Administration, portal.
+- **Performance**: PageHeader + empty states on team, cycles, a cycle, a goal, a review; cycle
+  progress shows a percentage; new shared `disclosure` / `disclosureMark` (styles.ts) for the
+  "New review cycle / Set a goal / Change this goal" panels; goal progress, goal rows, option
+  cards, review-form section buttons and notes refreshed (admin and portal share these).
+
+**Next** — continue in sidebar order: Hiring, Reports, Administration, portal.
 Sign in to the browser pane so the signed-in screens can be checked by eye (shell,
 dashboard, a table page, portal on a phone); then page-level passes per module if wanted.
 
