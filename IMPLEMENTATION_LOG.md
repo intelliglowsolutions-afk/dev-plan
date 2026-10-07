@@ -347,8 +347,20 @@ colour). Scope: foundation + key screens; every other page inherits through the 
 light and dark. The dev container needed a restart to pick up the new file (Turbopack's polling
 missed a file *creation* on the bind mount).
 
-**Next** — look over the signed-in screens (shell, dashboard, a table page, portal on a phone) and
-say what to push further; then page-level layout passes per module if wanted.
+**Then, the dashboard** (same session, your ask) — rebuilt top to bottom:
+- Header: today's date and a greeting by the company's clock, with the person's preferred name when
+  they have an employee record, and one line saying how many things wait on them.
+- **Needs your attention**: one row per queue they can act on — leave requests, attendance
+  corrections, profile change requests, unmatched terminal IDs. Each count comes from the SAME
+  function and scope as its page (`pendingForMe`, `listCorrections` awaiting-me, the pending change
+  requests, undismissed PINs), so the number always matches the list behind it. Each runs in its own
+  transaction; a failure reads "Couldn't count", never 0. Count shown as a word in a tile (filled
+  when something waits, outlined when clear) — not colour alone.
+- Report tiles unchanged; then **Go to** (up to six permission-gated destinations) beside
+  **Upcoming holidays** with calendar-leaf dates (full date kept for screen readers).
+
+**Next** — sign in to the browser pane so the signed-in screens can be checked by eye (shell,
+dashboard, a table page, portal on a phone); then page-level passes per module if wanted.
 
 ### 2026-10-07 — Session 69: Payslips emailed as a CNIC-locked PDF (OQ-136); the terminal looked for on the network
 
