@@ -318,6 +318,38 @@ gap.
 
 ## Session entries
 
+### 2026-10-07 — Session 70: UI refresh, "refined minimal" (foundation + key screens)
+
+**Your answers** — direction: refined minimal (keep the flat warm monochrome, tighten it; no brand
+colour). Scope: foundation + key screens; every other page inherits through the shared tokens.
+
+**Done** (hrm-system)
+
+- **Tokens** (`globals.css`): canvas one step warmer than the white cards (`--background` #f7f7f5 /
+  dark #161615) so surfaces layer without heavier borders; new `--muted` fill for hover, active nav
+  and table heads; `shadow-card` (0.04) and `shadow-pop` (floating panels) replace ad-hoc shadows;
+  `color-scheme` set so native controls follow dark mode; tabular figures in every table; `pop` and
+  `drawer` keyframes (all under the existing reduced-motion rule). Re-measured: muted text 5.0:1 on
+  the canvas, 4.8:1 on `--muted`; `--input` 3.1:1; dark muted text 7.1:1 / 5.9:1.
+- **Shared styles** (`styles.ts`, `portal/ui.tsx`): cards `rounded-xl` with `shadow-card` (reaches
+  112 files); buttons press to 0.98; secondary/ghost hover on `--muted`; inputs get the card shadow;
+  table heads on a muted band.
+- **Shell**: new `Brand` mark (monogram tile + company name) in the admin and portal sidebars, the
+  operator header and the sign-in card. Sidebars are sticky full-height with their own scroll; the
+  top bar is sticky (solid, not blurred — a backdrop-filter would capture the bell panel and the
+  drawer, both `position: fixed` inside it). User menu shows initials and an SVG chevron; the mobile
+  drawer slides in. Nav rows keep 40px (44px below 768px) and the active bar (not colour alone).
+- **Sign-in screens**: card with the floating shadow over a faint hairline grid that fades out.
+- **Dashboard**: shortcut cards with an arrow and a hover lift; holidays as a headed card; report
+  tiles lift on hover; skeletons on `--muted`.
+
+**Verified** — `tsc` and eslint clean; 387 unit tests pass; sign-in checked in the browser pane in
+light and dark. The dev container needed a restart to pick up the new file (Turbopack's polling
+missed a file *creation* on the bind mount).
+
+**Next** — look over the signed-in screens (shell, dashboard, a table page, portal on a phone) and
+say what to push further; then page-level layout passes per module if wanted.
+
 ### 2026-10-07 — Session 69: Payslips emailed as a CNIC-locked PDF (OQ-136); the terminal looked for on the network
 
 **The terminal** — you had plugged it into the PC by USB-C, thinking it was needed: it is not. The
