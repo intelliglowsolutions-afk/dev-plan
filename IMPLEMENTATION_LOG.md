@@ -412,7 +412,14 @@ the peak — light can't go much further without dropping below AA).
   "New review cycle / Set a goal / Change this goal" panels; goal progress, goal rows, option
   cards, review-form section buttons and notes refreshed (admin and portal share these).
 
-**Next** — continue in sidebar order: Hiring, Reports, Administration, portal.
+- **Hiring + onboarding**: a scripted pass over 16 pages (back links → breadcrumbs, empty
+  paragraphs → dashed panels, notices rounded, new hover fill), then by hand: pipeline stages as
+  tinted lanes with count pills, cards with initials / amber edge when stalled / ring when
+  selected, floating selection bar; Hiring overview with header, open roles / applying / filled
+  strip and a filled bar per role; candidate details in a card; Onboarding header with count and
+  a tasks bar; the PUBLIC job page with brand mark, fact chips, the halo and the form in a card.
+
+**Next** — continue in sidebar order: Reports, Administration, portal.
 Sign in to the browser pane so the signed-in screens can be checked by eye (shell,
 dashboard, a table page, portal on a phone); then page-level passes per module if wanted.
 
