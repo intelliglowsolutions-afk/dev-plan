@@ -195,7 +195,7 @@ gap.
 | OQ-133 | **No automatic deletion** (OQ-1002) means `notification_deliveries` and `local_emails` grow without bound. Fine for years at this size; worth a decision before it is not. | 2026-09-30 | Open |
 | OQ-134 | **Fiscal leave years in two HR views.** The balances table and the carry-over year picker assume calendar years; per-person balances and every engine honour a policy's fiscal basis. Harmless while all policies are calendar-year (the default, OQ-602). | 2026-09-30 | Open — fix before any fiscal-year policy |
 | OQ-135 | **Who runs payroll and who approves it.** There is no seeded payroll-officer or approver role, so `HR_ADMIN` holds run, approve, finalise, publish, adjust and export; only reopen stays with the super admin. The two acts are recorded separately (OQ-707), but one person can do both. Real segregation needs two custom roles — which the role editor can already make. | 2026-10-01 | Open — decide the roles before the first real run |
-| OQ-136 | **Payslip PDFs are not generated or emailed.** FR-L-05 (revised 2026-09-18) wants an emailed, password-protected PDF. That needs a PDF library — a package, so your approval — and a decision on the password scheme (employee code + date of birth is common and weak). Until then the payslip page prints cleanly and "Print or save as PDF" is the PDF; the notification links to the payslip and carries no figures. | 2026-10-01 | Open — approve a library and choose the scheme |
+| OQ-136 | ~~Payslip PDFs are not generated or emailed~~ — **answered 2026-10-06/07**: pdfkit; CNIC as the password; emailed on release to the personal email, else the sign-in address | 2026-10-01 | ✅ Built Session 69 |
 | OQ-137 | **Salary structures are chosen per pay record**, not assigned by group (FR-S-02 asked for employment type / department / grade with most-specific-wins, as leave policies have). Simpler and explicit; costs a click per person. | 2026-10-01 | Open — build group assignment if the headcount makes it worth it |
 | OQ-138 | **A pay change in the middle of a period** uses the salary in force on the last employed day for the whole period, and says so on the payslip. A split by days is owed; today the difference can be paid as an adjustment. | 2026-10-01 | Open |
 | OQ-139 | **Days after the cut-off are assumed, noted on the payslip, and NOT settled automatically.** FR-A-04 wants a system-generated settlement in the next period comparing assumed with actual. Not built: a run calculated after its period ends has no assumed days at all, which is the simple way to avoid the question. | 2026-10-01 | Open — needed only if payroll runs before month end |
@@ -317,6 +317,43 @@ gap.
 ---
 
 ## Session entries
+
+### 2026-10-07 — Session 69: Payslips emailed as a CNIC-locked PDF (OQ-136); the terminal looked for on the network
+
+**The terminal** — you had plugged it into the PC by USB-C, thinking it was needed: it is not. The
+SenseFace talks to the system only over the network, and Windows confirmed no SenseFace on USB (the
+one unknown USB device was a mouse). The ZKFinger SDK in `C:\Dev\zkt` is for desktop USB fingerprint
+scanners, not this terminal (as found in Session 62). On the Wi-Fi (192.168.1.x) eight devices
+answered; none on the terminal's port 4370 (TCP or UDP), so reading records without changing its
+settings is not possible — most likely it is on another network or its 4370 is off. **Waiting on its
+admin access** (from your supervisor) to set its Cloud Server address and TA push.
+
+**Your answers (OQ-136)** — pdfkit approved; the password is the employee's CNIC; emailed when HR
+releases payslips; to the personal email, else the sign-in address.
+
+**Done**
+
+- **The PDF** (`src/lib/payroll/payslip-pdf.ts`): A4, from the payslip's own snapshot — company and
+  logo (PNG/JPEG), title and dates, employee, earnings, deductions, net pay, the bank account's last
+  four, what the company pays on top, days. AES-256; opens with the 13 digits of the CNIC; printing
+  allowed, editing and copying not; random owner password. Made at sending, never stored.
+- **The email**: the existing "Your payslip is ready" notice gains `emailTo: personalFirst` and
+  `attach: payslipPdf`. No CNIC of 13 digits (or a replaced payslip): no PDF, and the email says why.
+  The email still carries no figures. The SMTP client gained attachments (multipart/mixed); the local
+  outbox records the attachment's name, type and size only.
+- **For HR**, on a released payslip: where its email goes, whether it carries the PDF (or why not),
+  and **Email it again** (`payroll.publish`, audited).
+- `scripts/sample-payslip-pdf.ts` writes a sample PDF with made-up figures, for checking a reader.
+
+**Verified** — the sample PDF checked with qpdf (AES-256, R5; wrong and missing passwords refused;
+copy and modify not allowed) and pdftotext, and rendered to an image; pdfkit works inside the
+production image (its font files are traced). Unit 387 (+CNIC password, MIME attachment byte for byte);
+integration 378 (+release → personal address with PDF; no CNIC → sign-in address, no PDF, reason;
+re-send after adding the CNIC attaches it); database suite; `tsc`; lint.
+
+**Also** — Docker Desktop had stopped and was restarted (the dev containers came back by themselves).
+A new high advisory in `sharp` (through Next.js, unrelated to pdfkit) has a non-breaking fix:
+`npm audit fix` in the app container, as before.
 
 ### 2026-10-06 — Session 68: Real pay components and leave entitlements (OQ-701, OQ-601b)
 

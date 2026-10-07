@@ -62,7 +62,7 @@ For each: keyboard-only use, visible focus, dark mode if used, and nothing scrol
 |---|---|
 | ~~Seeding real pay components~~ — done Session 68 (“Pakistan standard (2026-27)”) | ~~OQ-701~~ |
 | ~~Seeding real leave policies~~ — done Session 68 | ~~OQ-601b~~ |
-| Payslips as PDF and by email | OQ-136 |
+| ~~Payslips as PDF and by email~~ — done Session 69 (CNIC-locked PDF, emailed on release) | ~~OQ-136~~ |
 | Salary structures by employee group | OQ-137 |
 | Mid-period pay split; cut-off settlement | OQ-138, OQ-139 |
 | The bank's own export format | OQ-708 |
@@ -163,6 +163,14 @@ Grouped by feature. None of this needs an answer first.
 **Platform operator** (Session 67)
 - ~~Company export and deletion (OQ-T-05)~~, ~~support access (OQ-T-04)~~ — done Session 67. The console
   now covers a company's whole life: add, suspend, look in with its permission, export (by the company), delete
+
+---
+
+**Attendance terminal** (Session 69)
+- **You:** admin access to the SenseFace (from your supervisor). Then: its IP and firmware version, the Cloud
+  Server address, and TA push — about five minutes, with the PC side set up by me. It was not found on
+  192.168.1.x on port 4370, so it cannot be read without changing its settings.
+- **You:** `npm audit fix` in the app container for a new `sharp` advisory (through Next.js)
 
 ---
 
