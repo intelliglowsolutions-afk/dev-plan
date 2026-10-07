@@ -395,8 +395,13 @@ the peak — light can't go much further without dropping below AA).
   swatches. **Shifts**: header with count; pattern cycles as numbered day chips; shift form section
   titles moved off the card border (floated legends), fixed/flexible as option cards.
 
-**Next** — continue in sidebar order: Leave, Pay, Performance, Hiring, Reports, Administration,
-portal.
+- **Leave**: `UsageBar` (used / pending hatched / left, aria-hidden — the numbers are always
+  written beside it) on My leave and one person's balances; approvals with dates large, facts as
+  chips, amber edge when past escalation (also said in words); calendar with month stepper and
+  today circled; balances header with count and filters in a card; request form's cost panel
+  sticky with balance before → after as two figures.
+
+**Next** — continue in sidebar order: Pay, Performance, Hiring, Reports, Administration, portal.
 Sign in to the browser pane so the signed-in screens can be checked by eye (shell,
 dashboard, a table page, portal on a phone); then page-level passes per module if wanted.
 
