@@ -369,7 +369,24 @@ The dev container again needed a restart to serve the CSS change. Then made stro
 light `rgba(255,200,140,0.30)`, dark 0.12, 920×640px fading at 75% (muted text 4.55:1 / 5.4:1 at
 the peak — light can't go much further without dropping below AA).
 
-**Next** — sign in to the browser pane so the signed-in screens can be checked by eye (shell,
+**Then, page by page** (your ask; sidebar order):
+- Shared: `components/ui/page.tsx` — `PageHeader` (breadcrumb, title + quiet count, description,
+  actions), `EmptyState`, `FilterChip`, `SearchIcon`, `TabNav`. Pagination reads "26–50 of 128".
+- **Employees**: header with count; filters as one toolbar card (search icon, Apply primary);
+  removable chips; real empty states; quieter code/hired columns.
+- **Employee profile**: one summary card (photo, name, status, job, actions) with a 4-fact strip
+  (code, reports to, hired, service/left); breadcrumb; shared tabs with a document count; panels
+  with a headed top and ruled fact rows.
+- **Employee form** (new/edit): two-column sections on wide screens; sticky save bar — Save on the
+  right but still FIRST in the DOM, so Enter keeps meaning Save, not "Save and add another".
+- **Org chart**: connectors were one border across the whole row (overshooting the outer cards);
+  now CSS `.org-branch` elbows. Cards with department tag and ruled footer; one toolbar with a
+  segmented Tree/List switch; zoom as one − 100% + control; faint dot-grid canvas. Connectors
+  checked by eye with a mock tree.
+
+**Next** — continue in sidebar order: employee import wizard, Holidays, then Time (attendance,
+corrections, roster, shifts…), Leave, Pay, Performance, Hiring, Reports, Administration, portal.
+Sign in to the browser pane so the signed-in screens can be checked by eye (shell,
 dashboard, a table page, portal on a phone); then page-level passes per module if wanted.
 
 ### 2026-10-07 — Session 69: Payslips emailed as a CNIC-locked PDF (OQ-136); the terminal looked for on the network
