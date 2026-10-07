@@ -384,8 +384,19 @@ the peak — light can't go much further without dropping below AA).
   segmented Tree/List switch; zoom as one − 100% + control; faint dot-grid canvas. Connectors
   checked by eye with a mock tree.
 
-**Next** — continue in sidebar order: employee import wizard, Holidays, then Time (attendance,
-corrections, roster, shifts…), Leave, Pay, Performance, Hiring, Reports, Administration, portal.
+- **Import wizard**: connected stepper; drop zone with icon and drag-over state; preview/result
+  counts as figures; option cards for "import nothing / valid rows only".
+- **Holidays**: one toolbar (calendar, year, view); new shared `PeriodStepper` (‹ 2026 ›) and
+  `SegmentedLinks` (org chart switched to it); list rows lead with a calendar leaf; month counts.
+- **Attendance**: status tiles with a dot beside the word and a ring when active; filters + day
+  shortcuts in one card; month page with month stepper, totals strip, today ringed; day page with
+  verdict strip and punches as a timeline. Corrections use the shared tabs; empty states throughout.
+- **Roster**: fortnight stepper; toolbar cards; today's column lifted; selected rows tinted; key as
+  swatches. **Shifts**: header with count; pattern cycles as numbered day chips; shift form section
+  titles moved off the card border (floated legends), fixed/flexible as option cards.
+
+**Next** — continue in sidebar order: Leave, Pay, Performance, Hiring, Reports, Administration,
+portal.
 Sign in to the browser pane so the signed-in screens can be checked by eye (shell,
 dashboard, a table page, portal on a phone); then page-level passes per module if wanted.
 
