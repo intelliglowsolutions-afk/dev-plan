@@ -359,6 +359,14 @@ missed a file *creation* on the bind mount).
 - Report tiles unchanged; then **Go to** (up to six permission-gated destinations) beside
   **Upcoming holidays** with calendar-leaf dates (full date kept for screen readers).
 
+**Then, a corner halo** (your ask): `.halo` in `globals.css` — a faint warm radial light from the
+top-right of the content area (admin, portal, operator `<main>`), behind everything, static, hidden
+in print; `--halo` token per theme (muted text at its peak still 4.6:1 light / 6.2:1 dark). Checked
+by eye in both themes. Making the top bar sticky (earlier this session) had left three things under
+it — fixed now: the notification-wording and shift previews stick at `top-20`, the hiring selection
+bar at `top-16`; and the permission matrix's save bar starts at the new 240px sidebar (`left-60`).
+The dev container again needed a restart to serve the CSS change.
+
 **Next** — sign in to the browser pane so the signed-in screens can be checked by eye (shell,
 dashboard, a table page, portal on a phone); then page-level passes per module if wanted.
 
