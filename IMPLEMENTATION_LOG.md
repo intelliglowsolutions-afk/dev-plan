@@ -318,6 +318,26 @@ gap.
 
 ## Session entries
 
+### 2026-10-08 — Session 71: first production deploy (hr.vexalid.com)
+
+**Done**
+
+- **Live at `https://hr.vexalid.com`**, commit `9da5157`. Health ok, jobs running, first backup
+  taken, first operator created; no companies yet.
+- **Shared server**: the VPS also hosts the Vexalid sites, whose host nginx owns ports 80/443. So
+  DEPLOY.md's Caddy is not used there: a server-only compose override disables `caddy` and
+  publishes the app on loopback; host nginx proxies to it, certificate by certbot.
+- **Behind Cloudflare (proxied)**: nginx takes the visitor address from `CF-Connecting-IP` only for
+  Cloudflare's ranges and **overwrites** `X-Forwarded-For`, because `requestMeta` trusts the first
+  hop (rate limit, audit log, OPERATOR_ALLOWED_IPS).
+- **Code delivery**: the server has no GitHub access; code goes over as a `git bundle`.
+
+**Next**
+
+- Operator first sign-in, password change, then remove `OPERATOR_PASSWORD` from the server's env file.
+- Keep a copy of the production env file off the server; set up off-site copies of `./backups`.
+- Consider adding a "shared host behind nginx/Cloudflare" variant to DEPLOY.md.
+
 ### 2026-10-07 — Session 70: UI refresh, "refined minimal" (foundation + key screens)
 
 **Your answers** — direction: refined minimal (keep the flat warm monochrome, tighten it; no brand
