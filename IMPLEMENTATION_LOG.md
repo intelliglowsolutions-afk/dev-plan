@@ -168,6 +168,7 @@ gap.
 | OQ-319 | **New, and blocks ingestion:** is this one hosted installation serving many tenants, or one installation per company? It decides whether the collector is necessary or the LAN is already the trust boundary. | 2026-09-18 | **Answered 2026-10-05: one hosted installation serving many companies.** So the LAN is not the trust boundary: each terminal needs its own credentials, and each site a small collector (DEVICE-INGESTION-SECURITY.md). Ingestion is unblocked on this point |
 | OQ-320…323 | Collector details: API key vs mTLS · does the device's Server Address accept a path · who installs and updates the collector · buffer and alert thresholds. | 2026-09-18 | Open |
 | OQ-701 | ~~Still needed~~ — **answered 2026-10-06**: one gross salary; tax (FBR slabs), EOBI, PF 3% + 3%, loans; overtime by setting. Built as the “Pakistan standard (2026-27)” setup | 2026-09-15 | ✅ Built Session 68 — tax slabs and EOBI base still to be checked by you |
+| OQ-702 | Sri Lanka standard: APIT 2026/27, EPF 8% + 12%, ETF 3%; leave 14 / 7 / 7 | 2026-10-21 | ✅ Built Session 72 — APIT table still to be checked against the IRD by you |
 | OQ-601b | ~~Still needed~~ — **answered 2026-10-06**: 14 annual (all at year start, up to 5 carried over), 10 casual, 8 sick; same for everyone | 2026-09-18 | ✅ Built Session 68 |
 | OQ-000 | SenseFace 2A manual not found on the dev machine. Deployment doc's §8 summary is used for now; the manual is needed for the exact push payload shapes in Attendance `api-design.md`. | 2026-09-11 | Open |
 | OQ-001 | Confirm feature list and build order (Step 1). | 2026-09-11 | ✅ Resolved 2026-09-11 |
@@ -317,6 +318,42 @@ gap.
 ---
 
 ## Session entries
+
+### 2026-10-21 — Session 72: Sri Lanka standard setup
+
+**Done**
+
+- **"Sri Lanka standard (2026-27)"** setup (`src/lib/platform/templates.ts`, key `srilanka-2026`),
+  next to the Pakistan one, which is unchanged. Pay: the same gross salary, overtime, bonus,
+  loans and other deduction; **APIT** on Table 01, 2026/27 (`APIT_2026_27`: Rs 1.8M relief, then
+  6/18/24/30/36%, marginal, × 12 ÷ 12), **EPF 8%** employee, **EPF 12%** and **ETF 3%** company, all
+  on SALARY. Leave: 14 annual, 7 casual (Shop and Office Employees Act), 7 sick (company practice);
+  no carry-over. The tax table is created not reviewed, like the FBR one.
+- Templates are now data (one definition per country); the shared components have the same codes,
+  so a company set up on the Pakistan template can apply the Sri Lanka one on top. It gets the APIT
+  table, EPF/ETF and a new structure; its own components are left as they are.
+- **New companies default to Sri Lanka**: setup option, `Asia/Colombo`, `LKR`. Hints say LKR /
+  Asia/Colombo.
+- **Payslip PDF password** accepts a Sri Lankan NIC (12 digits, or 9 digits + V/X in capitals) as
+  well as a 13-digit CNIC. The email, notification and payslip wording says "national ID number
+  (NIC)".
+- Tests: `test/integration/payroll-srilanka.test.ts` (figures worked by hand, plus applying it on
+  top of the Pakistan setup); the payslip email test moved to the Sri Lanka setup and NICs; the
+  unit tests cover NIC formats.
+
+**Decisions**
+
+- Kept Pakistan as an option rather than removing it. Existing tenants and their payslips are untouched.
+- The leave year stays the calendar year, pro-rated on joining. The Act's first-year rule (by
+  quarter of joining) is not modelled.
+- Gratuity (half a month per year after 5 years) is not a monthly deduction, so it is not in this setup.
+
+**Next**
+
+- Check `APIT_2026_27` against the IRD's published tables and mark it reviewed.
+- Existing companies that should move: `TENANT=<slug> TEMPLATE=srilanka-2026 npx tsx scripts/apply-template.ts`,
+  then move people to "Standard salary (Sri Lanka 2026-27)" and set the company's currency/timezone.
+- Sri Lankan public and Poya holidays: the system has no built-in country list (for either country), so enter or CSV-import them on the Holidays screen.
 
 ### 2026-10-08 — Session 71: first production deploy (hr.vexalid.com)
 
