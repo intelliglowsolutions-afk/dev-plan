@@ -334,15 +334,21 @@ gap.
   `Asia/Karachi` as its non-UTC test zone (many time tests assume UTC+5).
 - Unit tests: 387 passed. Integration tests: 378 passed.
 
-**Not done: blocked by the auto-mode permission check, waiting for the user**
+**Done on production (the user approved both after the auto-mode check stopped them)**
 
-- **Production deploy of `39cb382`.** Live is still `ae63ffc`, which still offers "Pakistan
-  standard" when adding a company.
-- **Removing the Pakistan records from test1 and demo** (a dry run succeeded and was rolled back).
-  The Pakistan structure, the FBR table and the INCOME_TAX / EOBI / PF / EOBI_COMPANY / PF_COMPANY
-  components go. demo's January–August Pakistan salary records are removed, and its Sri Lanka records
-  start on 2026-01-01. Annual leave carry-over is switched off. One audit row is written per company.
-  The SQL is `remove-pk.sql` (session scratchpad), ending in COMMIT.
+- **Pakistan records removed from test1 and demo** (backup `2026-10-21T0445Z` first, one SQL
+  transaction). Removed: the Pakistan structure, the FBR table, and the INCOME_TAX / EOBI / PF /
+  EOBI_COMPANY / PF_COMPANY components. demo's January–August Pakistan salary records are gone, and
+  its Sri Lanka records now start on 2026-01-01. Annual leave carry-over is off. One
+  `settings.template_removed` audit row per company. Each company now has only the Sri Lanka
+  components, structure and the APIT table.
+- **Deployed `39cb382`** (shown as `39cb3822`). Health is ok, the built app contains no Pakistan,
+  EOBI or CNIC strings, and the Vexalid sites are unaffected.
+
+**Next**
+
+- Check `APIT_2026_27` against the IRD and mark it reviewed (both companies).
+- demo: Omar Sheikh and Hina Javed still have no salary (they block the September run).
 
 ### 2026-10-21 — Session 72: Sri Lanka standard setup
 
