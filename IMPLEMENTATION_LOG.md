@@ -348,11 +348,29 @@ gap.
   quarter of joining) is not modelled.
 - Gratuity (half a month per year after 5 years) is not a monthly deduction, so it is not in this setup.
 
+- **Deployed** to hr.vexalid.com (`f9a7c96`, then `ae63ffc`); backups `2026-10-21T0345Z` and
+  `2026-10-21T0416Z` taken first.
+- **`scripts/switch-to-srilanka.ts`** (`src/lib/platform/switch-country.ts`): moves an existing
+  company through the screens' services, recorded as "platform operator (command line)". It applies
+  the setup; sets casual and sick to 7 days from the next leave year (this year's grants kept); moves
+  salaries to the Sri Lanka structure from the earliest open run, same amounts; switches the
+  Pakistan structure off; sets Asia/Colombo and LKR; and recalculates calculated runs. Dry run
+  unless `APPLY=1`.
+- **Ran on production for test1 and demo.** Both are now Asia/Colombo and LKR, with leave 14 / 7 / 7
+  and the Pakistan structure off. demo's 5 salaries are on the Sri Lanka structure from 2026-09-01,
+  and its draft September 2026 run is recalculated (APIT, EPF 8% + 12%, ETF 3%). That run's 2 blocking
+  exceptions (Omar Sheikh and Hina Javed have no salary) were there before.
+- **Found by the production dry run:** the owner role `hrm_user` is a superuser, so it bypasses
+  Row-Level Security. Run as it, the services saw demo's run from test1. Nothing was saved. The query
+  now names the tenant, and the script refuses any role that bypasses RLS. It runs as `hrm_app`.
+
 **Next**
 
-- Check `APIT_2026_27` against the IRD's published tables and mark it reviewed.
-- Existing companies that should move: `TENANT=<slug> TEMPLATE=srilanka-2026 npx tsx scripts/apply-template.ts`,
-  then move people to "Standard salary (Sri Lanka 2026-27)" and set the company's currency/timezone.
+- Check `APIT_2026_27` against the IRD's published tables and mark it reviewed (both companies).
+- demo: give Omar Sheikh and Hina Javed a salary, or leave them out of the September run.
+- Annual leave keeps its Pakistan-era carry-over (5 days to 31 March); remove it in Leave policies if not wanted.
+- `scripts/apply-template.ts` also runs as the owner. It is safe because every query names the
+  tenant, but consider the same RLS guard there.
 - Sri Lankan public and Poya holidays: the system has no built-in country list (for either country), so enter or CSV-import them on the Holidays screen.
 
 ### 2026-10-08 — Session 71: first production deploy (hr.vexalid.com)
