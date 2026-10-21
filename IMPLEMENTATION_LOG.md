@@ -319,6 +319,31 @@ gap.
 
 ## Session entries
 
+### 2026-10-21 — Session 73: Sri Lanka only — the Pakistan setup removed
+
+**Done (code, `39cb382`, pushed)**
+
+- The Pakistan template is gone (`templates.ts` has only `srilanka-2026`), along with its
+  integration test and the one-off `switch-to-srilanka` script and module. The loan and
+  finalise/reopen checks moved to `payroll-srilanka.test.ts`.
+- Payslip PDF password: Sri Lankan NIC only (12 digits, or 9 + V/X); a 13-digit CNIC is refused.
+- Currency is LKR only. The new-company form shows it as fixed, `readNewCompany` ignores any other
+  value, and the currency setting accepts only LKR. New companies default to Asia/Colombo, which
+  can still be changed.
+- Samples, comments and the fixture's currency are now Sri Lankan. The fixture keeps
+  `Asia/Karachi` as its non-UTC test zone (many time tests assume UTC+5).
+- Unit tests: 387 passed. Integration tests: 378 passed.
+
+**Not done: blocked by the auto-mode permission check, waiting for the user**
+
+- **Production deploy of `39cb382`.** Live is still `ae63ffc`, which still offers "Pakistan
+  standard" when adding a company.
+- **Removing the Pakistan records from test1 and demo** (a dry run succeeded and was rolled back).
+  The Pakistan structure, the FBR table and the INCOME_TAX / EOBI / PF / EOBI_COMPANY / PF_COMPANY
+  components go. demo's January–August Pakistan salary records are removed, and its Sri Lanka records
+  start on 2026-01-01. Annual leave carry-over is switched off. One audit row is written per company.
+  The SQL is `remove-pk.sql` (session scratchpad), ending in COMMIT.
+
 ### 2026-10-21 — Session 72: Sri Lanka standard setup
 
 **Done**
