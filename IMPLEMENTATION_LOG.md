@@ -431,6 +431,12 @@ colour). Scope: foundation + key screens; every other page inherits through the 
 
 **Done** (hrm-system)
 
+- **Logo** (2026-10-22): the supplied `C:\Dev\lg.png` is now the product mark. Trimmed to
+  `public/logo.png` (128px) and shown by `Brand` on a white disc, so the navy figures read on the
+  dark theme too; it replaces the monogram everywhere `Brand` appears (admin and portal sidebars,
+  operator header, sign-in card, careers page). `favicon.ico` regenerated from it; home-screen icons
+  are now static PNGs in `public/icons/` (logo on white, maskable one with a wider margin) and the
+  drawn `/app-icon/[size]` route is removed; manifest `theme_color` white to match.
 - **Tokens** (`globals.css`): canvas one step warmer than the white cards (`--background` #f7f7f5 /
   dark #161615) so surfaces layer without heavier borders; new `--muted` fill for hover, active nav
   and table heads; `shadow-card` (0.04) and `shadow-pop` (floating panels) replace ad-hoc shadows;
