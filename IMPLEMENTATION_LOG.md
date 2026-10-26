@@ -431,6 +431,19 @@ colour). Scope: foundation + key screens; every other page inherits through the 
 
 **Done** (hrm-system)
 
+- **Mobile fixes** (2026-10-26), from the 375px audit of all admin pages:
+  - Tap targets 44px below 640px: every breadcrumb (one rule in `globals.css`, since pages build
+    crumbs several ways), `SegmentedLinks`, `FilterChip`, org-chart "Show reports", and the standalone
+    text links (dashboard, employees, attendance, users, departments, leave, email log, settings,
+    holidays banner); pipeline select-box wrapped in a 44px label; roster rows.
+  - No iOS focus-zoom: every textarea and ad-hoc field is 16px below 640px (`text-base sm:text-sm`).
+  - Employees: selects + Apply fold behind a "Filters" button on phones (no-script, unnamed
+    checkbox toggle; open when a filter is in use, with the count).
+  - Pay components: rows stack into cards below 640px instead of scrolling with the formula cut off.
+  - Review forms: name and tags on one line, counts beneath; editor padding tightened on phones.
+  - `src/app/not-found.tsx`: a styled 404 with the logo and a way back, replacing the framework's.
+  Re-measured: 0 overflow, 0 small targets, 0 sub-16px fields on the 18 pages that had them.
+  Portal not yet audited at 375px.
 - **Form controls** (2026-10-26): native controls drawn in the app's hand, in `globals.css`
   `@layer base` so page utilities still win — selects get our chevron (per-theme SVG token),
   checkboxes and radios are custom ink-filled marks (tick/dash/dot, 2px ring-colour focus outline,
@@ -438,9 +451,6 @@ colour). Scope: foundation + key screens; every other page inherits through the 
   faint top highlight and soft drop, secondary a light edge that firms on hover. `inputCls`/`pinput`:
   `rounded-lg`, hover edge, focus = ring-colour border + soft 4px halo; `inputCls` is 16px below
   640px so iOS no longer zooms on focus (mobile audit item 1).
-  Mobile audit 2026-10-26 still open: breadcrumb/text-link tap targets, 36px segmented links,
-  Employees filters fold-away, Pay components table as cards, Review forms summary row,
-  pipeline checkbox, email-log count links, a styled not-found page; portal not yet audited.
 - **Mobile header** (2026-10-26): below 768px the admin top bar is menu icon left, company
   centred, bell right (equal outer columns so the name stays centred without a bell). The menu
   button is icon-only (`aria-label="Menu"`, 44px); the drawer opens with the brand and a × close.
