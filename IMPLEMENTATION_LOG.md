@@ -440,6 +440,8 @@ colour). Scope: foundation + key screens; every other page inherits through the 
   - Employees: selects + Apply fold behind a "Filters" button on phones (no-script, unnamed
     checkbox toggle; open when a filter is in use, with the count).
   - Pay components: rows stack into cards below 640px instead of scrolling with the formula cut off.
+    Formulas are folded behind "Show formula" at every width (they read as code in the list; Edit
+    shows them in full); short percentage/bracket rules stay inline.
   - Review forms: name and tags on one line, counts beneath; editor padding tightened on phones.
   - `src/app/not-found.tsx`: a styled 404 with the logo and a way back, replacing the framework's.
   Re-measured: 0 overflow, 0 small targets, 0 sub-16px fields on the 18 pages that had them.
