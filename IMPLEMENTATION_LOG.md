@@ -447,8 +447,9 @@ colour). Scope: foundation + key screens; every other page inherits through the 
   Re-measured: 0 overflow, 0 small targets, 0 sub-16px fields on the 18 pages that had them.
   Portal audited at 375px (2026-10-26, as an employee): all 16 screens 0 overflow, 0 small targets,
   0 sub-16px fields. Fixed: the bottom bar's More dots were zero-length strokes (faint) — now real
-  dots; date fields' calendar glyph quieter until hovered. Noted, not changed: "Ask to change" on
-  every profile row is visually heavy; review section steps wrap to two rows.
+  dots; date fields' calendar glyph quieter until hovered. Profile "Ask to change" / "Change" made
+  quiet (muted 14px text, underline on hover, still 44px). Noted, not changed: review section steps
+  wrap to two rows.
 - **Form controls** (2026-10-26): native controls drawn in the app's hand, in `globals.css`
   `@layer base` so page utilities still win — selects get our chevron (per-theme SVG token),
   checkboxes and radios are custom ink-filled marks (tick/dash/dot, 2px ring-colour focus outline,
