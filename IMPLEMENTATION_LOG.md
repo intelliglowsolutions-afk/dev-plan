@@ -431,6 +431,9 @@ colour). Scope: foundation + key screens; every other page inherits through the 
 
 **Done** (hrm-system)
 
+- **Mobile header** (2026-10-26): below 768px the admin top bar is menu icon left, company
+  centred, bell right (equal outer columns so the name stays centred without a bell). The menu
+  button is icon-only (`aria-label="Menu"`, 44px); the drawer opens with the brand and a × close.
 - **Logo** (2026-10-22): the supplied `C:\Dev\lg.png` is now the product mark. Trimmed to
   `public/logo.png` (128px) and shown by `Brand` on a white disc, so the navy figures read on the
   dark theme too; it replaces the monogram everywhere `Brand` appears (admin and portal sidebars,
