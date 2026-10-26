@@ -431,6 +431,16 @@ colour). Scope: foundation + key screens; every other page inherits through the 
 
 **Done** (hrm-system)
 
+- **Form controls** (2026-10-26): native controls drawn in the app's hand, in `globals.css`
+  `@layer base` so page utilities still win — selects get our chevron (per-theme SVG token),
+  checkboxes and radios are custom ink-filled marks (tick/dash/dot, 2px ring-colour focus outline,
+  `--input` 3:1 edge), file inputs get a styled button. `btn`/`pbtn`: `rounded-lg`, primary has a
+  faint top highlight and soft drop, secondary a light edge that firms on hover. `inputCls`/`pinput`:
+  `rounded-lg`, hover edge, focus = ring-colour border + soft 4px halo; `inputCls` is 16px below
+  640px so iOS no longer zooms on focus (mobile audit item 1).
+  Mobile audit 2026-10-26 still open: breadcrumb/text-link tap targets, 36px segmented links,
+  Employees filters fold-away, Pay components table as cards, Review forms summary row,
+  pipeline checkbox, email-log count links, a styled not-found page; portal not yet audited.
 - **Mobile header** (2026-10-26): below 768px the admin top bar is menu icon left, company
   centred, bell right (equal outer columns so the name stays centred without a bell). The menu
   button is icon-only (`aria-label="Menu"`, 44px); the drawer opens with the brand and a × close.
