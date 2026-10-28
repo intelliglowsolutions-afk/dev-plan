@@ -460,6 +460,11 @@ colour). Scope: foundation + key screens; every other page inherits through the 
 - **Mobile header** (2026-10-26): below 768px the admin top bar is menu icon left, company
   centred, bell right (equal outer columns so the name stays centred without a bell). The menu
   button is icon-only (`aria-label="Menu"`, 44px); the drawer opens with the brand and a × close.
+- **Deployed `d6debc3`** to hr.vexalid.com (2026-10-28): logo, mobile header, form controls, mobile
+  fixes, folded formulas, portal tweaks. Backup `2026-10-28T0345Z` first; `tools` ran clean (no schema
+  change); health ok on `d6debc3a`; `/logo.png`, `/icons/*` 200, old `/app-icon/192` 404, styled 404
+  live; vexalid.com 200, acc.vexalid.com 307 (its sign-in redirect). Server disk 90% (11 GB free;
+  117 unused images + 13 GB build cache, shared with Vexalid — not pruned, ask before doing so).
 - **Logo** (2026-10-22): the supplied `C:\Dev\lg.png` is now the product mark. Trimmed to
   `public/logo.png` (128px) and shown by `Brand` on a white disc, so the navy figures read on the
   dark theme too; it replaces the monogram everywhere `Brand` appears (admin and portal sidebars,
