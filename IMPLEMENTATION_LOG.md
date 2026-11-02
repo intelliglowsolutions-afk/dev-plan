@@ -314,10 +314,40 @@ gap.
 | OQ-206 | Multiple work locations/branches? Cheaper to add now than after the history table exists. Plan assumes single location. | 2026-09-15 | Open |
 | OQ-207…214 | Lower-impact feature-02 questions (custom fields, document types, doc volume + backup in docker-compose, `fields` param, async import, expiring-docs ownership, photo handling, profile completeness indicator). See the feature files. | 2026-09-15 | Open |
 | OQ-108…115 | Lower-impact feature-01 questions (remember-device, rate-limit storage if scaled, nav derivation, API versioning, post-reset sign-in, dashboard shape, branding, i18n). See the feature files. | 2026-09-15 | Open |
+| — | Production email: no company has a mail server set, so everything stays in the local outbox. "Where email goes" needs a real picker (see Session 74). | 2026-11-02 | Open |
 
 ---
 
 ## Session entries
+
+### 2026-11-02 — Session 74: why production email does not arrive (diagnosis, nothing changed)
+
+**Found (read-only on production)**
+
+- `settings` has no rows for any company, and no `settings.changed` audit entry exists, so
+  `notification.deliveryMode` is still its default `LOCAL_OUTBOX`. All 15 EMAIL deliveries are SENT
+  only in the sense of being written to `local_emails`; none left the server.
+- No `auth.password_reset_requested` since 2026-10-28 and no reset token for an ACTIVE account since
+  2026-10-09. `requestPasswordReset` silently skips non-ACTIVE accounts, and the one employee
+  (rajithkarunaratne@gmail.com) is still INVITED, as are the Test1 and Test3 admins.
+- The server and the app container both reach `smtp.gmail.com` on 587 and 465, so nothing blocks SMTP.
+- `/admin/settings` is only a list of sections; the Email group is on `/admin/settings/advanced`.
+- UI trap: `settings-form.tsx` `ControlledDialog` uses a free-text box for an enum. To switch
+  delivery the admin must type the stored value `SMTP`; the label "The mail server below" is rejected.
+
+**Done**
+
+- `ControlledDialog` now gives enum settings a select and shows the option label as the current
+  value (`1d01ecf`). Unit tests 387 passed, eslint clean; `tsc` reports only a stale `.next` type
+  for the removed `app-icon` route. Integration tests were not run. The signed-in dialog itself was
+  not opened on production (no admin session).
+- **Deployed `1d01ecf`** to hr.vexalid.com (2026-11-02). Backup `2026-11-02T0410Z` first; `tools`
+  ran clean; health ok on `1d01ecf5`. Server disk 92% (7.8 GB free), not pruned; ask first.
+
+**Next**
+
+- User: enter the Gmail details on `/admin/settings/advanced` for Demo Company, then switch delivery.
+- Pick a proper sending provider for vexalid.com (SPF, DKIM, DMARC) before real use.
 
 ### 2026-10-21 — Session 73: Sri Lanka only — the Pakistan setup removed
 
