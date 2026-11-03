@@ -502,6 +502,12 @@ colour). Scope: foundation + key screens; every other page inherits through the 
   Backup `2026-11-03T0907Z`; tools clean; health ok on `10a71338`; live CSS has `.back-link`;
   vexalid.com 200, acc.vexalid.com 307. **Server disk 93% (7.2 GB free)** — clean up before the
   next deploy or two (unused images / build cache; shared with Vexalid, ask first).
+- **Server cleanup** (2026-11-03, user's rule: HRM only, nothing Vexalid): removed the 7 old
+  `hrm-app`/`hrm-tools` versions no container used (`9da5157` … `1d01ecf5`), kept the running
+  `10a71338`. Disk 93% → 89% (7.2 → 11 GB free). Left alone: the 5 untagged images (built by
+  Vexalid's accounts/web builds), the shared build cache, and Vexalid's 34 kept accounts versions
+  (~90 GB — the real space user; theirs to decide). A rollback now means rebuilding the previous
+  commit from the bundle (a few minutes) rather than retagging an image.
 - **Deployed `d6debc3`** to hr.vexalid.com (2026-10-28): logo, mobile header, form controls, mobile
   fixes, folded formulas, portal tweaks. Backup `2026-10-28T0345Z` first; `tools` ran clean (no schema
   change); health ok on `d6debc3a`; `/logo.png`, `/icons/*` 200, old `/app-icon/192` 404, styled 404
