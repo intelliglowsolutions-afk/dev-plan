@@ -490,6 +490,14 @@ colour). Scope: foundation + key screens; every other page inherits through the 
 - **Mobile header** (2026-10-26): below 768px the admin top bar is menu icon left, company
   centred, bell right (equal outer columns so the name stays centred without a bell). The menu
   button is icon-only (`aria-label="Menu"`, 44px); the drawer opens with the brand and a × close.
+- **Back buttons** (2026-11-03): sub-pages named their parent in a small grey text link, which read
+  as no back button. One control everywhere now — "‹ Parent", a quiet bordered button (44px on
+  phones), styled once in `globals.css` for both the shared `PageHeader` crumbs and the 37
+  hand-written `<nav aria-label="Breadcrumb">`s, plus `.back-link` for the portal. Only the nearest
+  parent shows. Added where missing: Rating scales (Review forms; its duplicate header button
+  removed), Export and Support access (Settings); portal Goals/Reviews/Feedback/Profile get
+  "‹ More" on phones only. Org chart's in-chart path relabelled so it keeps its own style.
+  Not deployed yet.
 - **Deployed `d6debc3`** to hr.vexalid.com (2026-10-28): logo, mobile header, form controls, mobile
   fixes, folded formulas, portal tweaks. Backup `2026-10-28T0345Z` first; `tools` ran clean (no schema
   change); health ok on `d6debc3a`; `/logo.png`, `/icons/*` 200, old `/app-icon/192` 404, styled 404
