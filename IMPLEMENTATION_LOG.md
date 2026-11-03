@@ -532,7 +532,13 @@ colour). Scope: foundation + key screens; every other page inherits through the 
   content scrolls over it. Then: cards more see-through (`bg-surface/45`), and the dark theme's halo
   made as visible as the light one — deeper hues (amber 210,110,45 / blue 60,100,220 at 0.45) since a
   pale tint on dark mostly just lightens; dark `--muted-foreground` #adaca8 → #b8b7b3 (≥4.51:1 on
-  the halo, incl. overlap). Not deployed yet.
+  the halo, incl. overlap). Then the app frame too: the halo moved from `.halo::before` (main only)
+  to `.halo-shell::before` on the shell root — fixed to the window, behind sidebar, top bar and
+  content — with a third, cool light rising from the bottom-left so the sidebar has colour.
+  Sidebars `bg-surface/45`; top bars frosted via a layer BEHIND their contents (`absolute inset-0
+  -z-10 bg-surface/70 backdrop-blur-xl`) — a backdrop-filter on the bar itself would trap the
+  fixed bell panel and drawer; portal bottom bar /70 + blur-xl. Checked: drawer and bell panel still
+  open full-screen on a phone. `.halo` on main keeps only position + overflow-x: clip. Not deployed yet.
 - **Deployed `9640403`** to hr.vexalid.com (2026-11-03): round, floating back button. Backup
   `2026-11-03T1020Z`; tools clean; health ok on `96404033`; live CSS has the sticky rule;
   vexalid.com 200, acc.vexalid.com 307. Removed the unused `cef0fc22` HRM images; disk 88%, 13 GB free.
