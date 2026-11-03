@@ -517,7 +517,11 @@ colour). Scope: foundation + key screens; every other page inherits through the 
   under the 56px top bar (z-20, under the bar, bell panel and drawer), with the floating shadow; the
   Breadcrumb nav shrinks to the button so it never covers anything else. `PageHeader` now renders the
   crumb outside `<header>` (a sticky box only sticks while its parent is on screen); every hand-built
-  crumb was already at page level. Static when printed. Not deployed yet.
+  crumb was already at page level. Static when printed. Checked as admin too (Edit employee on a
+  phone, role permissions on desktop).
+- **Deployed `9640403`** to hr.vexalid.com (2026-11-03): round, floating back button. Backup
+  `2026-11-03T1020Z`; tools clean; health ok on `96404033`; live CSS has the sticky rule;
+  vexalid.com 200, acc.vexalid.com 307. Removed the unused `cef0fc22` HRM images; disk 88%, 13 GB free.
 - **Deployed `cef0fc2`** to hr.vexalid.com (2026-11-03): the notification fixes above. Backup
   `2026-11-03T1004Z`; tools clean; health ok on `cef0fc22`; vexalid.com 200, acc.vexalid.com 307.
   Removed the now-unused `10a71338` HRM images (user's rule); disk 88%, 13 GB free.
