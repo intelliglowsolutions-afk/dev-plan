@@ -497,7 +497,11 @@ colour). Scope: foundation + key screens; every other page inherits through the 
   parent shows. Added where missing: Rating scales (Review forms; its duplicate header button
   removed), Export and Support access (Settings); portal Goals/Reviews/Feedback/Profile get
   "‹ More" on phones only. Org chart's in-chart path relabelled so it keeps its own style.
-  Not deployed yet.
+  Portal checked as an employee (phone + desktop, light + dark).
+- **Deployed `10a7133`** to hr.vexalid.com (2026-11-03), on top of `1d01ecf` (deployed in between).
+  Backup `2026-11-03T0907Z`; tools clean; health ok on `10a71338`; live CSS has `.back-link`;
+  vexalid.com 200, acc.vexalid.com 307. **Server disk 93% (7.2 GB free)** — clean up before the
+  next deploy or two (unused images / build cache; shared with Vexalid, ask first).
 - **Deployed `d6debc3`** to hr.vexalid.com (2026-10-28): logo, mobile header, form controls, mobile
   fixes, folded formulas, portal tweaks. Backup `2026-10-28T0345Z` first; `tools` ran clean (no schema
   change); health ok on `d6debc3a`; `/logo.png`, `/icons/*` 200, old `/app-icon/192` 404, styled 404
