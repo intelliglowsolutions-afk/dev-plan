@@ -527,7 +527,9 @@ colour). Scope: foundation + key screens; every other page inherits through the 
   `bg-surface/60`) so the halo reads through them; floating panels (top bar, sidebar, menus,
   dialogs, sticky action bars, the back button), inputs, and the sign-in/404 cards stay solid. The
   three `gap-px bg-border` stat grids pin `bg-border!` (their cells stay solid so the hairlines
-  draw). Contrast unaffected: the card only adds surface colour over the canvas. Not deployed yet.
+  draw). Contrast unaffected: the card only adds surface colour over the canvas. Then the halo
+  fixed to the window (`position: fixed`, from under the top bar) so it stays in the corner while
+  content scrolls over it. Not deployed yet.
 - **Deployed `9640403`** to hr.vexalid.com (2026-11-03): round, floating back button. Backup
   `2026-11-03T1020Z`; tools clean; health ok on `96404033`; live CSS has the sticky rule;
   vexalid.com 200, acc.vexalid.com 307. Removed the unused `cef0fc22` HRM images; disk 88%, 13 GB free.
