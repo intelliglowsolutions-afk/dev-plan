@@ -538,7 +538,10 @@ colour). Scope: foundation + key screens; every other page inherits through the 
   Sidebars `bg-surface/45`; top bars frosted via a layer BEHIND their contents (`absolute inset-0
   -z-10 bg-surface/70 backdrop-blur-xl`) — a backdrop-filter on the bar itself would trap the
   fixed bell panel and drawer; portal bottom bar /70 + blur-xl. Checked: drawer and bell panel still
-  open full-screen on a phone. `.halo` on main keeps only position + overflow-x: clip. Not deployed yet.
+  open full-screen on a phone. `.halo` on main keeps only position + overflow-x: clip. Then light
+  mode made more see-through than dark via theme tokens: `--glass` (cards, sidebars) white 0.28 /
+  dark surface 0.45, `--glass-strong` (frosted bars) white 0.55 / dark 0.7, as `bg-glass` /
+  `bg-glass-strong`. Not deployed yet.
 - **Deployed `9640403`** to hr.vexalid.com (2026-11-03): round, floating back button. Backup
   `2026-11-03T1020Z`; tools clean; health ok on `96404033`; live CSS has the sticky rule;
   vexalid.com 200, acc.vexalid.com 307. Removed the unused `cef0fc22` HRM images; disk 88%, 13 GB free.
