@@ -519,6 +519,11 @@ colour). Scope: foundation + key screens; every other page inherits through the 
   crumb outside `<header>` (a sticky box only sticks while its parent is on screen); every hand-built
   crumb was already at page level. Static when printed. Checked as admin too (Edit employee on a
   phone, role permissions on desktop).
+- **Stronger, two-colour halo** (2026-11-03): larger (min(1100px,100%) × 760px); warm peach in the
+  corner at 0.5 (was 0.3) plus a cool blue (the logo's) further in at 0.28; dark 0.2 / 0.2. To keep
+  AA, `--muted-foreground` moved #6b6a67 → #5c5b58 (light; ≥4.76:1 on the halo incl. overlap, 6.8:1
+  on white) and #a3a29e → #adaca8 (dark; ≥4.68:1). Tokens now `--halo-warm` / `--halo-cool`.
+  Not deployed yet.
 - **Deployed `9640403`** to hr.vexalid.com (2026-11-03): round, floating back button. Backup
   `2026-11-03T1020Z`; tools clean; health ok on `96404033`; live CSS has the sticky rule;
   vexalid.com 200, acc.vexalid.com 307. Removed the unused `cef0fc22` HRM images; disk 88%, 13 GB free.
