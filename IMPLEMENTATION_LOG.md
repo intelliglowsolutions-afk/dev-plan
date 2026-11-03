@@ -510,6 +510,10 @@ colour). Scope: foundation + key screens; every other page inherits through the 
   Remind me later open, its choices widened the right-hand column to one line and crushed the text
   to a word per line (also from 640px up). The column is now capped (`sm:max-w-[13.5rem]`) and the
   choices wrap inside it.
+- **Back button, round** (2026-11-03): at the user's request the back control is now just the ‹ in
+  a round bordered button (40px, 44px on phones) instead of "‹ Parent". The parent's name stays in
+  the link at zero size, so it is still the accessible name (checked: link "My pay"). Same single
+  rule in `globals.css` covers every admin and portal sub-page. Not deployed yet.
 - **Deployed `cef0fc2`** to hr.vexalid.com (2026-11-03): the notification fixes above. Backup
   `2026-11-03T1004Z`; tools clean; health ok on `cef0fc22`; vexalid.com 200, acc.vexalid.com 307.
   Removed the now-unused `10a71338` HRM images (user's rule); disk 88%, 13 GB free.
