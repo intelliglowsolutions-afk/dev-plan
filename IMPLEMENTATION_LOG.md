@@ -509,7 +509,10 @@ colour). Scope: foundation + key screens; every other page inherits through the 
   as raw codes — now Reviews / Reports / Hiring. Follow-up from the user's live screenshot: with
   Remind me later open, its choices widened the right-hand column to one line and crushed the text
   to a word per line (also from 640px up). The column is now capped (`sm:max-w-[13.5rem]`) and the
-  choices wrap inside it. Not deployed yet.
+  choices wrap inside it.
+- **Deployed `cef0fc2`** to hr.vexalid.com (2026-11-03): the notification fixes above. Backup
+  `2026-11-03T1004Z`; tools clean; health ok on `cef0fc22`; vexalid.com 200, acc.vexalid.com 307.
+  Removed the now-unused `10a71338` HRM images (user's rule); disk 88%, 13 GB free.
 - **Server cleanup** (2026-11-03, user's rule: HRM only, nothing Vexalid): removed the 7 old
   `hrm-app`/`hrm-tools` versions no container used (`9da5157` … `1d01ecf5`), kept the running
   `10a71338`. Disk 93% → 89% (7.2 → 11 GB free). Left alone: the 5 untagged images (built by
