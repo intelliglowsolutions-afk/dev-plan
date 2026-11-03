@@ -523,7 +523,11 @@ colour). Scope: foundation + key screens; every other page inherits through the 
   corner at 0.5 (was 0.3) plus a cool blue (the logo's) further in at 0.28; dark 0.2 / 0.2. To keep
   AA, `--muted-foreground` moved #6b6a67 → #5c5b58 (light; ≥4.76:1 on the halo incl. overlap, 6.8:1
   on white) and #a3a29e → #adaca8 (dark; ≥4.68:1). Tokens now `--halo-warm` / `--halo-cool`.
-  Not deployed yet.
+  Then cards made half-see-through (`card`, `pcard`, report charts/tables, the careers apply box:
+  `bg-surface/60`) so the halo reads through them; floating panels (top bar, sidebar, menus,
+  dialogs, sticky action bars, the back button), inputs, and the sign-in/404 cards stay solid. The
+  three `gap-px bg-border` stat grids pin `bg-border!` (their cells stay solid so the hairlines
+  draw). Contrast unaffected: the card only adds surface colour over the canvas. Not deployed yet.
 - **Deployed `9640403`** to hr.vexalid.com (2026-11-03): round, floating back button. Backup
   `2026-11-03T1020Z`; tools clean; health ok on `96404033`; live CSS has the sticky rule;
   vexalid.com 200, acc.vexalid.com 307. Removed the unused `cef0fc22` HRM images; disk 88%, 13 GB free.
