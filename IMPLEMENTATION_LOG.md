@@ -529,7 +529,10 @@ colour). Scope: foundation + key screens; every other page inherits through the 
   three `gap-px bg-border` stat grids pin `bg-border!` (their cells stay solid so the hairlines
   draw). Contrast unaffected: the card only adds surface colour over the canvas. Then the halo
   fixed to the window (`position: fixed`, from under the top bar) so it stays in the corner while
-  content scrolls over it. Not deployed yet.
+  content scrolls over it. Then: cards more see-through (`bg-surface/45`), and the dark theme's halo
+  made as visible as the light one — deeper hues (amber 210,110,45 / blue 60,100,220 at 0.45) since a
+  pale tint on dark mostly just lightens; dark `--muted-foreground` #adaca8 → #b8b7b3 (≥4.51:1 on
+  the halo, incl. overlap). Not deployed yet.
 - **Deployed `9640403`** to hr.vexalid.com (2026-11-03): round, floating back button. Backup
   `2026-11-03T1020Z`; tools clean; health ok on `96404033`; live CSS has the sticky rule;
   vexalid.com 200, acc.vexalid.com 307. Removed the unused `cef0fc22` HRM images; disk 88%, 13 GB free.
