@@ -541,7 +541,10 @@ colour). Scope: foundation + key screens; every other page inherits through the 
   open full-screen on a phone. `.halo` on main keeps only position + overflow-x: clip. Then light
   mode made more see-through than dark via theme tokens: `--glass` (cards, sidebars) white 0.28 /
   dark surface 0.45, `--glass-strong` (frosted bars) white 0.55 / dark 0.7, as `bg-glass` /
-  `bg-glass-strong`. Not deployed yet.
+  `bg-glass-strong`.
+- **Deployed `deb39a4`** to hr.vexalid.com (2026-11-04): the halo and glass changes above (6 commits).
+  Backup `2026-11-04T0308Z`; tools clean; health ok on `deb39a43`; live CSS has `halo-shell` and
+  `--glass`; vexalid.com 200, acc.vexalid.com 307. Removed the unused `96404033` HRM images; disk 88%.
 - **Deployed `9640403`** to hr.vexalid.com (2026-11-03): round, floating back button. Backup
   `2026-11-03T1020Z`; tools clean; health ok on `96404033`; live CSS has the sticky rule;
   vexalid.com 200, acc.vexalid.com 307. Removed the unused `cef0fc22` HRM images; disk 88%, 13 GB free.
