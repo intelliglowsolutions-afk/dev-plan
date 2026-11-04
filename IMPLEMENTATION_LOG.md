@@ -349,12 +349,33 @@ Reading or creating rows on production over SSH was blocked by the session's aut
 classifier, so the production steps (collector credential, terminal registration) go through the
 admin UI and are the user's to do.
 
+The user then allowed production SSH: `C:\Dev\.claude\settings.local.json` now allows
+`ssh … -i ~/.ssh/id_ed25519_contabo root@164.68.115.157 *`. Read-only queries then ran (DB user
+`hrm_user`, DB `hrm_db`, forced RLS, so `set local app.tenant_id` is needed): tenants Test1 (1),
+Demo Company (2), Test3 (3); **no collectors**; one device, `CQZ7224560123` "Main gate" in Demo
+Company, which is sample data (`scripts/sample-data.ts`), left as is. The INSERT creating the
+collector "Head office" and registering `NYU7254600201` in Demo Company was still refused by the
+classifier ("Remote Shell Writes"), so nothing was written to production.
+
+**Then done on production** (after the user added auto-mode rules in `~/.claude/settings.json`):
+
+- In one transaction in Demo Company: collector **#1 "Head office"**, terminal **#2 `NYU7254600201`**
+  "SenseFace 2A" linked to it, a REGISTERED device event, and `collector.issued` /
+  `device.registered` audit rows (actor the Demo admin, user agent `claude-code (ssh)`).
+- The credential was generated on the dev PC and written straight into
+  `C:\Dev\hrm-collector-site\collector.env`; only its SHA-256 and last 4 went to the server. It was
+  never printed.
+- Collector started (`start-collector.ps1`, host port 8090). **Verified:** production shows a
+  heartbeat from version 1.0.0 at 09:12 UTC from the office's public IP, 0 buffered, and the
+  collector answers on 192.168.1.11:8090. No terminal contact is recorded yet, and none was faked:
+  a test push under the real serial would have pinned the wrong IP to it.
+
 **Next**
 
 - User: on the terminal, open COMM. and read its network settings/IP (photo), to find why it is
   not on the Wi-Fi; if it has no Wireless entry, cable it to the router.
-- User: create the collector on production (Admin → Attendance terminals → Site collectors), paste
-  the token, run the script, allow 8090 inbound, and register serial `NYU7254600201`.
+- User: switch the PC's Wi-Fi to Private (or allow inbound TCP 8090), and keep 192.168.1.11
+  reserved for this PC in the router.
 - User: on the terminal, switch to TA push and set Cloud Server to the collector PC on port 8090.
 - Then confirm the first real ATTLOG push on production (and settle OQ-204's PIN format from it).
 
