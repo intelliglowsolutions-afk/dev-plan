@@ -338,11 +338,24 @@ gap.
   `collector.env` (PLATFORM_URL=https://hr.vexalid.com, token left blank), `start-collector.ps1`,
   and a README with the terminal settings. The collector has **not** been started: there's no credential yet.
 
+**Follow-up the same day** — the user says the terminal is on this Wi-Fi. A TCP scan of
+192.168.1.1–254 on 4370/80/443/8080/8081, plus a UDP 4370 discovery broadcast, found no ZKTeco
+device: only the router (.1), an unidentified host with a silent port 80 (.12, MAC A8:31:62, not
+ZKTeco's 00:17:61), and this PC. That matches Session 69. Likely causes: the unit has no Wi-Fi or it
+is not joined (check COMM. on the terminal for a Wireless Network entry), or the router isolates
+Wi-Fi clients. USB on this terminal is for a flash drive, not a PC link. The dev app already
+publishes host 8081 (`hrm-system-app-1`), so the collector script now uses **host port 8090**.
+Reading or creating rows on production over SSH was blocked by the session's auto-mode
+classifier, so the production steps (collector credential, terminal registration) go through the
+admin UI and are the user's to do.
+
 **Next**
 
+- User: on the terminal, open COMM. and read its network settings/IP (photo), to find why it is
+  not on the Wi-Fi; if it has no Wireless entry, cable it to the router.
 - User: create the collector on production (Admin → Attendance terminals → Site collectors), paste
-  the token, run the script, allow 8081 inbound, and register serial `NYU7254600201`.
-- User: on the terminal, switch to TA push and set Cloud Server to the collector PC on port 8081.
+  the token, run the script, allow 8090 inbound, and register serial `NYU7254600201`.
+- User: on the terminal, switch to TA push and set Cloud Server to the collector PC on port 8090.
 - Then confirm the first real ATTLOG push on production (and settle OQ-204's PIN format from it).
 
 ### 2026-11-02 — Session 74: why production email does not arrive (diagnosis, nothing changed)
