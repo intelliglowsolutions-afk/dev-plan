@@ -320,6 +320,31 @@ gap.
 
 ## Session entries
 
+### 2026-11-04 — Session 75: first real terminal identified; site collector prepared
+
+**Found**
+
+- The user's terminal (photos of its menus): ZKTeco **SenseFace 2A**, serial `NYU7254600201`, MAC
+  `00:17:61:11:1b:41`, firmware `ZAM70-NF24HA-Ver3.3.12`, platform ZAM70_TFT, ZKFinger VX13.0,
+  ZKFace VX4.0. This matches the model the collector was built for, so no code change is needed.
+- The dev PC (Wi-Fi 192.168.1.11/24) does not see the terminal: no 00:17:61 MAC after a full
+  subnet sweep. The terminal is on another network or not connected yet.
+- The PC's Wi-Fi profile is *Public*, so Windows Firewall will likely block terminals from reaching 8081.
+
+**Done**
+
+- Built the `hrm-collector` Docker image on the dev PC from `collector/Dockerfile`.
+- `C:\Dev\hrm-collector-site\` (outside both repos, so the credential cannot be committed):
+  `collector.env` (PLATFORM_URL=https://hr.vexalid.com, token left blank), `start-collector.ps1`,
+  and a README with the terminal settings. The collector has **not** been started: there's no credential yet.
+
+**Next**
+
+- User: create the collector on production (Admin → Attendance terminals → Site collectors), paste
+  the token, run the script, allow 8081 inbound, and register serial `NYU7254600201`.
+- User: on the terminal, switch to TA push and set Cloud Server to the collector PC on port 8081.
+- Then confirm the first real ATTLOG push on production (and settle OQ-204's PIN format from it).
+
 ### 2026-11-02 — Session 74: why production email does not arrive (diagnosis, nothing changed)
 
 **Found (read-only on production)**
