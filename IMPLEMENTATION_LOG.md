@@ -90,6 +90,7 @@ Source documents:
 | **Real pay components and leave entitlements** — the “Pakistan standard (2026-27)” setup, company contributions, loans and advances, unreviewed-table warnings (OQ-701, OQ-601b) | ✅ 2026-10-06, Session 68 — check the tax slabs and EOBI base |
 | **Offboarding and support access** — company data export, deletion on request, time-boxed read-only support access (OQ-T-04, OQ-T-05) | ✅ 2026-10-06, Session 67 |
 | **Production readiness** — image (non-root, health check, no sources), `docker-compose.prod.yml` with Caddy HTTPS, database setup and upgrade script, daily backups with a tested restore, `/api/health`, settings checked at start, security headers, `DEPLOY.md` | ✅ 2026-10-05, Session 66 — rehearsed locally end to end; waits on a server and a domain |
+| **Company setup** — guided `/setup` page for a new company: 14 steps in order, each ticked off from the data, optional ones skippable, “Finish setup”; dashboard prompt; replaces the Settings checklist | ✅ 2026-11-05, Session 76 |
 
 **Toolchain on this machine:** no Node or npm on the host — **Docker works**, so the toolchain runs
 in containers (`docker run --rm -v C:\Dev\hrm-system:/app node:20-alpine …`). Git is installed on
@@ -305,7 +306,7 @@ gap.
 | OQ-304 | Does the work week vary by employee group (office Mon–Fri vs factory six days)? | 2026-09-15 | Open |
 | OQ-306 | How many SenseFace terminals, at how many locations? Interacts with OQ-206. | 2026-09-15 | Open |
 | OQ-307 | Does the SenseFace 2A support a per-device comm key, or only one shared key? If shared, feature 03's D-08 is not implementable as designed. | 2026-09-15 | Open — blocked by OQ-000 |
-| OQ-305, OQ-308…317 | Remaining feature-03 questions (half-day semantics, offline-day attendance, lunar/computed holidays, iCal feed, who holds `device.write`, protocol fields available, public settings endpoint, event storage at scale, job runner location, setup checklist, device server address). See the feature files. | 2026-09-15 | Open |
+| OQ-305, OQ-308…317 | Remaining feature-03 questions (half-day semantics, offline-day attendance, lunar/computed holidays, iCal feed, who holds `device.write`, protocol fields available, public settings endpoint, event storage at scale, job runner location, device server address). See the feature files. The setup checklist (03 ui-ux OQ-316) was **answered 2026-11-05**: it leaves the dashboard once marked finished, and `/setup` stays under Settings. | 2026-09-15 | Open |
 | OQ-201 | **Highest-impact open question so far.** Is `DEPARTMENT` scope the actor's manager chain, the department subtree they head, or the union? Feature 01 assumed the manager chain; the plan now proposes the union. Affects every scoped query in every module. | 2026-09-15 | Open — needs decision before build |
 | OQ-202 | Which personal/PII fields the company actually needs to hold (national ID, DOB, address, gender, marital status…). Unused PII is pure liability. | 2026-09-15 | Open |
 | OQ-203 | Retention/deletion obligation for terminated employees' records. Would override "never delete" and require an anonymisation path. | 2026-09-15 | Open |
@@ -319,6 +320,46 @@ gap.
 ---
 
 ## Session entries
+
+### 2026-11-05 — Session 76: company setup — the guided /setup page
+
+**Asked** — a clear setup process for a new client: departments, employees and everything else.
+What existed: the operator console creates the company (roles, profile, calendar, work week, a
+starting configuration, the admin's invitation), and the Settings home had a five-item checklist
+(company, timezone, work week, holidays, terminal). Nothing covered departments, positions, leave, pay,
+employees, salaries or sign-in accounts, and nothing took the new admin there.
+
+**Done**
+- **`src/lib/setup/status.ts`** — 14 steps in five groups, in the order that avoids rework: company
+  details, time zone and currency, working days, this year's holidays; departments, positions*, shifts*;
+  leave types and entitlements, pay components and tax table; employees, salaries, sign-in accounts;
+  attendance terminal*, email* (* optional). Each is DONE from the data, never a tick: e.g. employees
+  = at least one active and none without a department; salaries = every active employee has a
+  compensation row covering today; leave = a real active policy and no active example; pay = a real
+  salary structure, no active example component, and every tax table in use marked reviewed; terminal
+  = a device and no unmatched IDs; email = delivery mode SMTP.
+- **Skips and finishing are audit entries** (`setup.step_skipped` / `step_resumed` / `completed` /
+  `reopened`) — no migration; the latest per step decides. Only optional steps can be skipped;
+  finishing is refused while a required step is open.
+- **`/setup`** (needs `settings.write`) — progress, the next step highlighted with the page's one
+  primary button, each step's current state, why it matters, and a link to the screen that does it.
+  The page edits nothing itself.
+- **Dashboard** — "Finish setting up your company · n of 14 · next: …" for `settings.write` holders,
+  until setup is marked finished. **Nav** — "Company setup" in the admin group. **Settings home** —
+  its checklist replaced by a pointer to `/setup`, and a "Company setup" card.
+
+**Decisions**
+- 03 ui-ux OQ-316 (does the checklist persist after completion?): the prompt leaves the dashboard and
+  the settings home once finished; `/setup` stays reachable from Settings and can be reopened.
+- A new company created with the Sri Lanka setup starts with time zone, leave and (until the APIT
+  table is reviewed) not pay done — intended: the tax table must be checked by a person.
+
+**Verified** — integration 383 (28 files, +5 in `setup.test.ts`: order, data-driven employees /
+salaries / leave, skip rules, finish refused then reopen); `tsc`; lint on the changed files. In the
+browser (dev database, Acme): `/setup` at phone and desktop width, dashboard card. **Not clicked on
+the dev database:** Skip and Finish (they write audit rows there) — covered by the integration tests.
+
+**Next** — none required. Possible: a "next step" link back to `/setup` from each step's screen.
 
 ### 2026-11-04 — Session 75: first real terminal identified; site collector prepared
 
