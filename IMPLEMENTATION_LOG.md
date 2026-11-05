@@ -90,7 +90,7 @@ Source documents:
 | **Real pay components and leave entitlements** — the “Pakistan standard (2026-27)” setup, company contributions, loans and advances, unreviewed-table warnings (OQ-701, OQ-601b) | ✅ 2026-10-06, Session 68 — check the tax slabs and EOBI base |
 | **Offboarding and support access** — company data export, deletion on request, time-boxed read-only support access (OQ-T-04, OQ-T-05) | ✅ 2026-10-06, Session 67 |
 | **Production readiness** — image (non-root, health check, no sources), `docker-compose.prod.yml` with Caddy HTTPS, database setup and upgrade script, daily backups with a tested restore, `/api/health`, settings checked at start, security headers, `DEPLOY.md` | ✅ 2026-10-05, Session 66 — rehearsed locally end to end; waits on a server and a domain |
-| **Company setup** — guided `/setup` page for a new company: 14 steps in order, each ticked off from the data, optional ones skippable, “Finish setup”; dashboard prompt; replaces the Settings checklist | ✅ 2026-11-05, Session 76 |
+| **Company setup** — guided `/setup` page for a new company: 14 steps in order, each ticked off from the data, optional ones skippable, “Finish setup”; dashboard prompt; replaces the Settings checklist | ✅ 2026-11-05, Session 76 — live on hr.vexalid.com at `483955d` |
 
 **Toolchain on this machine:** no Node or npm on the host — **Docker works**, so the toolchain runs
 in containers (`docker run --rm -v C:\Dev\hrm-system:/app node:20-alpine …`). Git is installed on
@@ -358,6 +358,12 @@ employees, salaries or sign-in accounts, and nothing took the new admin there.
 salaries / leave, skip rules, finish refused then reopen); `tsc`; lint on the changed files. In the
 browser (dev database, Acme): `/setup` at phone and desktop width, dashboard card. **Not clicked on
 the dev database:** Skip and Finish (they write audit rows there) — covered by the integration tests.
+
+**Deployed** to hr.vexalid.com at `483955d` (backup taken first; no migration). The first build
+(`44d9e67`) **failed the production type check** on `setup.test.ts` — `tsc` had been run before the
+test file was written. Production stayed on `deb39a4` throughout, healthy; fixed in `483955d`. After:
+`/api/health` ok on `483955da`, jobs passing, `/setup` routed; vexalid.com and acc.vexalid.com
+unchanged. Lesson: run `tsc` last, after every file is written.
 
 **Next** — none required. Possible: a "next step" link back to `/setup` from each step's screen.
 
